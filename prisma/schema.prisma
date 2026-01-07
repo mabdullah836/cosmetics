@@ -1,0 +1,337 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// User Management
+model User {
+  id            String    @id @default(cuid())
+  email         String    @unique
+  name          String?
+  phone         String?
+  password      String?
+  emailVerified DateTime?
+  image         String?
+
+  // Relations
+  addresses Address[]
+  orders    Order[]
+  sessions  Session[]
+  accounts  Account[]
+  cart      Cart?
+  reviews   Review[] // ADD THIS
+
+  // Timestamps
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Indexes
+  @@index([email])
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([sessionToken])
+}
+
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String?
+  access_token      String?
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String?
+  session_state     String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+}
+
+// Address Management
+model Address {
+  id           String      @id @default(cuid())
+  userId       String
+  type         AddressType // BILLING, SHIPPING, BOTH
+  fullName     String
+  phone        String
+  addressLine1 String
+  addressLine2 String?
+  city         String
+  state        String
+  postalCode   String
+  country      String      @default("India")
+  isDefault    Boolean     @default(false)
+
+  user   User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  orders Order[]
+
+  // ADD THESE TWO FIELDS for the named relations
+  shippingOrders Order[] @relation("OrderShippingAddress")
+  billingOrders  Order[] @relation("OrderBillingAddress")
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([userId])
+}
+
+enum AddressType {
+  BILLING
+  SHIPPING
+  BOTH
+}
+
+// Product Catalog
+model Category {
+  id          String  @id @default(cuid())
+  name        String
+  slug        String  @unique
+  description String?
+  image       String?
+  isActive    Boolean @default(true)
+  order       Int     @default(0)
+
+  // Relations
+  products Product[]
+
+  // SEO
+  metaTitle       String?
+  metaDescription String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([slug, isActive])
+}
+
+model Product {
+  id               String @id @default(cuid())
+  name             String
+  slug             String @unique
+  description      String
+  shortDescription String
+  sku              String @unique
+  brand            String
+
+  // Pricing
+  price          Decimal  @db.Decimal(10, 2)
+  compareAtPrice Decimal? @db.Decimal(10, 2)
+  costPrice      Decimal? @db.Decimal(10, 2)
+
+  // Inventory
+  stockLevel        StockLevel
+  lowStockThreshold Int        @default(5)
+  trackInventory    Boolean    @default(true)
+  allowBackorder    Boolean    @default(false)
+
+  // Display
+  isActive   Boolean @default(true)
+  isFeatured Boolean @default(false)
+
+  // Relations
+  categoryId String?
+  category   Category?        @relation(fields: [categoryId], references: [id])
+  images     ProductImage[]
+  variants   ProductVariant[]
+  reviews    Review[]
+
+  // ADD THESE TWO FIELDS
+  cartItems  CartItem[]
+  orderItems OrderItem[]
+
+  // SEO
+  metaTitle       String?
+  metaDescription String?
+
+  // Specifications
+  weight     Decimal? @db.Decimal(10, 2)
+  dimensions String? // JSON: {length, width, height}
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([slug, isActive, categoryId])
+}
+
+enum StockLevel {
+  IN_STOCK // Available for purchase
+  LOW_STOCK // Less than threshold
+  OUT_OF_STOCK // No stock
+  DISCONTINUED // No longer available
+}
+
+model ProductImage {
+  id        String  @id @default(cuid())
+  productId String
+  url       String
+  altText   String?
+  order     Int     @default(0)
+  isPrimary Boolean @default(false)
+
+  product Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  @@index([productId, order])
+}
+
+model ProductVariant {
+  id        String   @id @default(cuid())
+  productId String
+  name      String // e.g., "Color", "Size"
+  options   String[] // e.g., ["Red", "Blue", "Green"]
+
+  product Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  @@index([productId])
+}
+
+// Cart & Orders
+model Cart {
+  id        String  @id @default(cuid())
+  userId    String? // Null for guest carts
+  sessionId String? // For guest carts
+
+  // ADD THIS RELATION
+  user  User?      @relation(fields: [userId], references: [id])
+  items CartItem[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([userId])
+  @@unique([sessionId])
+  @@index([userId, sessionId])
+}
+
+model CartItem {
+  id        String @id @default(cuid())
+  cartId    String
+  productId String
+  quantity  Int    @default(1)
+
+  cart    Cart    @relation(fields: [cartId], references: [id], onDelete: Cascade)
+  product Product @relation(fields: [productId], references: [id])
+
+  @@unique([cartId, productId])
+}
+
+model Order {
+  id          String  @id @default(cuid())
+  orderNumber String  @unique @default(cuid())
+  userId      String?
+
+  // Status
+  status        OrderStatus   @default(PENDING)
+  paymentStatus PaymentStatus @default(PENDING)
+
+  // Totals
+  subtotal Decimal @db.Decimal(10, 2)
+  shipping Decimal @db.Decimal(10, 2)
+  tax      Decimal @db.Decimal(10, 2)
+  total    Decimal @db.Decimal(10, 2)
+
+  // Customer Info
+  customerEmail String
+  customerPhone String
+  customerNote  String?
+
+  // Addresses
+  shippingAddressId String
+  billingAddressId  String
+
+  // Payment
+  paymentMethod PaymentMethod
+  transactionId String? // For bank transfers
+  paymentProof  String? // URL to uploaded screenshot
+
+  // Relations
+  user            User?       @relation(fields: [userId], references: [id])
+  shippingAddress Address     @relation("OrderShippingAddress", fields: [shippingAddressId], references: [id])
+  billingAddress  Address     @relation("OrderBillingAddress", fields: [billingAddressId], references: [id])
+  items           OrderItem[]
+
+  // Timestamps
+  paidAt      DateTime?
+  confirmedAt DateTime? // When admin confirms bank transfer
+  cancelledAt DateTime?
+  shippedAt   DateTime?
+  deliveredAt DateTime?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  address   Address? @relation(fields: [addressId], references: [id])
+  addressId String?
+
+  @@index([orderNumber, status, userId, createdAt])
+}
+
+enum OrderStatus {
+  PENDING
+  CONFIRMED
+  PROCESSING
+  SHIPPED
+  DELIVERED
+  CANCELLED
+  REFUNDED
+}
+
+enum PaymentStatus {
+  PENDING
+  PROCESSING
+  COMPLETED
+  FAILED
+  REFUNDED
+}
+
+enum PaymentMethod {
+  COD
+  BANK_TRANSFER
+}
+
+model OrderItem {
+  id          String  @id @default(cuid())
+  orderId     String
+  productId   String
+  productName String // Snapshot of product name at time of order
+  price       Decimal @db.Decimal(10, 2) // Snapshot of price
+  quantity    Int
+
+  order   Order   @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  product Product @relation(fields: [productId], references: [id])
+
+  @@index([orderId, productId])
+}
+
+// Reviews & Ratings
+model Review {
+  id         String  @id @default(cuid())
+  productId  String
+  userId     String
+  rating     Int     @default(5) // 1-5
+  title      String?
+  comment    String?
+  isVerified Boolean @default(false) // Verified purchase
+
+  product Product @relation(fields: [productId], references: [id])
+  user    User    @relation(fields: [userId], references: [id])
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([productId, userId])
+  @@index([productId, rating])
+}
