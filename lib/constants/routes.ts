@@ -1,0 +1,29 @@
+/**
+ * Application route constants
+ */
+export const ROUTES = {
+  HOME: "/",
+  PRODUCTS: "/products",
+  PRODUCT: (slug: string) => `/product/${slug}`,
+  CART: "/cart",
+  CHECKOUT: "/checkout",
+  ADDRESS: "/checkout/address",
+  PAYMENT: "/checkout/payment",
+  CONFIRMATION: "/checkout/confirmation",
+  LOGIN: "/login",
+  REGISTER: "/register",
+  ACCOUNT: "/account",
+  ACCOUNT_ORDERS: "/account/orders",
+  ACCOUNT_ORDER: (id: string) => `/account/orders/${id}`,
+  ACCOUNT_SETTINGS: "/account/settings",
+  ACCOUNT_ADDRESSES: "/account/addresses",
+  ACCOUNT_ADDRESS_NEW: "/account/addresses/new",
+  ACCOUNT_ADDRESS_EDIT: (id: string) => `/account/addresses/${id}/edit`,
+  WISHLIST: "/wishlist",
+  FAQ: "/faq",
+  ADMIN: "/admin",
+  ADMIN_PRODUCTS: "/admin/products",
+  ADMIN_ORDERS: "/admin/orders",
+  ADMIN_STOCK: "/admin/stock",
+  ADMIN_PAYMENTS: "/admin/payments",
+} as const;
