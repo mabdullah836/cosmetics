@@ -1,73 +1,40 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { X, Truck, Gift, Tag, Clock } from "lucide-react";
+import { X, Tag } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
+import { SHIPPING_BANNER_MESSAGES, CONFIG, ROUTES } from "@/lib/constants";
 
 export default function ShippingBanner() {
   const [isVisible, setIsVisible] = useState(false);
   const [isClosing, setIsClosing] = useState(false);
   const [currentMessageIndex, setCurrentMessageIndex] = useState(0);
   const pathname = usePathname();
-
-  // Banner messages that rotate
-  const messages = [
-    {
-      icon: Truck,
-      text: "Free shipping on orders over $50",
-      highlight: "Free shipping",
-      action: "Shop Now",
-      code: null,
-    },
-    {
-      icon: Gift,
-      text: "Get 15% off your first order",
-      highlight: "15% off",
-      action: "Use Code",
-      code: "BEAUTY15",
-    },
-    {
-      icon: Tag,
-      text: "New arrivals just dropped",
-      highlight: "New arrivals",
-      action: "Shop Now",
-      code: null,
-    },
-    {
-      icon: Clock,
-      text: "Limited time: Free gift with $75+ orders",
-      highlight: "Free gift",
-      action: "Shop Now",
-      code: null,
-    },
-  ];
+  const router = useRouter();
 
   // Don't show banner on checkout or admin pages
-  const shouldShowBanner = !pathname?.includes("/checkout") && 
-                          !pathname?.includes("/admin") &&
-                          !pathname?.includes("/cart");
+  const shouldShowBanner = !CONFIG.HIDE_BANNER_PATHS.some((path) =>
+    pathname?.includes(path)
+  );
 
   useEffect(() => {
-    // Check localStorage for banner dismissal
-    const dismissedUntil = localStorage.getItem("shippingBannerDismissed");
+    const dismissedUntil = localStorage.getItem(CONFIG.STORAGE_KEYS.BANNER_DISMISSED);
     
     if (dismissedUntil) {
       const dismissedTime = parseInt(dismissedUntil);
       const currentTime = Date.now();
       
-      // Show banner again after 24 hours
       if (currentTime > dismissedTime) {
-        localStorage.removeItem("shippingBannerDismissed");
+        localStorage.removeItem(CONFIG.STORAGE_KEYS.BANNER_DISMISSED);
         setIsVisible(true);
       }
     } else {
-      // Show banner after a short delay
       const timer = setTimeout(() => {
         setIsVisible(true);
-      }, 500);
+      }, CONFIG.BANNER_SHOW_DELAY);
       
       return () => clearTimeout(timer);
     }
@@ -76,15 +43,14 @@ export default function ShippingBanner() {
   useEffect(() => {
     if (!isVisible) return;
 
-    // Rotate messages every 8 seconds
     const interval = setInterval(() => {
-      setCurrentMessageIndex((prev) => (prev + 1) % messages.length);
-    }, 8000);
+      setCurrentMessageIndex((prev) => (prev + 1) % SHIPPING_BANNER_MESSAGES.length);
+    }, CONFIG.BANNER_ROTATION_INTERVAL);
 
     return () => clearInterval(interval);
   }, [isVisible]);
 
-  const handleDismiss = (duration: number = 24 * 60 * 60 * 1000) => {
+  const handleDismiss = (duration: number = CONFIG.BANNER_DISMISS_DURATION) => {
     setIsClosing(true);
     
     setTimeout(() => {
@@ -93,36 +59,35 @@ export default function ShippingBanner() {
       
       if (duration > 0) {
         const dismissedUntil = Date.now() + duration;
-        localStorage.setItem("shippingBannerDismissed", dismissedUntil.toString());
+        localStorage.setItem(CONFIG.STORAGE_KEYS.BANNER_DISMISSED, dismissedUntil.toString());
       }
     }, 300);
   };
 
   const handleCopyCode = () => {
-    const code = messages[currentMessageIndex].code;
+    const code = SHIPPING_BANNER_MESSAGES[currentMessageIndex].code;
     if (code) {
       navigator.clipboard.writeText(code);
       toast.success("Code copied!", {
         description: `Discount code "${code}" copied to clipboard`,
-        duration: 3000,
+        duration: CONFIG.TOAST_DURATION,
       });
     }
   };
 
   const handleAction = () => {
-    const message = messages[currentMessageIndex];
+    const message = SHIPPING_BANNER_MESSAGES[currentMessageIndex];
     
     if (message.code) {
       handleCopyCode();
     } else {
-      // Navigate to products page
-      window.location.href = "/products";
+      router.push(ROUTES.PRODUCTS);
     }
   };
 
   if (!isVisible || !shouldShowBanner) return null;
 
-  const currentMessage = messages[currentMessageIndex];
+  const currentMessage = SHIPPING_BANNER_MESSAGES[currentMessageIndex];
   const Icon = currentMessage.icon;
 
   return (
