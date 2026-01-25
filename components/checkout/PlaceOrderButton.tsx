@@ -4,6 +4,7 @@ import { useState } from "react";
 import { createOrder } from "@/lib/actions/order";
 import { Address, PaymentMethod } from "@/types/supabase";
 import { useRouter } from "next/navigation";
+import { Button } from "@/components/ui/button";
 
 type PlaceOrderButtonProps = {
   shippingAddress: Omit<Address, 'id'>;
@@ -29,15 +30,18 @@ const PlaceOrderButton = ({ shippingAddress, billingAddress, paymentMethod }: Pl
   };
 
   return (
-    <div className="mt-8 flex justify-end">
-      <button
+    <div className="space-y-4">
+      <Button
         onClick={handleClick}
         disabled={isLoading}
-        className="bg-black text-white py-3 px-6 rounded-md disabled:bg-gray-500"
+        size="lg"
+        className="w-full hover:shadow-md transition-shadow"
       >
         {isLoading ? "Placing Order..." : "Place Order"}
-      </button>
-      {result?.error && <p className="text-red-500 mt-2">{result.error}</p>}
+      </Button>
+      {result?.error && (
+        <p className="text-sm text-destructive text-center">{result.error}</p>
+      )}
     </div>
   );
 };

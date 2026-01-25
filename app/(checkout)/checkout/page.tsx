@@ -1,6 +1,7 @@
+import { redirect } from "next/navigation";
 import { auth } from "@/auth";
 import { createClient } from "@/lib/supabase/server";
-import CartPageClient from './CartPageClient';
+import CheckoutPageClient from "./CheckoutPageClient";
 import { CartItem } from "@/types/supabase";
 import Link from "next/link";
 import {
@@ -12,7 +13,7 @@ import {
   BreadcrumbSeparator,
 } from "@/components/ui/breadcrumb";
 
-const CartPage = async () => {
+const CheckoutPage = async () => {
   const session = await auth();
   const userId = session?.user?.id;
 
@@ -20,6 +21,7 @@ const CartPage = async () => {
   let subtotal = 0;
 
   // Only fetch from Supabase if user is authenticated
+  // For guests, cart will be loaded from localStorage client-side
   if (userId) {
     const supabase = await createClient();
     const { data: cart } = await supabase
@@ -34,7 +36,16 @@ const CartPage = async () => {
       0
     );
   }
-  // For guest users, cart will be loaded from local storage client-side
+
+  // Redirect to cart if no items (for authenticated users)
+  // Guest users will see empty cart message in client component
+  if (userId && cartItems.length === 0) {
+    redirect("/cart");
+  }
+
+  const shipping = 0; // Free shipping
+  const discount = 0; // Can be calculated from coupons/promos
+  const total = subtotal + shipping - discount;
 
   return (
     <>
@@ -48,18 +59,28 @@ const CartPage = async () => {
             </BreadcrumbItem>
             <BreadcrumbSeparator />
             <BreadcrumbItem>
-              <BreadcrumbPage>Shopping Cart</BreadcrumbPage>
+              <BreadcrumbLink asChild>
+                <Link href="/cart">Cart</Link>
+              </BreadcrumbLink>
+            </BreadcrumbItem>
+            <BreadcrumbSeparator />
+            <BreadcrumbItem>
+              <BreadcrumbPage>Checkout</BreadcrumbPage>
             </BreadcrumbItem>
           </BreadcrumbList>
         </Breadcrumb>
       </div>
-      <CartPageClient 
-        initialCartItems={cartItems} 
-        initialSubtotal={subtotal}
-        isAuthenticated={!!userId}
+      <CheckoutPageClient
+        cartItems={cartItems}
+        subtotal={subtotal}
+        shipping={shipping}
+        discount={discount}
+        total={total}
+        userEmail={session?.user?.email || ""}
+        isAuthenticated={!!session}
       />
     </>
   );
 };
 
-export default CartPage;
+export default CheckoutPage;

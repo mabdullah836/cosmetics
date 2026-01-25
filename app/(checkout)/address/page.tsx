@@ -1,13 +1,48 @@
+import { redirect } from "next/navigation";
+import { auth } from "@/auth";
 import { saveAddress } from "@/lib/actions/checkout";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import Link from "next/link";
+import {
+  Breadcrumb,
+  BreadcrumbList,
+  BreadcrumbItem,
+  BreadcrumbLink,
+  BreadcrumbPage,
+  BreadcrumbSeparator,
+} from "@/components/ui/breadcrumb";
 
-const AddressPage = () => {
+const AddressPage = async () => {
+  const session = await auth();
+  
+  if (!session) {
+    redirect('/login?redirect=/address');
+  }
   return (
     <div className="container mx-auto px-4 py-12 max-w-7xl">
+      <Breadcrumb className="mb-6">
+        <BreadcrumbList>
+          <BreadcrumbItem>
+            <BreadcrumbLink asChild>
+              <Link href="/">Home</Link>
+            </BreadcrumbLink>
+          </BreadcrumbItem>
+          <BreadcrumbSeparator />
+          <BreadcrumbItem>
+            <BreadcrumbLink asChild>
+              <Link href="/cart">Cart</Link>
+            </BreadcrumbLink>
+          </BreadcrumbItem>
+          <BreadcrumbSeparator />
+          <BreadcrumbItem>
+            <BreadcrumbPage>Shipping Address</BreadcrumbPage>
+          </BreadcrumbItem>
+        </BreadcrumbList>
+      </Breadcrumb>
       <div className="text-center mb-10">
         <h1 className="text-4xl font-bold tracking-tight">Checkout</h1>
         <p className="mt-2 text-lg text-muted-foreground">Please enter your shipping and billing information.</p>
@@ -64,7 +99,13 @@ const AddressPage = () => {
               </div>
             </div>
             <div className="mt-8 flex justify-end">
-              <Button type="submit" size="lg">Proceed to Payment</Button>
+              <Button 
+                type="submit" 
+                size="lg"
+                className="hover:shadow-md transition-shadow"
+              >
+                Proceed to Payment
+              </Button>
             </div>
           </form>
         </div>
