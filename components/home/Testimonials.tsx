@@ -185,7 +185,6 @@ export default function Testimonials() {
     </section>
   );
 }
-
 interface TestimonialCardProps {
   testimonial: typeof testimonials[0];
   index: number;
