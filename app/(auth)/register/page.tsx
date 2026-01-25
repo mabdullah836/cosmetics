@@ -1,14 +1,14 @@
-import RegisterForm from "@/components/auth/RegisterForm";
+import RegisterPageClient from "./RegisterPageClient";
 
-const RegisterPage = () => {
-  return (
-    <div className="flex justify-center items-center h-full">
-      <div className="w-full max-w-md p-8 space-y-6 bg-white rounded-lg shadow-md">
-        <h1 className="text-2xl font-bold text-center">Register</h1>
-        <RegisterForm />
-      </div>
-    </div>
-  );
+interface RegisterPageProps {
+  searchParams: Promise<{ redirect?: string }>;
+}
+
+const RegisterPage = async ({ searchParams }: RegisterPageProps) => {
+  const params = await searchParams;
+  const redirectTo = params?.redirect || "/";
+  
+  return <RegisterPageClient redirectTo={redirectTo} />;
 };
 
 export default RegisterPage;
