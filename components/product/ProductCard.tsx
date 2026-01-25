@@ -1,33 +1,32 @@
 "use client";
 
-import { useState, useCallback, memo } from "react";
+import { memo, useCallback, useState, useEffect } from "react";
 import Link from "next/link";
 import Image from "next/image";
+import { useRouter } from "next/navigation";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Heart, ShoppingBag, Star, Eye, Truck, Clock } from "lucide-react";
+import { Skeleton } from "@/components/ui/skeleton";
+import { Heart, ShoppingBag, Eye, Star, Truck, Zap } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
-import { Skeleton } from "@/components/ui/skeleton";
 
 interface ProductCardProps {
   id: string;
   name: string;
   price: number;
   originalPrice?: number;
-  imageUrl: string;
+  imageUrl?: string;
   rating?: number;
   reviewCount?: number;
-  isNew?: boolean;
-  isSale?: boolean;
   slug: string;
   category?: string;
   stock?: number;
   shippingDays?: number;
+  isNew?: boolean;
 }
 
-// Optimized with memo to prevent unnecessary re-renders
 const ProductCard = memo(function ProductCard({
   id,
   name,
@@ -36,307 +35,293 @@ const ProductCard = memo(function ProductCard({
   imageUrl,
   rating = 4.5,
   reviewCount = 0,
-  isNew = false,
-  isSale = false,
   slug,
   category,
   stock = 10,
   shippingDays = 3,
+  isNew = false,
 }: ProductCardProps) {
-  const [isWishlisted, setIsWishlisted] = useState(false);
-  const [isHovered, setIsHovered] = useState(false);
-  const [isImageLoading, setIsImageLoading] = useState(true);
-  const [isAddingToCart, setIsAddingToCart] = useState(false);
+  const router = useRouter();
+  const [wishlisted, setWishlisted] = useState(false);
+  const [adding, setAdding] = useState(false);
+  const [imgLoaded, setImgLoaded] = useState(false);
+  const [wishlisting, setWishlisting] = useState(false);
+  const [showActions, setShowActions] = useState(false);
 
-  const discount = originalPrice ? Math.round((1 - price / originalPrice) * 100) : 0;
-  const isLowStock = stock < 5;
-  const isFastShipping = shippingDays <= 3;
+  const discount =
+    originalPrice && originalPrice > price
+      ? Math.round((1 - price / originalPrice) * 100)
+      : 0;
 
-  // Memoized handlers
-  const handleWishlist = useCallback((e: React.MouseEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    
-    setIsWishlisted(prev => !prev);
-    
-    if (isWishlisted) {
-      toast.error("Removed from wishlist", {
-        description: `${name} has been removed from your wishlist`,
-      });
-    } else {
-      toast.success("Added to wishlist", {
-        description: `${name} has been added to your wishlist`,
-        duration: 2000,
-      });
+  const outOfStock = stock <= 0;
+
+  useEffect(() => {
+    try {
+      const { isInLocalWishlist } = require("@/lib/utils/localWishlist");
+      const inWishlist = isInLocalWishlist(id);
+      setWishlisted(inWishlist);
+    } catch (error) {
+      // Silently fail
     }
-  }, [isWishlisted, name]);
+  }, [id]);
 
-  const handleAddToCart = useCallback(async (e: React.MouseEvent) => {
+  const handleWishlist = useCallback(async (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
     
-    setIsAddingToCart(true);
+    if (wishlisting) return;
     
-    // Simulate API call
-    setTimeout(() => {
-      setIsAddingToCart(false);
+    setWishlisting(true);
+    
+    try {
+      const { addToWishlist, removeFromWishlist } = await import("@/lib/actions/wishlist");
+      const { addToLocalWishlist, removeFromLocalWishlist } = await import("@/lib/utils/localWishlist");
       
-      toast.success("Added to cart", {
-        description: (
-          <div className="flex items-center gap-2">
-            <div className="relative h-10 w-10 overflow-hidden rounded">
-              <Image
-                src={imageUrl}
-                alt={name}
-                fill
-                className="object-cover"
-                sizes="40px"
-              />
-            </div>
-            <div>
-              <p className="font-medium">{name}</p>
-              <p className="text-sm text-muted-foreground">
-                ${price.toFixed(2)} • Added to cart
-              </p>
-            </div>
-          </div>
-        ),
-        action: {
-          label: "View Cart",
-          onClick: () => window.location.href = "/cart",
-        },
-        duration: 4000,
-      });
-    }, 500);
-  }, [name, price, imageUrl]);
+      if (wishlisted) {
+        const result = await removeFromWishlist(id);
+        if (result?.useLocalStorage) {
+          removeFromLocalWishlist(id);
+          setWishlisted(false);
+          toast.success("Removed from wishlist");
+        } else if (result?.error) {
+          toast.error(result.error);
+        } else {
+          setWishlisted(false);
+          toast.success("Removed from wishlist");
+        }
+      } else {
+        const result = await addToWishlist(id);
+        if (result?.useLocalStorage) {
+          addToLocalWishlist(id);
+          setWishlisted(true);
+          toast.success("Added to wishlist");
+        } else if (result?.error) {
+          toast.error(result.error);
+        } else {
+          setWishlisted(true);
+          toast.success("Added to wishlist");
+        }
+      }
+    } catch (error) {
+      toast.error("Failed to update wishlist");
+    } finally {
+      setWishlisting(false);
+    }
+  }, [id, wishlisted, wishlisting]);
 
-  const handleMouseEnter = useCallback(() => setIsHovered(true), []);
-  const handleMouseLeave = useCallback(() => setIsHovered(false), []);
-  const handleImageLoad = useCallback(() => setIsImageLoading(false), []);
+  const handleAddToCart = useCallback(
+    async (e: React.MouseEvent) => {
+      e.preventDefault();
+      e.stopPropagation();
+      if (outOfStock) return;
+
+      try {
+        setAdding(true);
+        const { addToCart } = await import("@/lib/actions/cart");
+        const result = await addToCart(id, 1);
+
+        if (result?.success) {
+          router.refresh();
+          toast.success("Added to cart", {
+            description: name,
+            action: {
+              label: "View Cart",
+              onClick: () => router.push("/cart"),
+            },
+          });
+        } else {
+          toast.error("Failed to add to cart");
+        }
+      } catch {
+        toast.error("Something went wrong");
+      } finally {
+        setAdding(false);
+      }
+    },
+    [id, name, router, outOfStock]
+  );
 
   return (
-    <Card
-      className={cn(
-        "group relative overflow-hidden border border-border/50 shadow-sm hover:shadow-xl transition-all duration-300 h-full",
-        isHovered && "ring-2 ring-primary/20"
-      )}
-      onMouseEnter={handleMouseEnter}
-      onMouseLeave={handleMouseLeave}
+    <Link 
+      href={`/product/${slug}`} 
+      className="block h-full group"
+      onMouseEnter={() => setShowActions(true)}
+      onMouseLeave={() => setShowActions(false)}
     >
-      {/* Image Container */}
-      <div className="relative aspect-[3/4] overflow-hidden bg-muted/30">
-        {/* Image Loading Skeleton */}
-        {isImageLoading && (
-          <Skeleton className="absolute inset-0 w-full h-full" />
-        )}
-        
-        <Link href={`/product/${slug}`} className="block h-full">
+      <div className="h-full flex flex-col bg-white rounded-2xl overflow-hidden transition-all duration-300 hover:shadow-2xl hover:-translate-y-1.5">
+        {/* Image container */}
+        <div className="relative aspect-[4/5] bg-gradient-to-b from-gray-50 to-gray-100 overflow-hidden">
+          {!imgLoaded && (
+            <div className="absolute inset-0">
+              <Skeleton className="h-full w-full" />
+            </div>
+          )}
+
           <Image
-            src={imageUrl}
+            src={
+              imageUrl ||
+              "https://images.unsplash.com/photo-1596462502278-27bfdc403348?w=600"
+            }
             alt={name}
             fill
+            sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, (max-width: 1280px) 33vw, 25vw"
             className={cn(
-              "object-cover transition-transform duration-500",
-              isHovered && "scale-105",
-              isImageLoading ? "opacity-0" : "opacity-100"
+              "object-cover transition-all duration-500",
+              "group-hover:scale-105",
+              imgLoaded ? "opacity-100" : "opacity-0"
             )}
-            sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
+            onLoad={() => setImgLoaded(true)}
             priority={false}
-            onLoad={handleImageLoad}
-            onError={handleImageLoad}
           />
-        </Link>
 
-        {/* Badges - Top Left */}
-        <div className="absolute top-3 left-3 flex flex-col gap-2">
-          {isNew && (
-            <Badge 
-              className="bg-green-500 hover:bg-green-600 text-white border-0 shadow-md animate-pulse"
-              aria-label="New product"
-            >
-              New
-            </Badge>
-          )}
-          {isSale && discount > 0 && (
-            <Badge 
-              variant="destructive" 
-              className="border-0 shadow-md"
-              aria-label={`${discount}% off`}
-            >
-              -{discount}% OFF
-            </Badge>
-          )}
-          {category && (
-            <Badge 
-              variant="outline" 
-              className="bg-background/80 backdrop-blur-sm hidden sm:inline-flex"
-              aria-label={`Category: ${category}`}
-            >
-              {category}
-            </Badge>
-          )}
-        </div>
-
-        {/* Stock Indicator - Top Right */}
-        {isLowStock && stock > 0 && (
-          <div className="absolute top-3 right-3">
-            <Badge 
-              variant="outline" 
-              className="bg-amber-50 text-amber-800 border-amber-200"
-              aria-label={`Low stock: ${stock} items left`}
-            >
-              Only {stock} left
-            </Badge>
-          </div>
-        )}
-
-        {/* Action Buttons - Right Side */}
-        <div className="absolute right-3 top-12 flex flex-col gap-2">
-          {/* Wishlist Button */}
-          <Button
-            onClick={handleWishlist}
-            variant="secondary"
-            size="icon"
-            className={cn(
-              "bg-background/80 backdrop-blur-sm shadow-sm hover:bg-background transition-all",
-              "hover:scale-110 active:scale-95",
-              isHovered ? "opacity-100" : "opacity-0 group-hover:opacity-100"
+          {/* Top badges */}
+          <div className="absolute top-4 left-4 flex flex-col gap-2 z-10">
+            {isNew && (
+              <Badge className="bg-emerald-500 text-white border-0 px-3 py-1 rounded-full font-medium shadow-lg">
+                <Zap className="h-3 w-3 mr-1" />
+                New
+              </Badge>
             )}
-            aria-label={isWishlisted ? "Remove from wishlist" : "Add to wishlist"}
-          >
-            <Heart
-              className={cn(
-                "h-4 w-4 transition-colors",
-                isWishlisted && "fill-primary text-primary"
+            {discount > 0 && (
+              <Badge className="bg-rose-500 text-white border-0 px-3 py-1 rounded-full font-medium shadow-lg">
+                -{discount}% OFF
+              </Badge>
+            )}
+          </div>
+
+          {/* Floating action buttons */}
+          <div className={cn(
+            "absolute top-4 right-4 flex flex-col gap-2 z-10 transition-all duration-300",
+            showActions ? "opacity-100 translate-x-0" : "opacity-0 translate-x-4"
+          )}>
+            <Button
+              size="icon"
+              variant="secondary"
+              onClick={handleWishlist}
+              disabled={wishlisting}
+              className="h-11 w-11 rounded-full bg-white/90 backdrop-blur-sm shadow-lg hover:shadow-xl border-0 hover:scale-105 transition-transform"
+            >
+              {wishlisting ? (
+                <div className="h-4 w-4 border-2 border-gray-700 border-t-transparent rounded-full animate-spin" />
+              ) : (
+                <Heart
+                  className={cn(
+                    "h-5 w-5 transition-all",
+                    wishlisted && "fill-rose-500 text-rose-500 animate-pulse"
+                  )}
+                />
               )}
-            />
-          </Button>
+            </Button>
 
-          {/* Quick View Button */}
-          <Button
-            variant="secondary"
-            size="icon"
-            className={cn(
-              "bg-background/80 backdrop-blur-sm shadow-sm hover:bg-background transition-all",
-              "hover:scale-110 active:scale-95",
-              isHovered ? "opacity-100" : "opacity-0 group-hover:opacity-100"
-            )}
-            asChild
-          >
-            <Link href={`/product/${slug}`} onClick={(e) => e.stopPropagation()}>
-              <Eye className="h-4 w-4" />
-              <span className="sr-only">Quick view {name}</span>
-            </Link>
-          </Button>
-        </div>
-
-        {/* Shipping Info - Bottom Left */}
-        {isFastShipping && (
-          <div className="absolute bottom-3 left-3">
-            <Badge 
-              variant="secondary" 
-              className="bg-green-50 text-green-700 border-green-200"
-              aria-label={`Fast delivery in ${shippingDays} days`}
+            <Button
+              size="icon"
+              variant="secondary"
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                router.push(`/product/${slug}?quickview=true`);
+              }}
+              className="h-11 w-11 rounded-full bg-white/90 backdrop-blur-sm shadow-lg hover:shadow-xl border-0 hover:scale-105 transition-transform"
             >
-              <Truck className="h-3 w-3 mr-1" />
-              Fast Delivery
-            </Badge>
+              <Eye className="h-5 w-5" />
+            </Button>
           </div>
-        )}
 
-        {/* Add to Cart Button - Bottom Overlay */}
-        <div
-          className={cn(
-            "absolute inset-x-0 bottom-0 p-4 transition-all duration-300",
-            isHovered ? "translate-y-0 opacity-100" : "translate-y-full opacity-0"
+          {/* Stock indicator */}
+          {stock > 0 && stock <= 5 && (
+            <div className="absolute bottom-4 left-4">
+              <Badge variant="secondary" className="bg-amber-50 text-amber-700 border-amber-200">
+                Only {stock} left
+              </Badge>
+            </div>
           )}
-        >
-          <Button
-            onClick={handleAddToCart}
-            disabled={isAddingToCart}
-            size="sm"
-            className="w-full rounded-full shadow-md"
-          >
-            {isAddingToCart ? (
-              <>
-                <div className="h-4 w-4 mr-2 animate-spin rounded-full border-2 border-current border-t-transparent" />
-                Adding...
-              </>
-            ) : (
-              <>
-                <ShoppingBag className="h-4 w-4 mr-2" />
-                Add to Cart
-              </>
-            )}
-          </Button>
-        </div>
-      </div>
 
-      {/* Product Info */}
-      <CardContent className="p-4 space-y-2">
-        {/* Category */}
-        {category && (
-          <p className="text-xs text-muted-foreground uppercase tracking-wide sm:hidden">
-            {category}
-          </p>
-        )}
-        
-        {/* Product Name */}
-        <Link href={`/product/${slug}`}>
-          <h3 className="font-medium text-foreground hover:text-primary transition-colors line-clamp-2 min-h-12">
+          {/* Add to cart overlay */}
+          <div className={cn(
+            "absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/60 to-transparent p-6 transition-all duration-300",
+            showActions ? "opacity-100 translate-y-0" : "opacity-0 translate-y-4"
+          )}>
+            <Button
+              onClick={handleAddToCart}
+              disabled={adding || outOfStock}
+              size="lg"
+              className={cn(
+                "w-full bg-white text-gray-900 hover:bg-gray-50 font-semibold h-12 rounded-xl shadow-lg",
+                "transition-all duration-300 hover:scale-[1.02] active:scale-[0.98]",
+                outOfStock && "bg-gray-100 text-gray-500 cursor-not-allowed"
+              )}
+            >
+              {outOfStock ? (
+                "Out of Stock"
+              ) : adding ? (
+                <>
+                  <div className="h-4 w-4 border-2 border-current border-t-transparent rounded-full animate-spin mr-2" />
+                  Adding...
+                </>
+              ) : (
+                <>
+                  <ShoppingBag className="h-5 w-5 mr-2" />
+                  Add to Cart
+                </>
+              )}
+            </Button>
+          </div>
+        </div>
+
+        {/* Content */}
+        <div className="flex-1 p-5 flex flex-col">
+          {category && (
+            <p className="text-xs font-medium text-gray-500 uppercase tracking-wider mb-2">
+              {category}
+            </p>
+          )}
+
+          <h3 className="text-lg font-semibold text-gray-900 mb-3 line-clamp-2 leading-tight group-hover:text-gray-700 transition-colors">
             {name}
           </h3>
-        </Link>
 
-        {/* Rating */}
-        {rating > 0 && (
-          <div className="flex items-center gap-1">
-            <div className="flex" aria-label={`Rating: ${rating} out of 5 stars`}>
+          {/* Rating and reviews */}
+          <div className="flex items-center gap-2 mb-4">
+            <div className="flex items-center gap-1">
               {[...Array(5)].map((_, i) => (
                 <Star
                   key={i}
                   className={cn(
-                    "h-3.5 w-3.5",
+                    "h-4 w-4",
                     i < Math.floor(rating)
-                      ? "fill-yellow-400 text-yellow-400"
-                      : "fill-muted text-muted"
+                      ? "fill-amber-400 text-amber-400"
+                      : "text-gray-300"
                   )}
-                  aria-hidden="true"
                 />
               ))}
             </div>
             {reviewCount > 0 && (
-              <span className="text-xs text-muted-foreground" aria-label={`${reviewCount} reviews`}>
-                ({reviewCount.toLocaleString()})
-              </span>
+              <span className="text-sm text-gray-500">({reviewCount})</span>
             )}
           </div>
-        )}
 
-        {/* Price */}
-        <div className="flex items-center gap-2 flex-wrap">
-          <span className="text-lg font-bold text-foreground">
-            ${price.toFixed(2)}
-          </span>
-          {originalPrice && originalPrice > price && (
-            <>
-              <span className="text-sm text-muted-foreground line-through">
-                ${originalPrice.toFixed(2)}
-              </span>
-              <span className="text-xs font-medium text-destructive">
-                Save ${(originalPrice - price).toFixed(2)}
-              </span>
-            </>
-          )}
+          {/* Price */}
+          <div className="mt-auto">
+            <div className="flex items-center gap-3">
+              <span className="text-2xl font-bold text-gray-900">${price.toFixed(2)}</span>
+              {originalPrice && originalPrice > price && (
+                <span className="text-lg text-gray-400 line-through">
+                  ${originalPrice.toFixed(2)}
+                </span>
+              )}
+            </div>
+            
+            {/* Shipping info */}
+            {shippingDays <= 3 && (
+              <div className="flex items-center gap-1.5 mt-3 text-sm text-gray-600">
+                <Truck className="h-4 w-4" />
+                <span>Free shipping • {shippingDays} days</span>
+              </div>
+            )}
+          </div>
         </div>
-
-        {/* Shipping Time */}
-        <div className="flex items-center gap-2 text-xs text-muted-foreground">
-          <Clock className="h-3 w-3" />
-          <span>Delivery in {shippingDays} days</span>
-        </div>
-      </CardContent>
-    </Card>
+      </div>
+    </Link>
   );
 });
 
