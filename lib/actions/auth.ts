@@ -47,3 +47,14 @@ export const register = async (formData: FormData) => {
       "User registered successfully. Please check your email to verify your account.",
   };
 };
+
+export const signOut = async () => {
+  const supabase = await createClient();
+  const { error } = await supabase.auth.signOut();
+
+  if (error) {
+    return { error: error.message };
+  }
+
+  return { success: "Signed out successfully." };
+};

@@ -3,6 +3,8 @@
 import { z } from "zod";
 import { createClient } from "@/lib/supabase/server";
 import { revalidatePath } from "next/cache";
+import { logger } from "@/lib/utils/logger";
+import { MESSAGES } from "@/lib/constants";
 
 // Schema validation
 const newsletterSchema = z.object({
@@ -36,7 +38,7 @@ export async function subscribeToNewsletter(formData: FormData) {
     if (existingSubscriber) {
       return {
         success: false,
-        error: "You're already subscribed to our newsletter!",
+        error: MESSAGES.NEWSLETTER.ALREADY_SUBSCRIBED,
       };
     }
 
@@ -51,10 +53,10 @@ export async function subscribeToNewsletter(formData: FormData) {
       });
 
     if (error) {
-      console.error("Error subscribing to newsletter:", error);
+      logger.error(MESSAGES.NEWSLETTER.SUBSCRIBE_ERROR, error);
       return {
         success: false,
-        error: "Failed to subscribe. Please try again.",
+        error: MESSAGES.NEWSLETTER.SUBSCRIBE_ERROR,
       };
     }
 
@@ -65,13 +67,13 @@ export async function subscribeToNewsletter(formData: FormData) {
     
     return {
       success: true,
-      message: "Successfully subscribed to newsletter",
+      message: MESSAGES.NEWSLETTER.SUBSCRIBE_SUCCESS,
     };
   } catch (error) {
-    console.error("Error in newsletter subscription:", error);
+    logger.error("Error in newsletter subscription:", error);
     return {
       success: false,
-      error: "An unexpected error occurred. Please try again later.",
+      error: MESSAGES.NEWSLETTER.SUBSCRIBE_ERROR,
     };
   }
 }
