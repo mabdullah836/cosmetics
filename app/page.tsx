@@ -1,124 +1,163 @@
-import HeroCarousel from "@/components/home/HeroCarousel";
-import CategoryCard from "@/components/home/CategoryCard";
-import ProductCard from "@/components/product/ProductCard";
+import HeroSection from "@/components/home/HeroSection";
+import CategoryGrid from "@/components/home/CategoryCard";
+import ProductCarousel from "@/components/home/ProductCarousel";
+import NewArrivalsSection from "@/components/home/NewArrivalsSection";
 import BrandValues from "@/components/home/BrandValues";
 import Testimonials from "@/components/home/Testimonials";
 import Newsletter from "@/components/common/Newsletter";
-import FAQ from "@/components/common/FAQ";
-import { getFeaturedCategories, getFeaturedProducts } from "@/lib/actions/product";
+import { 
+  getFeaturedCategories, 
+  getFeaturedProducts,
+  getTrendingProducts,
+  getNewArrivals,
+  getBestSellers 
+} from "@/lib/actions/product";
+import type { HeroProduct, CategoryData, ProductCarouselItem } from "@/types/homepage";
+import type { Product, Category } from "@/types/supabase";
+import { logger } from "@/lib/utils/logger";
 
 // Fetch data on the server
 async function getHomePageData() {
   try {
-    const [categories, products] = await Promise.all([
+    const [
+      categories,
+      featuredProducts,
+      trendingProducts,
+      newArrivals,
+      bestSellers
+    ] = await Promise.all([
       getFeaturedCategories(),
       getFeaturedProducts(),
+      getTrendingProducts(),
+      getNewArrivals(),
+      getBestSellers()
     ]);
     
-    return { categories, products };
+    return { 
+      categories, 
+      featuredProducts, 
+      trendingProducts, 
+      newArrivals, 
+      bestSellers 
+    };
   } catch (error) {
-    console.error("Error fetching home page data:", error);
-    return { categories: [], products: [] };
+    logger.error("Error fetching home page data:", error);
+    return { 
+      categories: [], 
+      featuredProducts: [], 
+      trendingProducts: [], 
+      newArrivals: [], 
+      bestSellers: [] 
+    };
   }
 }
 
 export default async function HomePage() {
   // Fetch data on the server
-  const { categories, products } = await getHomePageData();
+  const { 
+    categories, 
+    trendingProducts, 
+    newArrivals, 
+    bestSellers 
+  } = await getHomePageData();
+
+  const categoryData: CategoryData[] = categories.map((cat: Category): CategoryData => {
+    // Extract product count from relation or direct field
+    const productCount = cat.product_count || 
+      (Array.isArray(cat.products) ? cat.products[0]?.count : cat.products?.count) || 
+      0;
+    
+    return {
+      id: cat.id,
+      name: cat.name,
+      slug: cat.slug || cat.name.toLowerCase().replace(/\s+/g, "-"),
+      imageUrl: cat.image_url || cat.image || 'https://images.unsplash.com/photo-1596462502278-27bfdc403348?w=400&h=400&fit=crop',
+      productCount: productCount,
+      isFeatured: cat.is_featured || false,
+    };
+  });
 
   return (
     <>
-      {/* Hero Carousel */}
-      <section aria-label="Hero banner">
-        <HeroCarousel />
-      </section>
+      {/* Hero Section with Trending Products */}
+      <HeroSection />
 
       {/* Featured Categories */}
-      <section 
-        className="py-16 md:py-20 bg-background" 
-        aria-labelledby="featured-categories-heading"
-      >
-        <div className="container mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-12">
-            <h2 
-              id="featured-categories-heading"
-              className="text-3xl md:text-4xl font-display font-bold text-foreground mb-4"
-            >
-              Shop by Category
-            </h2>
-            <p className="text-muted-foreground max-w-2xl mx-auto">
-              Explore our carefully curated collections for every beauty need
-            </p>
-          </div>
+      <CategoryGrid
+        categories={categoryData}
+        title="Shop by Category"
+        subtitle="Discover products from our premium categories"
+        columns={6}
+      />
 
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6 max-w-6xl mx-auto">
-            {categories.map((category, index) => (
-              <div
-                key={category.id}
-                className="animate-fade-in-up"
-                style={{ animationDelay: `${index * 0.1}s` }}
-              >
-                <CategoryCard
-                  id={category.id}
-                  name={category.name}
-                  imageUrl={category?.image_url || category?.image || 'https://images.unsplash.com/photo-1596462502278-27bfdc403348?w=400&h=400&fit=crop'}
-                  productCount={0}
-                  slug={category.slug || category.name.toLowerCase()}
-                />
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
+      {/* Best Sellers */}
+      <ProductCarousel
+        products={bestSellers.map((p: Product): ProductCarouselItem => {
+          const categoryName = p.category_name || 
+            (Array.isArray(p.categories) ? p.categories[0]?.name : p.categories?.name);
+          
+          return {
+            id: p.id,
+            name: p.name,
+            slug: p.slug || p.id,
+            price: p.price,
+            originalPrice: p.original_price,
+            imageUrl: p.images?.[0]?.image_url || 'https://images.unsplash.com/photo-1596462502278-27bfdc403348?w=400&h=400&fit=crop',
+            rating: p.rating_average || p.rating,
+            isNew: p.is_new_arrival || false,
+            isSale: p.sale_price ? p.sale_price < p.price : false,
+            category: categoryName,
+          };
+        })}
+        title="Best Sellers"
+        subtitle="Our most popular products this month"
+        showViewAll={true}
+      />
 
-      {/* Featured Products */}
-      <section 
-        className="py-16 md:py-20 bg-muted/30" 
-        aria-labelledby="featured-products-heading"
-      >
-        <div className="container mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-12">
-            <h2 
-              id="featured-products-heading"
-              className="text-3xl md:text-4xl font-display font-bold text-foreground mb-4"
-            >
-              Best Sellers
-            </h2>
-            <p className="text-muted-foreground max-w-2xl mx-auto">
-              Discover our most loved products, adored by thousands
-            </p>
-          </div>
+      {/* New Arrivals - Unique Layout with Tabs */}
+      <NewArrivalsSection
+        products={newArrivals.map((p: Product): ProductCarouselItem => {
+          const categoryName = p.category_name || 
+            (Array.isArray(p.categories) ? p.categories[0]?.name : p.categories?.name);
+          
+          return {
+            id: p.id,
+            name: p.name,
+            slug: p.slug || p.id,
+            price: p.price,
+            originalPrice: p.original_price,
+            imageUrl: p.images?.[0]?.image_url || 'https://images.unsplash.com/photo-1596462502278-27bfdc403348?w=400&h=400&fit=crop',
+            rating: p.rating_average || p.rating,
+            isNew: true,
+            isSale: p.sale_price ? p.sale_price < p.price : false,
+            category: categoryName,
+          };
+        })}
+      />
 
-          {products.length > 0 ? (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 max-w-6xl mx-auto">
-              {products.map((product, index) => (
-                <div
-                  key={product.id}
-                  className="animate-fade-in-up"
-                  style={{ animationDelay: `${index * 0.1}s` }}
-                >
-                  <ProductCard
-                    id={product.id}
-                    name={product.name}
-                    price={product.price}
-                    originalPrice={product.original_price}
-                    imageUrl={product.images?.[0]?.image_url || 'https://images.unsplash.com/photo-1596462502278-27bfdc403348?w=400&h=400&fit=crop'}
-                    rating={product.rating || 4.5}
-                    reviewCount={0}
-                    isNew={false}
-                    isSale={false}
-                    slug={product.slug || product.id}
-                  />
-                </div>
-              ))}
-            </div>
-          ) : (
-            <div className="text-center py-12">
-              <p className="text-muted-foreground">No products available at the moment.</p>
-            </div>
-          )}
-        </div>
-      </section>
+      {/* Trending Products */}
+      <ProductCarousel
+        products={trendingProducts.map((p: Product): ProductCarouselItem => {
+          const categoryName = p.category_name || 
+            (Array.isArray(p.categories) ? p.categories[0]?.name : p.categories?.name);
+          
+          return {
+            id: p.id,
+            name: p.name,
+            slug: p.slug || p.id,
+            price: p.price,
+            originalPrice: p.original_price,
+            imageUrl: p.images?.[0]?.image_url || 'https://images.unsplash.com/photo-1596462502278-27bfdc403348?w=400&h=400&fit=crop',
+            rating: p.rating_average || p.rating,
+            isNew: p.is_new_arrival || false,
+            isSale: p.sale_price ? p.sale_price < p.price : false,
+            category: categoryName,
+          };
+        })}
+        title="Trending Now"
+        subtitle="What everyone is loving right now"
+        showViewAll={true}
+      />
 
       {/* Brand Values */}
       <BrandValues />
@@ -128,9 +167,6 @@ export default async function HomePage() {
 
       {/* Newsletter */}
       <Newsletter />
-
-      {/* FAQ */}
-      <FAQ />
     </>
   );
 }

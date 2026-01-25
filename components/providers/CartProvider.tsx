@@ -3,11 +3,15 @@
 import * as React from "react";
 import { createContext, useContext, ReactNode } from "react";
 import { CartItem } from "@/types/supabase";
+import { removeFromCart as removeFromCartAction, updateCartQuantity as updateCartQuantityAction } from "@/lib/actions/cart";
+import { useRouter } from "next/navigation";
 
 interface CartContextType {
   cartItems: CartItem[];
   subtotal: number;
   itemCount: number;
+  removeFromCart: (cartItemId: string) => Promise<void>;
+  updateQuantity: (cartItemId: string, quantity: number) => Promise<void>;
   refreshCart: () => Promise<void>;
 }
 
@@ -26,31 +30,53 @@ export function CartProvider({
 }: CartProviderProps) {
   const [cartItems, setCartItems] = React.useState<CartItem[]>(initialCartItems);
   const [subtotal, setSubtotal] = React.useState<number>(initialSubtotal);
+  const router = useRouter();
 
   const itemCount = React.useMemo(
     () => cartItems.reduce((sum, item) => sum + item.quantity, 0),
     [cartItems]
   );
 
-  const refreshCart = React.useCallback(async () => {
-    // This can be implemented when an API route is available
-    // For now, it's a placeholder that components can call
-    try {
-      // Future: fetch from /api/cart or use server action
-      window.location.reload();
-    } catch (error) {
-      console.error("Failed to refresh cart:", error);
+  const removeFromCart = React.useCallback(async (cartItemId: string) => {
+    const result = await removeFromCartAction(cartItemId);
+    if (result.success) {
+      setCartItems(prev => {
+        const updated = prev.filter(item => item.id !== cartItemId);
+        const newSubtotal = updated.reduce((acc, item) => acc + item.product.price * item.quantity, 0);
+        setSubtotal(newSubtotal);
+        return updated;
+      });
     }
   }, []);
+
+  const updateQuantity = React.useCallback(async (cartItemId: string, quantity: number) => {
+    const result = await updateCartQuantityAction(cartItemId, quantity);
+    if (result.success) {
+      setCartItems(prev => {
+        const updated = prev.map(item => 
+          item.id === cartItemId ? { ...item, quantity } : item
+        );
+        const newSubtotal = updated.reduce((acc, item) => acc + item.product.price * item.quantity, 0);
+        setSubtotal(newSubtotal);
+        return updated;
+      });
+    }
+  }, []);
+
+  const refreshCart = React.useCallback(async () => {
+    router.refresh();
+  }, [router]);
 
   const value = React.useMemo(
     () => ({
       cartItems,
       subtotal,
       itemCount,
+      removeFromCart,
+      updateQuantity,
       refreshCart,
     }),
-    [cartItems, subtotal, itemCount, refreshCart]
+    [cartItems, subtotal, itemCount, removeFromCart, updateQuantity, refreshCart]
   );
 
   return <CartContext.Provider value={value}>{children}</CartContext.Provider>;

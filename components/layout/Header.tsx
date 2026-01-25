@@ -62,16 +62,46 @@ const navLinks: NavLink[] = [
   { name: "Contact", href: "/contact" },
 ];
 
-export default function Header() {
+interface HeaderProps {
+  cartItems?: CartItem[];
+  subtotal?: number;
+}
+
+export default function Header({ cartItems: serverCartItems = [], subtotal: serverSubtotal = 0 }: HeaderProps = {}) {
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [isScrolled, setIsScrolled] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const pathname = usePathname();
   const router = useRouter();
-  const { cartItems } = useCart();
+  const { cartItems: contextCartItems } = useCart();
+  const [localCartCount, setLocalCartCount] = useState(0);
   
-  const cartItemCount = cartItems.reduce((total: number, item: CartItem) => total + item.quantity, 0);
+  // Use server cart items if available, otherwise use context cart items
+  const cartItems = serverCartItems.length > 0 ? serverCartItems : contextCartItems;
+  
+  // Check localStorage for guest cart count
+  useEffect(() => {
+    const updateLocalCartCount = () => {
+      try {
+        const { getLocalCartItemCount } = require("@/lib/utils/localCart");
+        setLocalCartCount(getLocalCartItemCount());
+      } catch {
+        setLocalCartCount(0);
+      }
+    };
+    
+    updateLocalCartCount();
+    // Poll for changes (localStorage doesn't trigger storage event on same tab)
+    const interval = setInterval(updateLocalCartCount, 1000);
+    
+    return () => clearInterval(interval);
+  }, []);
+  
+  // Use Supabase cart count if available, otherwise use local cart count
+  const cartItemCount = cartItems.length > 0 
+    ? cartItems.reduce((total: number, item: CartItem) => total + item.quantity, 0)
+    : localCartCount;
 
   // Handle scroll effect
   useEffect(() => {
@@ -131,29 +161,12 @@ export default function Header() {
       )}
     >
       {/* Top Bar */}
-      <div className="hidden lg:block border-b border-border/30 bg-primary/5">
+      <div className="hidden lg:block border-b border-border/30 bg-muted/30">
         <div className="container mx-auto px-4">
-          <div className="flex items-center justify-between h-8 text-xs">
-            <div className="flex items-center gap-4">
-              <span className="text-muted-foreground">
-                Free shipping on orders over $50
-              </span>
-            </div>
-            <div className="flex items-center gap-4">
-              <Link 
-                href="/store-locator" 
-                className="text-muted-foreground hover:text-foreground transition-colors"
-              >
-                Store Locator
-              </Link>
-              <span className="text-muted-foreground">|</span>
-              <Link 
-                href="/help" 
-                className="text-muted-foreground hover:text-foreground transition-colors"
-              >
-                Need Help?
-              </Link>
-            </div>
+          <div className="flex items-center justify-center h-8 text-xs">
+            <span className="text-muted-foreground">
+              Free shipping on orders over $50 • 100% Vegan & Cruelty-Free
+            </span>
           </div>
         </div>
       </div>
@@ -164,7 +177,7 @@ export default function Header() {
           {/* Mobile Menu */}
           <Sheet open={mobileMenuOpen} onOpenChange={setMobileMenuOpen}>
             <SheetTrigger asChild className="lg:hidden">
-              <Button variant="ghost" size="icon" aria-label="Open menu">
+              <Button variant="ghost" size="icon" className="border border-border/50 hover:border-primary/50" aria-label="Open menu">
                 <Menu className="h-5 w-5" />
               </Button>
             </SheetTrigger>
@@ -186,17 +199,17 @@ export default function Header() {
                       <div key={link.name} className="border-b border-border/30 last:border-0">
                         {link.submenu ? (
                           <details className="group">
-                            <summary className="flex items-center justify-between py-3 text-base font-medium text-foreground cursor-pointer list-none">
+                            <summary className="flex items-center justify-between py-3 text-base font-medium text-foreground cursor-pointer list-none border-b border-border/30">
                               {link.name}
                               <ChevronDown className="h-4 w-4 transition-transform group-open:rotate-180" />
                             </summary>
-                            <div className="pl-4 pb-2 space-y-2">
+                            <div className="pl-4 pb-2 space-y-2 bg-gray-50 rounded-md mt-2 p-2 border border-gray-200">
                               {link.submenu.map((subItem) => (
                                 <Link
                                   key={subItem.name}
                                   href={subItem.href}
                                   onClick={() => setMobileMenuOpen(false)}
-                                  className="block py-2 text-sm text-muted-foreground hover:text-primary transition-colors"
+                                  className="block py-2 px-2 text-sm text-gray-700 hover:text-primary hover:bg-primary/10 rounded-md transition-colors border border-transparent hover:border-primary/30"
                                 >
                                   {subItem.name}
                                 </Link>
@@ -225,19 +238,19 @@ export default function Header() {
                 {/* Mobile Actions */}
                 <div className="border-t border-border pt-4 space-y-4">
                   <div className="flex items-center justify-around">
-                    <Button variant="ghost" size="icon" asChild>
+                    <Button variant="ghost" size="icon" className="border border-border/50 hover:border-primary/50" asChild>
                       <Link href="/account" onClick={() => setMobileMenuOpen(false)}>
                         <User className="h-5 w-5" />
                         <span className="sr-only">Account</span>
                       </Link>
                     </Button>
-                    <Button variant="ghost" size="icon" asChild>
+                    <Button variant="ghost" size="icon" className="border border-border/50 hover:border-primary/50" asChild>
                       <Link href="/wishlist" onClick={() => setMobileMenuOpen(false)}>
                         <Heart className="h-5 w-5" />
                         <span className="sr-only">Wishlist</span>
                       </Link>
                     </Button>
-                    <Button variant="ghost" size="icon" className="relative" asChild>
+                    <Button variant="ghost" size="icon" className="relative border border-border/50 hover:border-primary/50" asChild>
                       <Link href="/cart" onClick={() => setMobileMenuOpen(false)}>
                         <ShoppingBag className="h-5 w-5" />
                         {cartItemCount > 0 && (
@@ -283,7 +296,7 @@ export default function Header() {
           </Link>
 
           {/* Desktop Navigation */}
-          <nav className="hidden lg:flex items-center gap-1">
+          <nav className="hidden lg:flex items-center gap-2">
             {navLinks.map((link) => (
               <div key={link.name} className="relative group">
                 <Link
@@ -291,7 +304,11 @@ export default function Header() {
                   className={cn(
                     "flex items-center gap-1 px-4 py-2 text-sm font-medium transition-all duration-200",
                     "rounded-lg",
-                    isActive(link.href)
+                    link.name === "Shop"
+                      ? isActive(link.href)
+                        ? "text-primary bg-primary/10 font-semibold"
+                        : "text-foreground hover:text-primary hover:bg-primary/10 font-semibold"
+                      : isActive(link.href)
                       ? "text-primary bg-primary/5"
                       : "text-foreground hover:text-primary hover:bg-primary/5"
                   )}
@@ -304,20 +321,20 @@ export default function Header() {
 
                 {/* Dropdown Menu */}
                 {link.submenu && (
-                  <div className="absolute left-0 top-full pt-2 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200">
-                    <div className="w-64 bg-popover border border-border rounded-lg shadow-lg overflow-hidden">
+                  <div className="absolute left-0 top-full pt-2 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50">
+                    <div className="w-64 bg-white border-2 border-primary/30 rounded-lg shadow-2xl overflow-hidden">
                       <div className="p-2">
                         {link.submenu.map((item) => (
                           <Link
                             key={item.name}
                             href={item.href}
-                            className="flex flex-col gap-0.5 p-3 rounded-md hover:bg-accent transition-colors group/item"
+                            className="flex flex-col gap-0.5 p-3 rounded-md hover:bg-primary/10 transition-colors group/item border border-transparent hover:border-primary/30"
                           >
-                            <span className="font-medium text-foreground group-hover/item:text-primary">
+                            <span className="font-medium text-gray-900 group-hover/item:text-primary transition-colors">
                               {item.name}
                             </span>
                             {item.description && (
-                              <span className="text-xs text-muted-foreground">
+                              <span className="text-xs text-gray-600">
                                 {item.description}
                               </span>
                             )}
@@ -339,11 +356,11 @@ export default function Header() {
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
                 <Input
                   type="search"
-                  placeholder="Search for products..."
+                  placeholder="Search products..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   className={cn(
-                    "w-48 xl:w-64 pl-9 transition-all duration-300",
+                    "w-56 xl:w-72 pl-9 border-border/50 focus:border-primary",
                     isSearchOpen ? "opacity-100" : "opacity-0 lg:opacity-100"
                   )}
                 />
@@ -355,7 +372,7 @@ export default function Header() {
               variant="ghost"
               size="icon"
               onClick={() => setIsSearchOpen(!isSearchOpen)}
-              className="lg:hidden"
+              className="lg:hidden border border-border/50 hover:border-primary/50"
               aria-label={isSearchOpen ? "Close search" : "Open search"}
             >
               {isSearchOpen ? <X className="h-5 w-5" /> : <Search className="h-5 w-5" />}
@@ -385,7 +402,7 @@ export default function Header() {
               variant="ghost"
               size="icon"
               asChild
-              className="hidden md:inline-flex relative"
+              className="hidden md:inline-flex relative border border-border/50 hover:border-primary/50"
               aria-label="Wishlist"
             >
               <Link href="/wishlist">
@@ -398,7 +415,7 @@ export default function Header() {
               variant="ghost"
               size="icon"
               asChild
-              className="hidden md:inline-flex"
+              className="hidden md:inline-flex border border-border/50 hover:border-primary/50"
               aria-label="Account"
             >
               <Link href="/account">
@@ -410,7 +427,7 @@ export default function Header() {
             <Button
               variant="ghost"
               size="icon"
-              className="relative group"
+              className="relative group border border-border/50 hover:border-primary/50"
               asChild
               aria-label={`Cart ${cartItemCount > 0 ? `with ${cartItemCount} items` : ''}`}
             >
