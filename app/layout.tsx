@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
 import ShippingBanner from "@/components/layout/ShippingBanner";
-import Header from "@/components/layout/Header";
+import ServerHeader from "@/components/layout/ServerHeader";
 import Footer from "@/components/layout/Footer";
 import { CartProvider } from "@/components/providers/CartProvider";
 import { ThemeProvider } from "@/components/providers/ThemeProvider";
@@ -41,7 +41,7 @@ export default function RootLayout({
         >
           <CartProvider>
             <ShippingBanner />
-            <Header />
+            <ServerHeader />
             <main className="flex-1">
               {children}
             </main>
