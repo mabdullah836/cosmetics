@@ -48,7 +48,7 @@ export default function CartPageClient({
         
         setCartItems(convertedItems);
         const localSubtotal = convertedItems.reduce(
-          (acc, item) => acc + item.product.price * item.quantity,
+          (acc, item) => acc + (item.product?.price || 0) * item.quantity,
           0
         );
         setSubtotal(localSubtotal);
@@ -71,7 +71,7 @@ export default function CartPageClient({
     setCartItems(prev => prev.filter(item => item.id !== cartItemId));
     setSubtotal(prev => {
       const item = cartItems.find(i => i.id === cartItemId);
-      return item ? prev - (item.product.price * item.quantity) : prev;
+      return item ? prev - ((item.product?.price || 0) * item.quantity) : prev;
     });
     toast.success("Item removed from cart");
   };
@@ -81,8 +81,8 @@ export default function CartPageClient({
     setCartItems(prev => {
       const updated = prev.map(item => {
         if (item.id === cartItemId) {
-          const oldTotal = item.product.price * item.quantity;
-          const newTotal = item.product.price * quantity;
+          const oldTotal = (item.product?.price || 0) * item.quantity;
+          const newTotal = (item.product?.price || 0) * quantity;
           setSubtotal(prevSubtotal => prevSubtotal - oldTotal + newTotal);
           return { ...item, quantity };
         }
@@ -139,12 +139,12 @@ export default function CartPageClient({
               <CardContent className="p-6">
                 <div className="flex gap-4">
                   <Link 
-                    href={`/product/${item.product.slug || item.product.id}`}
+                    href={`/product/${item.product?.slug || item.product?.id || ''}`}
                     className="relative w-24 h-24 flex-shrink-0 rounded-md overflow-hidden border"
                   >
                     <Image
-                      src={item.product.images?.[0]?.image_url || '/placeholder-product.jpg'}
-                      alt={item.product.name}
+                      src={item.product?.images?.[0]?.image_url || '/placeholder-product.jpg'}
+                      alt={item.product?.name || 'Product'}
                       fill
                       className="object-cover"
                       sizes="96px"
@@ -153,15 +153,15 @@ export default function CartPageClient({
                   
                   <div className="flex-1 min-w-0">
                     <Link 
-                      href={`/product/${item.product.slug || item.product.id}`}
+                      href={`/product/${item.product?.slug || item.product?.id || ''}`}
                       className="block"
                     >
                       <h3 className="font-semibold text-lg hover:text-primary transition-colors mb-2">
-                        {item.product.name}
+                        {item.product?.name || 'Product'}
                       </h3>
                     </Link>
                     <p className="text-muted-foreground mb-4">
-                      ${item.product.price.toFixed(2)}
+                      ${(item.product?.price || 0).toFixed(2)}
                     </p>
                     
                     <div className="flex items-center justify-between">
@@ -188,7 +188,7 @@ export default function CartPageClient({
                       
                       <div className="flex items-center gap-4">
                         <p className="font-bold text-lg">
-                          ${(item.product.price * item.quantity).toFixed(2)}
+                          ${((item.product?.price || 0) * item.quantity).toFixed(2)}
                         </p>
                         <Button
                           variant="ghost"

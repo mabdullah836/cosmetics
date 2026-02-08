@@ -84,7 +84,7 @@ export default async function AccountPage() {
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-gray-900 mb-2">My Account</h1>
           <p className="text-gray-600">
-            Welcome back, {profile?.full_name || session.user.email?.split("@")[0] || "User"}!
+            Welcome back, {profile?.full_name || (session.user.email ? session.user.email.split("@")?.[0] : null) || "User"}!
           </p>
         </div>
 

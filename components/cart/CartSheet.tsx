@@ -42,17 +42,17 @@ const CartSheet = ({ cartItems, subtotal }: CartSheetProps) => {
                   <div key={item.id} className="flex items-center border-b py-4">
                     <div className="relative w-24 h-24 mr-4">
                       <Image 
-                        src={item.product.images[0]?.url || '/placeholder.svg'}
-                        alt={item.product.name}
+                        src={item.product?.images?.[0]?.url || '/placeholder.svg'}
+                        alt={item.product?.name || 'Product'}
                         fill
                         className="object-cover rounded-md"
                       />
                     </div>
                     <div className="flex-grow">
-                      <Link href={`/product/${item.product.slug}`} className="font-semibold hover:underline">{item.product.name}</Link>
+                      <Link href={`/product/${item.product?.slug || item.product?.id || ''}`} className="font-semibold hover:underline">{item.product?.name || 'Product'}</Link>
                       <p className="text-sm text-muted-foreground">Quantity: {item.quantity}</p>
                     </div>
-                    <p className="font-bold">${(item.product.price * item.quantity).toFixed(2)}</p>
+                    <p className="font-bold">${((item.product?.price || 0) * item.quantity).toFixed(2)}</p>
                   </div>
                 ))}
               </div>

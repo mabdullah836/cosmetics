@@ -160,8 +160,8 @@ export default async function OrderDetailPage({ params }: OrderDetailPageProps) 
                       {primaryImage && (
                         <div className="w-20 h-20 rounded-md overflow-hidden bg-gray-200 flex-shrink-0">
                           <img
-                            src={primaryImage.image_url}
-                            alt={item.product_name}
+                            src={primaryImage?.image_url || '/placeholder.svg'}
+                            alt={item?.product_name || 'Product'}
                             className="w-full h-full object-cover"
                           />
                         </div>

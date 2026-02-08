@@ -14,27 +14,32 @@ export default function ProductImageGallery({ images, productName }: Props) {
   const list =
     images.length > 0
       ? images
-      : [{ image_url: "https://images.unsplash.com/photo-1596462502278-27bfdc403348?w=800" } as any];
+      : [
+          {
+            image_url:
+              "https://images.unsplash.com/photo-1596462502278-27bfdc403348?w=800",
+          } as ProductImage,
+        ];
 
-  const [active, setActive] = useState(list[0].image_url);
+  const [active, setActive] = useState(list[0]?.image_url || list[0]?.image_url || '');
 
   return (
-    <div className="flex gap-6">
+    <div className="flex gap-4">
       {/* Thumbnails */}
-      <div className="flex flex-col gap-3">
+      <div className="flex flex-col gap-2">
         {list.map((img) => (
           <button
-            key={img.image_url}
-            onMouseEnter={() => setActive(img.image_url)}
+            key={img?.image_url}
+            onMouseEnter={() => setActive(img?.image_url || '')}
             className={cn(
-              "w-16 h-16 border rounded",
-              active === img.image_url
-                ? "border-primary"
-                : "border-border hover:border-muted-foreground"
+              "h-16 w-16 border rounded-lg overflow-hidden transition",
+              active === img?.image_url
+                ? "border-gray-900"
+                : "border-gray-200 hover:border-gray-400"
             )}
           >
             <Image
-              src={img.image_url}
+              src={img?.image_url || '/placeholder.svg'}
               alt={productName}
               width={64}
               height={64}
@@ -44,14 +49,14 @@ export default function ProductImageGallery({ images, productName }: Props) {
         ))}
       </div>
 
-      {/* Main image */}
-      <div className="relative w-[420px] h-[420px] border rounded">
+      {/* Main Image */}
+      <div className="relative flex-1 aspect-square border rounded-xl bg-white overflow-hidden">
         <Image
           src={active}
           alt={productName}
           fill
-          className="object-contain"
           priority
+          className="object-contain transition-transform duration-300 hover:scale-105"
         />
       </div>
     </div>

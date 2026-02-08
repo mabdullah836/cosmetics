@@ -36,7 +36,7 @@ export const createOrder = async (
       .eq('user_id', userId)
       .maybeSingle();
 
-    if (!cart || cart.items.length === 0) {
+    if (!cart || !cart.items || cart.items.length === 0) {
       return { error: MESSAGES.ORDER.EMPTY_CART };
     }
 
@@ -77,8 +77,8 @@ export const createOrder = async (
       
       if (cart) {
         const itemsToDelete = cart.items
-          .filter((item: any) => unavailableIds.includes(item.product_id))
-          .map((item: any) => item.id);
+          ?.filter((item: any) => unavailableIds.includes(item.product_id))
+          ?.map((item: any) => item.id) || [];
         
         if (itemsToDelete.length > 0) {
           await supabase.from('cart_items').delete().in('id', itemsToDelete);
