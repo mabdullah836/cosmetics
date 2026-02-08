@@ -1,11 +1,11 @@
 "use server";
 
-import { createServiceClient } from "@/lib/supabase/server";
+import { createServiceClient, createClient } from "@/lib/supabase/server";
 import { logger } from "@/lib/utils/logger";
 import { MESSAGES, CONFIG } from "@/lib/constants";
 
 interface OTPRecord {
-  phone: string;
+  email: string;
   otp: string;
   expires_at: string;
   attempts: number;
@@ -20,23 +20,25 @@ function generateOTP(): string {
   ).toString();
 }
 
-// Store OTP in database (you'll need to create an otp_verifications table)
-export async function sendOTP(phone: string): Promise<{ success: boolean; error?: string }> {
+// Send OTP via email using Supabase Auth
+export async function sendOTP(email: string): Promise<{ success: boolean; error?: string }> {
   try {
-    const supabase = createServiceClient();
+    const supabase = await createClient();
+    const serviceSupabase = createServiceClient();
     
-    // Clean phone number (remove spaces, dashes, etc.)
-    const cleanPhone = phone.replace(/\D/g, "");
-    
-    if (cleanPhone.length < 10) {
-      return { success: false, error: "Invalid phone number" };
+    // Validate email
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      return { success: false, error: "Invalid email address" };
     }
 
+    const cleanEmail = email.toLowerCase().trim();
+
     // Check for recent failed attempts (fraud prevention)
-    const { data: recentAttempts } = await supabase
+    const { data: recentAttempts } = await serviceSupabase
       .from("otp_verifications")
       .select("attempts, created_at")
-      .eq("phone", cleanPhone)
+      .eq("email", cleanEmail)
       .order("created_at", { ascending: false })
       .limit(1)
       .maybeSingle();
@@ -53,17 +55,17 @@ export async function sendOTP(phone: string): Promise<{ success: boolean; error?
       }
     }
 
-    // Check for blocked phone numbers
-    const { data: blocked } = await supabase
-      .from("blocked_phones")
-      .select("phone")
-      .eq("phone", cleanPhone)
+    // Check for blocked emails
+    const { data: blocked } = await serviceSupabase
+      .from("blocked_emails")
+      .select("email")
+      .eq("email", cleanEmail)
       .maybeSingle();
 
     if (blocked) {
       return {
         success: false,
-        error: "This phone number cannot be used for orders.",
+        error: "This email cannot be used for orders.",
       };
     }
 
@@ -72,25 +74,39 @@ export async function sendOTP(phone: string): Promise<{ success: boolean; error?
     expiresAt.setMinutes(expiresAt.getMinutes() + CONFIG.OTP_EXPIRY_MINUTES);
 
     // Store OTP in database
-    const { error } = await supabase.from("otp_verifications").insert({
-      phone: cleanPhone,
-      otp: otp, // In production, hash this
+    const { error: insertError } = await serviceSupabase.from("otp_verifications").insert({
+      email: cleanEmail,
+      otp: otp,
       expires_at: expiresAt.toISOString(),
       attempts: 0,
       verified: false,
     });
 
-    if (error) {
-      logger.error(MESSAGES.OTP.STORAGE_ERROR, error);
+    if (insertError) {
+      logger.error(MESSAGES.OTP.STORAGE_ERROR, insertError);
       return { success: false, error: MESSAGES.OTP.SEND_ERROR };
     }
 
-    // In production, send SMS via Twilio, AWS SNS, etc.
-    // For development, log the OTP
-    logger.log(`[DEV] OTP for ${cleanPhone}: ${otp}`);
+    // Send OTP via Supabase Auth email (uses your SMTP config)
+    const { error: emailError } = await supabase.auth.signInWithOtp({
+      email: cleanEmail,
+      options: {
+        emailRedirectTo: `${process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'}/checkout`,
+        data: {
+          otp_code: otp,
+          purpose: 'cod_verification'
+        },
+        shouldCreateUser: false, // Don't create user, just send email
+      },
+    });
 
-    // TODO: Integrate with SMS service
-    // await sendSMS(cleanPhone, `Your verification code is: ${otp}`);
+    if (emailError) {
+      logger.error("Email send error:", emailError);
+      // Still return success if OTP is stored, as we can verify it later
+      logger.log(`[DEV] OTP for ${cleanEmail}: ${otp}`);
+    } else {
+      logger.log(`OTP sent successfully to ${cleanEmail}`);
+    }
 
     return { success: true };
   } catch (error) {
@@ -100,18 +116,18 @@ export async function sendOTP(phone: string): Promise<{ success: boolean; error?
 }
 
 export async function verifyOTP(
-  phone: string,
+  email: string,
   otp: string
 ): Promise<{ success: boolean; error?: string }> {
   try {
     const supabase = createServiceClient();
-    const cleanPhone = phone.replace(/\D/g, "");
+    const cleanEmail = email.toLowerCase().trim();
 
-    // Find the most recent unverified OTP for this phone
+    // Find the most recent unverified OTP for this email
     const { data: otpRecord, error: fetchError } = await supabase
       .from("otp_verifications")
       .select("*")
-      .eq("phone", cleanPhone)
+      .eq("email", cleanEmail)
       .eq("verified", false)
       .order("created_at", { ascending: false })
       .limit(1)

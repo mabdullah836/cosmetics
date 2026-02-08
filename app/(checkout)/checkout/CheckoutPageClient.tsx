@@ -73,7 +73,7 @@ export default function CheckoutPageClient({
         
         setLocalCartItems(convertedItems);
         const localSubtotal = convertedItems.reduce(
-          (acc, item) => acc + item.product.price * item.quantity,
+          (acc, item) => acc + (item.product?.price || 0) * item.quantity,
           0
         );
         setLocalSubtotal(localSubtotal);
@@ -143,9 +143,10 @@ export default function CheckoutPageClient({
 
     // Check for COD OTP verification
     if (paymentMethod === "COD" && !skipOTPCheck && !isOTPVerified) {
-      // Validate phone number first
-      if (!phone || phone.length < 10) {
-        toast.error("Please enter a valid phone number for COD orders");
+      // Validate email first
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!email || !emailRegex.test(email)) {
+        toast.error("Please enter a valid email address for COD orders");
         return;
       }
       setShowOTPModal(true);
@@ -267,22 +268,6 @@ export default function CheckoutPageClient({
                   <div className="space-y-2">
                     <Label htmlFor="email">
                       Email address <span className="text-destructive">*</span>
-                    </Label>
-                    <Input
-                      id="email"
-                      type="email"
-                      value={email}
-                      onChange={(e) => setEmail(e.target.value)}
-                      required
-                      placeholder="your@email.com"
-                    />
-                    <p className="text-sm text-muted-foreground">
-                      Used for order updates and confirmation
-                    </p>
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="phone">
-                      Phone number <span className="text-destructive">*</span>
                       {paymentMethod === "COD" && (
                         <span className="text-xs text-yellow-600 ml-2">
                           (Required for COD verification)
@@ -290,23 +275,39 @@ export default function CheckoutPageClient({
                       )}
                     </Label>
                     <Input
-                      id="phone"
-                      type="tel"
-                      value={phone}
+                      id="email"
+                      type="email"
+                      value={email}
                       onChange={(e) => {
-                        setPhone(e.target.value);
-                        // Reset OTP verification if phone changes
+                        setEmail(e.target.value);
+                        // Reset OTP verification if email changes
                         if (isOTPVerified) {
                           setIsOTPVerified(false);
                         }
                       }}
                       required
-                      placeholder="+91 1234567890"
+                      placeholder="your@email.com"
                     />
                     <p className="text-sm text-muted-foreground">
                       {paymentMethod === "COD"
-                        ? "We'll send an OTP to verify your phone number for COD orders"
-                        : "Courier may contact you for delivery"}
+                        ? "We'll send an OTP to verify your email for COD orders"
+                        : "Used for order updates and confirmation"}
+                    </p>
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="phone">
+                      Phone number <span className="text-destructive">*</span>
+                    </Label>
+                    <Input
+                      id="phone"
+                      type="tel"
+                      value={phone}
+                      onChange={(e) => setPhone(e.target.value)}
+                      required
+                      placeholder="+91 1234567890"
+                    />
+                    <p className="text-sm text-muted-foreground">
+                      Courier may contact you for delivery
                     </p>
                   </div>
                 </CardContent>
@@ -521,11 +522,11 @@ export default function CheckoutPageClient({
                               Cash on Delivery (COD)
                             </span>
                             <span className="text-xs bg-yellow-100 text-yellow-800 px-2 py-1 rounded">
-                              Phone verification required
+                              Email verification required
                             </span>
                           </div>
                           <p className="text-sm text-muted-foreground mt-1">
-                            Pay when your order is delivered. Phone number verification required.
+                            Pay when your order is delivered. Email verification required.
                           </p>
                         </div>
                       </label>
@@ -579,10 +580,10 @@ export default function CheckoutPageClient({
                         <div className="relative w-16 h-16 rounded-md overflow-hidden border flex-shrink-0">
                           <Image
                             src={
-                              item.product.images?.[0]?.image_url ||
+                              item.product?.images?.[0]?.image_url ||
                               "/placeholder-product.jpg"
                             }
-                            alt={item.product.name}
+                            alt={item.product?.name || 'Product'}
                             fill
                             className="object-cover"
                             sizes="64px"
@@ -590,13 +591,13 @@ export default function CheckoutPageClient({
                         </div>
                         <div className="flex-1 min-w-0">
                           <p className="text-sm font-medium line-clamp-2">
-                            {item.product.name}
+                            {item.product?.name || 'Product'}
                           </p>
                           <p className="text-xs text-muted-foreground">
                             Qty: {item.quantity}
                           </p>
                           <p className="text-sm font-semibold mt-1">
-                            ${(item.product.price * item.quantity).toFixed(2)}
+                            ${((item.product?.price || 0) * item.quantity).toFixed(2)}
                           </p>
                         </div>
                       </div>
@@ -668,7 +669,7 @@ export default function CheckoutPageClient({
       <OTPVerificationModal
         open={showOTPModal}
         onOpenChange={setShowOTPModal}
-        phone={phone}
+        email={email}
         onVerified={handleOTPVerified}
       />
     </>

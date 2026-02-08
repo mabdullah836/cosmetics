@@ -17,14 +17,14 @@ import { toast } from "sonner";
 interface OTPVerificationModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  phone: string;
+  email: string;
   onVerified: () => void;
 }
 
 export default function OTPVerificationModal({
   open,
   onOpenChange,
-  phone,
+  email,
   onVerified,
 }: OTPVerificationModalProps) {
   const [otp, setOtp] = useState("");
@@ -34,10 +34,10 @@ export default function OTPVerificationModal({
   const [countdown, setCountdown] = useState(0);
 
   useEffect(() => {
-    if (open && phone) {
+    if (open && email) {
       handleSendOTP();
     }
-  }, [open, phone]);
+  }, [open, email]);
 
   useEffect(() => {
     if (countdown > 0) {
@@ -48,13 +48,13 @@ export default function OTPVerificationModal({
 
   const handleSendOTP = async () => {
     setIsSending(true);
-    const result = await sendOTP(phone);
+    const result = await sendOTP(email);
     setIsSending(false);
 
     if (result.success) {
       setOtpSent(true);
       setCountdown(60); // 60 second cooldown
-      toast.success("OTP sent to your phone number");
+      toast.success("OTP sent to your email address");
     } else {
       toast.error(result.error || "Failed to send OTP");
     }
@@ -69,11 +69,11 @@ export default function OTPVerificationModal({
     }
 
     setIsVerifying(true);
-    const result = await verifyOTP(phone, otp);
+    const result = await verifyOTP(email, otp);
     setIsVerifying(false);
 
     if (result.success) {
-      toast.success("Phone verified successfully");
+      toast.success("Email verified successfully");
       onVerified();
       onOpenChange(false);
     } else {
@@ -87,11 +87,11 @@ export default function OTPVerificationModal({
       <DialogContent className="sm:max-w-md bg-white">
         <DialogHeader>
           <DialogTitle className="text-gray-900 font-bold text-xl">
-            Verify Your Phone Number
+            Verify Your Email Address
           </DialogTitle>
           <DialogDescription className="text-gray-600 mt-2">
-            We need to verify your phone number for Cash on Delivery orders. 
-            An OTP has been sent to <strong>{phone}</strong>
+            We need to verify your email address for Cash on Delivery orders. 
+            An OTP has been sent to <strong>{email}</strong>
           </DialogDescription>
         </DialogHeader>
 
@@ -115,7 +115,7 @@ export default function OTPVerificationModal({
               className="border-2 border-gray-300 focus:border-primary text-center text-2xl tracking-widest"
             />
             <p className="text-xs text-muted-foreground">
-              Enter the 6-digit code sent to your phone
+              Enter the 6-digit code sent to your email
             </p>
           </div>
 
@@ -162,8 +162,8 @@ export default function OTPVerificationModal({
         </form>
 
         <p className="text-xs text-center text-muted-foreground mt-4">
-          By verifying, you confirm that this phone number belongs to you and 
-          you will be available to receive the order.
+          By verifying, you confirm that this email address belongs to you and 
+          you'll receive order updates at this address.
         </p>
       </DialogContent>
     </Dialog>
