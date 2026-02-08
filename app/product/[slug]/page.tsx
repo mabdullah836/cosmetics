@@ -186,21 +186,23 @@ export default async function ProductPage({ params }: ProductPageProps) {
           </Breadcrumb>
         </div>
 
-        {/* Main Product Grid */}
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-8 mb-16">
-          {/* Left Column - Image Gallery */}
-          <div className="lg:col-span-7">
-            <div className="sticky top-24">
-              <ProductImageGallery 
-                images={productWithData.images || []} 
+        {/* Main Product Section */}
+        <div className="mb-16">
+          <div className="grid grid-cols-1 lg:grid-cols-[1fr_1fr] gap-6 lg:gap-10 items-start">
+
+            {/* Image Gallery */}
+            <div className="lg:sticky lg:top-24">
+              <ProductImageGallery
+                images={productWithData.images || []}
                 productName={product.name}
               />
             </div>
-          </div>
 
-          {/* Middle Column - Product Info */}
-          <div className="lg:col-span-5">
-            <ProductInfo product={productWithData} />
+            {/* Product Info */}
+            <div>
+              <ProductInfo product={productWithData} />
+            </div>
+
           </div>
         </div>
 

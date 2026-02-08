@@ -5,25 +5,25 @@ import { cva, type VariantProps } from "class-variance-authority"
 import { cn } from "@/lib/utils"
 
 const buttonVariants = cva(
-  "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0",
+  "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1 disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0",
   {
     variants: {
       variant: {
         default:
-          "bg-primary text-primary-foreground shadow hover:bg-primary/90 hover:shadow-md transition-all duration-200 border-2 border-primary",
+          "bg-primary text-primary-foreground border-2 border-primary shadow-sm hover:bg-primary/90 hover:border-primary/90 hover:shadow-md active:scale-[0.98]",
         destructive:
-          "bg-destructive text-destructive-foreground shadow-sm hover:bg-destructive/90 border-2 border-destructive",
+          "bg-destructive text-destructive-foreground border-2 border-destructive shadow-sm hover:bg-destructive/90 hover:border-destructive/90 hover:shadow-md active:scale-[0.98]",
         outline:
-          "border-2 border-primary bg-background shadow-sm hover:bg-primary/10 hover:text-primary",
+          "border-2 border-input bg-background shadow-sm hover:bg-accent hover:text-accent-foreground hover:border-primary/40 hover:shadow active:scale-[0.98]",
         secondary:
-          "bg-secondary text-secondary-foreground shadow-sm hover:bg-secondary/80 border-2 border-secondary",
-        ghost: "border-2 border-primary/30 hover:bg-primary/10 hover:text-primary hover:border-primary",
-        link: "text-primary underline-offset-4 hover:underline border-0",
+          "bg-secondary text-secondary-foreground border-2 border-secondary/20 shadow-sm hover:bg-secondary/80 hover:border-secondary/30 hover:shadow active:scale-[0.98]",
+        ghost: "hover:bg-accent hover:text-accent-foreground hover:shadow-sm active:scale-[0.98]",
+        link: "text-primary underline-offset-4 hover:underline",
       },
       size: {
-        default: "h-9 px-4 py-2",
+        default: "h-10 px-4 py-2",
         sm: "h-8 rounded-md px-3 text-xs",
-        lg: "h-10 rounded-md px-8",
+        lg: "h-11 rounded-md px-8",
         icon: "h-9 w-9",
       },
     },

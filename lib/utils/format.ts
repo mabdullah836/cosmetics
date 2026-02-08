@@ -27,3 +27,7 @@ export const calculateDiscount = (originalPrice: number, currentPrice: number): 
   if (originalPrice <= currentPrice) return 0;
   return Math.round((1 - currentPrice / originalPrice) * 100);
 };
+
+export const formatPrice = (price: number): string => {
+  return formatCurrency(price);
+};

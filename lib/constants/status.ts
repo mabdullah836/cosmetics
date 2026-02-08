@@ -39,3 +39,13 @@ export type PaymentStatus = typeof PAYMENT_STATUS[keyof typeof PAYMENT_STATUS];
 export type PaymentMethod = typeof PAYMENT_METHOD[keyof typeof PAYMENT_METHOD];
 export type StockLevel = typeof STOCK_LEVEL[keyof typeof STOCK_LEVEL];
 export type AddressType = typeof ADDRESS_TYPE[keyof typeof ADDRESS_TYPE];
+
+const ADDRESS_TYPE_LABELS: Record<AddressType, string> = {
+  [ADDRESS_TYPE.SHIPPING]: "Shipping",
+  [ADDRESS_TYPE.BILLING]: "Billing",
+  [ADDRESS_TYPE.BOTH]: "Shipping & Billing",
+};
+
+export function getAddressTypeLabel(type: AddressType): string {
+  return ADDRESS_TYPE_LABELS[type] ?? type;
+}
