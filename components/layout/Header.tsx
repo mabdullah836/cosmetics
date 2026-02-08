@@ -1,8 +1,8 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
-import { usePathname, useRouter } from "next/navigation";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -10,6 +10,12 @@ import {
   SheetContent,
   SheetTrigger,
 } from "@/components/ui/sheet";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import {
   Search,
   ShoppingBag,
@@ -19,61 +25,32 @@ import {
   X,
   ChevronDown,
   Sparkles,
+  HelpCircle,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useCart } from "@/components/providers/CartProvider";
 import { toast } from "sonner";
 import { CartItem } from "@/types/supabase";
-
-interface NavLink {
-  name: string;
-  href: string;
-  submenu?: Array<{
-    name: string;
-    href: string;
-    description?: string;
-  }>;
-}
-
-const navLinks: NavLink[] = [
-  {
-    name: "Shop",
-    href: "/products",
-    submenu: [
-      { name: "All Products", href: "/products", description: "Browse our full collection" },
-      { name: "New Arrivals", href: "/products?new=true", description: "Latest additions" },
-      { name: "Best Sellers", href: "/products?bestsellers=true", description: "Customer favorites" },
-      { name: "Sale", href: "/products?sale=true", description: "Limited time offers" },
-    ],
-  },
-  {
-    name: "Categories",
-    href: "/categories",
-    submenu: [
-      { name: "Skincare", href: "/categories/skincare" },
-      { name: "Makeup", href: "/categories/makeup" },
-      { name: "Fragrance", href: "/categories/fragrance" },
-      { name: "Haircare", href: "/categories/haircare" },
-      { name: "Bath & Body", href: "/categories/bath-body" },
-    ],
-  },
-  { name: "About", href: "/about" },
-  { name: "Blog", href: "/blog" },
-  { name: "Contact", href: "/contact" },
-];
+import { NAV_CATEGORIES, SUPPORT_MENU_ITEMS } from "@/lib/constants/nav";
+import LoginForm from "@/components/auth/LoginForm";
 
 interface HeaderProps {
   cartItems?: CartItem[];
   subtotal?: number;
+  isAuthenticated?: boolean;
 }
 
-export default function Header({ cartItems: serverCartItems = [], subtotal: serverSubtotal = 0 }: HeaderProps = {}) {
+export default function Header({ cartItems: serverCartItems = [], subtotal: serverSubtotal = 0, isAuthenticated = false }: HeaderProps = {}) {
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [isScrolled, setIsScrolled] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [openNavMenu, setOpenNavMenu] = useState<string | null>(null);
+  const [showLoginModal, setShowLoginModal] = useState(false);
+  const navMenuCloseTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const pathname = usePathname();
   const router = useRouter();
+  const searchParams = useSearchParams();
   const { cartItems: contextCartItems } = useCart();
   const [localCartCount, setLocalCartCount] = useState(0);
   
@@ -144,11 +121,60 @@ export default function Header({ cartItems: serverCartItems = [], subtotal: serv
     });
   };
 
+  const handleAccountClick = (e: React.MouseEvent) => {
+    e.preventDefault();
+    if (isAuthenticated) {
+      router.push("/account");
+    } else {
+      setShowLoginModal(true);
+    }
+  };
+
+  const handleLoginSuccess = () => {
+    setShowLoginModal(false);
+    router.push("/account");
+  };
+
   const isActive = (href: string) => {
     if (href === "/") {
       return pathname === "/";
     }
     return pathname?.startsWith(href);
+  };
+
+  const isCategoryActive = (categoryHref: string) => {
+    if (pathname !== "/products") return false;
+    const category = searchParams?.get("category");
+    try {
+      const url = new URL(categoryHref, "https://x");
+      return url.searchParams.get("category") === category;
+    } catch {
+      return false;
+    }
+  };
+
+  const handleNavMenuOpen = (menuId: string) => {
+    if (navMenuCloseTimeoutRef.current) {
+      clearTimeout(navMenuCloseTimeoutRef.current);
+      navMenuCloseTimeoutRef.current = null;
+    }
+    setOpenNavMenu(menuId);
+  };
+
+  const handleNavMenuClose = () => {
+    if (navMenuCloseTimeoutRef.current) {
+      clearTimeout(navMenuCloseTimeoutRef.current);
+    }
+    navMenuCloseTimeoutRef.current = setTimeout(() => {
+      setOpenNavMenu(null);
+    }, 150);
+  };
+
+  const cancelNavMenuClose = () => {
+    if (navMenuCloseTimeoutRef.current) {
+      clearTimeout(navMenuCloseTimeoutRef.current);
+      navMenuCloseTimeoutRef.current = null;
+    }
   };
 
   return (
@@ -194,55 +220,89 @@ export default function Header({ cartItems: serverCartItems = [], subtotal: serv
 
                 {/* Mobile Navigation */}
                 <nav className="flex-1 py-6 overflow-y-auto">
-                  <div className="space-y-1">
-                    {navLinks.map((link) => (
-                      <div key={link.name} className="border-b border-border/30 last:border-0">
-                        {link.submenu ? (
-                          <details className="group">
-                            <summary className="flex items-center justify-between py-3 text-base font-medium text-foreground cursor-pointer list-none border-b border-border/30">
-                              {link.name}
-                              <ChevronDown className="h-4 w-4 transition-transform group-open:rotate-180" />
-                            </summary>
-                            <div className="pl-4 pb-2 space-y-2 bg-gray-50 rounded-md mt-2 p-2 border border-gray-200">
-                              {link.submenu.map((subItem) => (
-                                <Link
-                                  key={subItem.name}
-                                  href={subItem.href}
-                                  onClick={() => setMobileMenuOpen(false)}
-                                  className="block py-2 px-2 text-sm text-gray-700 hover:text-primary hover:bg-primary/10 rounded-md transition-colors border border-transparent hover:border-primary/30"
-                                >
-                                  {subItem.name}
-                                </Link>
-                              ))}
-                            </div>
-                          </details>
-                        ) : (
-                          <Link
-                            href={link.href}
-                            onClick={() => setMobileMenuOpen(false)}
-                            className={cn(
-                              "block py-3 text-base font-medium transition-colors",
-                              isActive(link.href)
-                                ? "text-primary"
-                                : "text-foreground hover:text-primary"
-                            )}
-                          >
-                            {link.name}
-                          </Link>
-                        )}
+                  <div className="space-y-0">
+                    {/* Categories (collapsible per category) */}
+                    {NAV_CATEGORIES.map((category) => (
+                      <div key={category.id} className="border-b border-border/30 last:border-0">
+                        <details className="group">
+                          <summary className="flex items-center justify-between py-3 text-base font-medium text-foreground cursor-pointer list-none">
+                            {category.name}
+                            <ChevronDown className="h-4 w-4 shrink-0 transition-transform group-open:rotate-180" />
+                          </summary>
+                          <div className="pl-4 pb-3 pt-1 space-y-1 bg-muted/30 rounded-md mt-1 p-2 border border-border/50">
+                            <Link
+                              href={category.href}
+                              onClick={() => setMobileMenuOpen(false)}
+                              className={cn(
+                                "block py-2 px-2 text-sm font-medium transition-colors rounded-md",
+                                isCategoryActive(category.href)
+                                  ? "text-primary bg-primary/10"
+                                  : "text-foreground hover:text-primary hover:bg-primary/10"
+                              )}
+                            >
+                              Shop all {category.name}
+                            </Link>
+                            {category.subCategories.map((sub) => (
+                              <Link
+                                key={sub.name}
+                                href={sub.href}
+                                onClick={() => setMobileMenuOpen(false)}
+                                className="block py-2 px-2 text-sm text-muted-foreground hover:text-primary hover:bg-primary/10 rounded-md transition-colors"
+                              >
+                                {sub.name}
+                              </Link>
+                            ))}
+                          </div>
+                        </details>
                       </div>
                     ))}
+                    {/* Support (collapsible) */}
+                    <div className="border-b border-border/30 last:border-0">
+                      <details className="group">
+                        <summary className="flex items-center justify-between py-3 text-base font-medium text-foreground cursor-pointer list-none">
+                          <span className="flex items-center gap-2">
+                            <HelpCircle className="h-4 w-4" />
+                            Support
+                          </span>
+                          <ChevronDown className="h-4 w-4 shrink-0 transition-transform group-open:rotate-180" />
+                        </summary>
+                        <div className="pl-4 pb-3 pt-1 space-y-1 bg-muted/30 rounded-md mt-1 p-2 border border-border/50">
+                          {SUPPORT_MENU_ITEMS.map((item) => (
+                            <Link
+                              key={item.id}
+                              href={item.href}
+                              onClick={() => setMobileMenuOpen(false)}
+                              className={cn(
+                                "block py-2 px-2 text-sm transition-colors rounded-md",
+                                isActive(item.href)
+                                  ? "text-primary font-medium bg-primary/10"
+                                  : "text-muted-foreground hover:text-primary hover:bg-primary/10"
+                              )}
+                            >
+                              {item.name}
+                            </Link>
+                          ))}
+                        </div>
+                      </details>
+                    </div>
                   </div>
                 </nav>
 
                 {/* Mobile Actions */}
                 <div className="border-t border-border pt-4 space-y-4">
                   <div className="flex items-center justify-around">
-                    <Button variant="ghost" size="icon" className="border border-border/50 hover:border-primary/50" asChild>
-                      <Link href="/account" onClick={() => setMobileMenuOpen(false)}>
-                        <User className="h-5 w-5" />
-                        <span className="sr-only">Account</span>
-                      </Link>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="border border-border/50 hover:border-primary/50"
+                      onClick={(e) => {
+                        handleAccountClick(e);
+                        setMobileMenuOpen(false);
+                      }}
+                      aria-label="Account"
+                    >
+                      <User className="h-5 w-5" />
+                      <span className="sr-only">Account</span>
                     </Button>
                     <Button variant="ghost" size="icon" className="border border-border/50 hover:border-primary/50" asChild>
                       <Link href="/wishlist" onClick={() => setMobileMenuOpen(false)}>
@@ -295,57 +355,141 @@ export default function Header({ cartItems: serverCartItems = [], subtotal: serv
             </span>
           </Link>
 
-          {/* Desktop Navigation */}
-          <nav className="hidden lg:flex items-center gap-2">
-            {navLinks.map((link) => (
-              <div key={link.name} className="relative group">
-                <Link
-                  href={link.href}
-                  className={cn(
-                    "flex items-center gap-1 px-4 py-2 text-sm font-medium transition-all duration-200",
-                    "rounded-lg",
-                    link.name === "Shop"
-                      ? isActive(link.href)
-                        ? "text-primary bg-primary/10 font-semibold"
-                        : "text-foreground hover:text-primary hover:bg-primary/10 font-semibold"
-                      : isActive(link.href)
-                      ? "text-primary bg-primary/5"
-                      : "text-foreground hover:text-primary hover:bg-primary/5"
-                  )}
+          {/* Desktop Navigation: hover to open (position under each trigger), no outline on items */}
+          <nav className="hidden lg:flex items-center gap-1">
+            {NAV_CATEGORIES.map((category) => (
+              <div
+                key={category.id}
+                onMouseEnter={() => handleNavMenuOpen(category.id)}
+                onMouseLeave={handleNavMenuClose}
+              >
+                <DropdownMenu
+                  open={openNavMenu === category.id}
+                  onOpenChange={(open) => {
+                    if (!open) {
+                      if (navMenuCloseTimeoutRef.current) {
+                        clearTimeout(navMenuCloseTimeoutRef.current);
+                      }
+                      setOpenNavMenu(null);
+                    }
+                  }}
+                  modal={false}
                 >
-                  {link.name}
-                  {link.submenu && (
-                    <ChevronDown className="h-3 w-3 transition-transform group-hover:rotate-180" />
-                  )}
-                </Link>
-
-                {/* Dropdown Menu */}
-                {link.submenu && (
-                  <div className="absolute left-0 top-full pt-2 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50">
-                    <div className="w-64 bg-white border-2 border-primary/30 rounded-lg shadow-2xl overflow-hidden">
-                      <div className="p-2">
-                        {link.submenu.map((item) => (
+                  <DropdownMenuTrigger asChild>
+                    <Button
+                      variant="ghost"
+                      className={cn(
+                        "gap-1 text-sm font-medium border-none",
+                        isCategoryActive(category.href) && "text-primary bg-primary/10"
+                      )}
+                      aria-expanded={openNavMenu === category.id}
+                      aria-haspopup="menu"
+                      aria-label={`${category.name} menu`}
+                      onPointerDown={(e) => e.preventDefault()}
+                    >
+                      {category.name}
+                      <ChevronDown
+                        className={cn(
+                          "h-3 w-3 shrink-0 transition-transform",
+                          openNavMenu === category.id && "rotate-180"
+                        )}
+                      />
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent
+                    align="start"
+                    className="w-[280px] min-w-[280px] rounded-lg bg-white p-0 shadow-lg md:w-[320px] md:min-w-[320px]"
+                    onCloseAutoFocus={(e) => e.preventDefault()}
+                  >
+                    <div className="p-2">
+                      <DropdownMenuItem asChild className="outline-none focus:outline-none focus:bg-accent">
+                        <Link
+                          href={category.href}
+                          className={cn(
+                            "block cursor-pointer rounded-md p-3 text-sm font-semibold outline-none focus:outline-none transition-colors hover:bg-accent hover:text-accent-foreground",
+                            isCategoryActive(category.href) && "bg-primary/10 text-primary"
+                          )}
+                        >
+                          Shop all {category.name}
+                        </Link>
+                      </DropdownMenuItem>
+                      {category.subCategories.map((sub) => (
+                        <DropdownMenuItem key={sub.name} asChild className="outline-none focus:outline-none focus:bg-accent">
                           <Link
-                            key={item.name}
-                            href={item.href}
-                            className="flex flex-col gap-0.5 p-3 rounded-md hover:bg-primary/10 transition-colors group/item border border-transparent hover:border-primary/30"
+                            href={sub.href}
+                            className="block cursor-pointer rounded-md p-3 text-sm outline-none focus:outline-none transition-colors hover:bg-accent hover:text-accent-foreground"
                           >
-                            <span className="font-medium text-gray-900 group-hover/item:text-primary transition-colors">
-                              {item.name}
-                            </span>
-                            {item.description && (
-                              <span className="text-xs text-gray-600">
-                                {item.description}
-                              </span>
-                            )}
+                            {sub.name}
                           </Link>
-                        ))}
-                      </div>
+                        </DropdownMenuItem>
+                      ))}
                     </div>
-                  </div>
-                )}
+                  </DropdownMenuContent>
+                </DropdownMenu>
               </div>
             ))}
+            {/* Support dropdown (hover to open) */}
+            <div
+              onMouseEnter={() => handleNavMenuOpen("support")}
+              onMouseLeave={handleNavMenuClose}
+            >
+              <DropdownMenu
+                open={openNavMenu === "support"}
+                onOpenChange={(open) => {
+                  if (!open) {
+                    if (navMenuCloseTimeoutRef.current) {
+                      clearTimeout(navMenuCloseTimeoutRef.current);
+                    }
+                    setOpenNavMenu(null);
+                  }
+                }}
+                modal={false}
+              >
+                <DropdownMenuTrigger asChild>
+                  <Button
+                    variant="ghost"
+                    className={cn(
+                      "group gap-1 text-sm font-medium outline-none focus:outline-none focus-visible:outline-none focus-visible:ring-0",
+                      SUPPORT_MENU_ITEMS.some((item) => isActive(item.href))
+                        ? "text-primary bg-primary/10"
+                        : "text-foreground hover:text-primary hover:bg-primary/5"
+                    )}
+                    aria-expanded={openNavMenu === "support"}
+                    aria-haspopup="menu"
+                    aria-label="Support menu"
+                    onPointerDown={(e) => e.preventDefault()}
+                  >
+                    <HelpCircle className="h-4 w-4" />
+                    Support
+                    <ChevronDown
+                      className={cn(
+                        "h-3 w-3 shrink-0 transition-transform",
+                        openNavMenu === "support" && "rotate-180"
+                      )}
+                    />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent
+                  align="end"
+                  className="w-52 rounded-lg bg-white shadow-lg"
+                  onCloseAutoFocus={(e) => e.preventDefault()}
+                >
+                  {SUPPORT_MENU_ITEMS.map((item) => (
+                    <DropdownMenuItem key={item.id} asChild className="outline-none focus:outline-none focus:bg-accent">
+                      <Link
+                        href={item.href}
+                        className={cn(
+                          "cursor-pointer outline-none focus:outline-none",
+                          isActive(item.href) && "bg-primary/10 text-primary font-medium"
+                        )}
+                      >
+                        {item.name}
+                      </Link>
+                    </DropdownMenuItem>
+                  ))}
+                </DropdownMenuContent>
+              </DropdownMenu>
+            </div>
           </nav>
 
           {/* Right Actions */}
@@ -414,13 +558,11 @@ export default function Header({ cartItems: serverCartItems = [], subtotal: serv
             <Button
               variant="ghost"
               size="icon"
-              asChild
+              onClick={handleAccountClick}
               className="hidden md:inline-flex border border-border/50 hover:border-primary/50"
               aria-label="Account"
             >
-              <Link href="/account">
-                <User className="h-5 w-5" />
-              </Link>
+              <User className="h-5 w-5" />
             </Button>
 
             {/* Cart */}
@@ -443,6 +585,14 @@ export default function Header({ cartItems: serverCartItems = [], subtotal: serv
           </div>
         </div>
       </div>
+
+      {/* Login Modal */}
+      <LoginForm
+        open={showLoginModal}
+        onOpenChange={setShowLoginModal}
+        onSuccess={handleLoginSuccess}
+        redirectTo="/account"
+      />
     </header>
   );
 }

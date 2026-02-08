@@ -16,10 +16,10 @@ const footerLinks = {
     { name: "Best Sellers", href: "/products?bestsellers=true" },
   ],
   help: [
-    { name: "Shipping", href: "/shipping" },
-    { name: "Returns", href: "/returns" },
+    { name: "Shipping & Returns", href: "/shipping-returns" },
     { name: "FAQ", href: "/faq" },
     { name: "Contact", href: "/contact" },
+    { name: "About", href: "/about" },
   ],
 };
 
@@ -103,16 +103,10 @@ export default function Footer() {
           </p>
           <div className="flex flex-wrap items-center justify-center gap-4">
             <Link
-              href="/privacy"
+              href="/privacy-policy"
               className="text-muted-foreground hover:text-primary transition-colors"
             >
-              Privacy
-            </Link>
-            <Link
-              href="/terms"
-              className="text-muted-foreground hover:text-primary transition-colors"
-            >
-              Terms
+              Privacy Policy
             </Link>
           </div>
         </div>

@@ -1,4 +1,3 @@
-import { cookies } from 'next/headers';
 import { auth } from '@/auth';
 import { createClient } from '@/lib/supabase/server';
 import Header from './Header';
@@ -24,8 +23,8 @@ const ServerHeader = async () => {
     subtotal = cartItems.reduce((acc, item) => acc + item.product.price * item.quantity, 0);
   }
   // For guest users, cart will be loaded from localStorage client-side
-
-  return <Header cartItems={cartItems} subtotal={subtotal} />;
+  
+  return <Header cartItems={cartItems} subtotal={subtotal} isAuthenticated={!!userId} />;
 };
 
 export default ServerHeader;
