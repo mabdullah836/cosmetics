@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { register } from "@/lib/actions/auth";
+import { login, register } from "@/lib/actions/auth";
 import {
   Dialog,
   DialogContent,
@@ -65,24 +65,29 @@ const LoginForm = ({
     setIsLoading(true);
 
     try {
-      const { data, error } = await supabase.auth.signInWithPassword({
-        email: loginEmail,
-        password: loginPassword,
-      });
+      // Use server action for login to ensure cookies are set properly
+      const formData = new FormData();
+      formData.append("email", loginEmail);
+      formData.append("password", loginPassword);
 
-      if (error) {
-        toast.error(error.message);
+      const result = await login(formData);
+
+      if (result.error) {
+        toast.error(result.error);
         setIsLoading(false);
         return;
       }
 
-      if (data.user) {
+      // Get the current user to check if login was successful (client-side check)
+      const { data: { user } } = await supabase.auth.getUser();
+
+      if (user) {
         // Migrate local cart to Supabase
         const localCart = getLocalCart();
         if (localCart.length > 0) {
           const migrationResult = await createCartFromLocalItems(
             localCart,
-            data.user.id
+            user.id
           );
 
           if (migrationResult.success) {
@@ -95,9 +100,11 @@ const LoginForm = ({
 
         toast.success("Logged in successfully");
         onOpenChange(false);
-        router.push(redirectTo);
-        router.refresh();
         onSuccess?.();
+        
+        // Navigate to trigger new request with cookies
+        // Use window.location for full page reload to ensure cookies are sent
+        window.location.href = redirectTo;
       }
     } catch (error) {
       toast.error("An error occurred. Please try again.");
@@ -154,29 +161,33 @@ const LoginForm = ({
       }
 
       if (result.success) {
-        // Wait a bit for session to be created, then migrate cart
-        setTimeout(async () => {
+        // Get the current user (client-side check)
+        const { data: { user } } = await supabase.auth.getUser();
+        
+        if (user) {
+          // Migrate local cart to Supabase
           const localCart = getLocalCart();
           if (localCart.length > 0) {
-            const { data: { user } } = await supabase.auth.getUser();
-            if (user) {
-              const migrationResult = await createCartFromLocalItems(
-                localCart,
-                user.id
-              );
-              if (migrationResult.success) {
-                clearLocalCart();
-                toast.success("Cart synced successfully");
-              }
+            const migrationResult = await createCartFromLocalItems(
+              localCart,
+              user.id
+            );
+            if (migrationResult.success) {
+              clearLocalCart();
+              toast.success("Cart synced successfully");
+            } else {
+              logger.error("Cart migration error:", migrationResult.error);
             }
           }
-        }, 500);
+        }
 
         toast.success("Account created successfully!");
         onOpenChange(false);
-        router.push(redirectTo);
-        router.refresh();
         onSuccess?.();
+        
+        // Navigate to trigger new request with cookies
+        // Use window.location for full page reload to ensure cookies are sent
+        window.location.href = redirectTo;
       }
     } catch (error) {
       toast.error("An error occurred. Please try again.");

@@ -1,6 +1,7 @@
 "use server";
 
 import { createClient } from "@/lib/supabase/server";
+import { revalidatePath } from "next/cache";
 
 export const login = async (formData: FormData) => {
   const email = formData.get("email") as string;
@@ -11,13 +12,16 @@ export const login = async (formData: FormData) => {
   }
 
   const supabase = await createClient(); // Server client
-  const { error } = await supabase.auth.signInWithPassword({ email, password });
+  const { data, error } = await supabase.auth.signInWithPassword({ email, password });
 
   if (error) {
     return { error: error.message };
   }
 
-  return { success: "Logged in successfully." };
+  // Revalidate to ensure server components get fresh session
+  revalidatePath("/", "layout");
+
+  return { success: "Logged in successfully.", userId: data.user?.id };
 };
 
 export const register = async (formData: FormData) => {
@@ -30,7 +34,7 @@ export const register = async (formData: FormData) => {
   }
 
   const supabase = await createClient(); // Server client
-  const { error } = await supabase.auth.signUp({
+  const { data, error } = await supabase.auth.signUp({
     email,
     password,
     options: {
@@ -42,9 +46,13 @@ export const register = async (formData: FormData) => {
     return { error: error.message };
   }
 
+  // Revalidate to ensure server components get fresh session
+  revalidatePath("/", "layout");
+
   return {
     success:
       "User registered successfully. Please check your email to verify your account.",
+    userId: data.user?.id,
   };
 };
 
@@ -55,6 +63,9 @@ export const signOut = async () => {
   if (error) {
     return { error: error.message };
   }
+
+  // Revalidate to clear session from server components
+  revalidatePath("/", "layout");
 
   return { success: "Signed out successfully." };
 };
