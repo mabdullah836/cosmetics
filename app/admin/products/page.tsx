@@ -1,4 +1,6 @@
 import Link from "next/link";
+import { redirect } from "next/navigation";
+import { auth } from "@/auth";
 import {
   Breadcrumb,
   BreadcrumbList,
@@ -7,10 +9,20 @@ import {
   BreadcrumbPage,
   BreadcrumbSeparator,
 } from "@/components/ui/breadcrumb";
+import { getAllProducts } from "@/lib/actions/admin";
+import AdminProductsClient from "./AdminProductsClient";
 
-const AdminProductsPage = () => {
+const AdminProductsPage = async () => {
+  const session = await auth();
+  
+  if (!session?.user) {
+    redirect("/login?redirect=/admin/products");
+  }
+
+  const products = await getAllProducts();
+
   return (
-    <div className="container mx-auto px-4 py-8">
+    <div className="container mx-auto px-4 py-8 max-w-7xl">
       <Breadcrumb className="mb-6">
         <BreadcrumbList>
           <BreadcrumbItem>
@@ -30,8 +42,8 @@ const AdminProductsPage = () => {
           </BreadcrumbItem>
         </BreadcrumbList>
       </Breadcrumb>
-      <h1 className="text-3xl font-bold mb-8">Manage Products</h1>
-      {/* Product management table will go here */}
+
+      <AdminProductsClient products={products} />
     </div>
   );
 };

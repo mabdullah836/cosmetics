@@ -1,4 +1,6 @@
 import Link from "next/link";
+import { redirect } from "next/navigation";
+import { auth } from "@/auth";
 import {
   Breadcrumb,
   BreadcrumbList,
@@ -7,10 +9,20 @@ import {
   BreadcrumbPage,
   BreadcrumbSeparator,
 } from "@/components/ui/breadcrumb";
+import { getAllOrders } from "@/lib/actions/admin";
+import AdminOrdersClient from "./AdminOrdersClient";
 
-const AdminOrdersPage = () => {
+const AdminOrdersPage = async () => {
+  const session = await auth();
+  
+  if (!session?.user) {
+    redirect("/login?redirect=/admin/orders");
+  }
+
+  const orders = await getAllOrders();
+
   return (
-    <div className="container mx-auto px-4 py-8">
+    <div className="container mx-auto px-4 py-8 max-w-7xl">
       <Breadcrumb className="mb-6">
         <BreadcrumbList>
           <BreadcrumbItem>
@@ -30,8 +42,13 @@ const AdminOrdersPage = () => {
           </BreadcrumbItem>
         </BreadcrumbList>
       </Breadcrumb>
-      <h1 className="text-3xl font-bold mb-8">Manage Orders</h1>
-      {/* Order management table will go here */}
+
+      <div className="mb-8">
+        <h1 className="text-4xl font-bold text-gray-900 mb-2">Manage Orders</h1>
+        <p className="text-gray-600">Track and manage customer orders</p>
+      </div>
+
+      <AdminOrdersClient initialOrders={orders} />
     </div>
   );
 };
