@@ -15,6 +15,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Package, User, MapPin, ShoppingBag, Heart, Settings } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import SignOutButton from "@/components/account/SignOutButton";
+import { getOrderStatusColor } from "@/lib/constants/status";
 
 export default async function AccountPage() {
   const session = await auth();

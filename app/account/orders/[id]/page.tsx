@@ -14,6 +14,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { ArrowLeft, Package, Truck, CreditCard, MapPin } from "lucide-react";
+import { getOrderStatusColor } from "@/lib/constants/status";
 
 type OrderDetailPageProps = {
   params: Promise<{ id: string }>;

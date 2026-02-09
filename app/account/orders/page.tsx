@@ -14,6 +14,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Package, ArrowLeft } from "lucide-react";
+import { getOrderStatusColor, getPaymentStatusColor } from "@/lib/constants/status";
 
 export default async function OrdersPage() {
   const session = await auth();
