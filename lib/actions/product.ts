@@ -178,6 +178,8 @@ export const getAllCategories = cache(async (): Promise<Category[]> => {
 export interface ProductFilters {
   search?: string;
   category?: string;
+  categories?: string;
+  brands?: string;
   minPrice?: number;
   maxPrice?: number;
   sortBy?: "latest" | "price-asc" | "price-desc" | "name-asc" | "name-desc";
@@ -191,6 +193,8 @@ export async function getFilteredProducts(filters: ProductFilters = {}) {
     const {
       search,
       category,
+      categories: categoriesParam,
+      brands: brandsParam,
       minPrice,
       maxPrice,
       sortBy = "latest",
@@ -223,9 +227,31 @@ export async function getFilteredProducts(filters: ProductFilters = {}) {
       query = query.or(`name.ilike.%${search}%,brand.ilike.%${search}%,description.ilike.%${search}%`);
     }
 
-    // Apply category filter
-    if (category && category.trim()) {
-      query = query.eq("categories.slug", category);
+    const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+    // Multi-select: "categories" = comma-separated IDs. Single: "category" = one ID or slug (backward compat).
+    if (categoriesParam?.trim()) {
+      const ids = categoriesParam?.split(",")?.map((c) => c?.trim())?.filter(Boolean);
+      if (ids?.length > 0) {
+        query = query.in("category_id", ids);
+      }
+    } else if (category?.trim()) {
+      const val = category?.trim();
+      if (uuidRegex.test(val)) {
+        query = query.eq("category_id", val);
+      } else {
+        query = query.eq("categories.slug", val);
+      }
+    }
+
+    // Apply brands filter (comma-separated in URL)
+    if (brandsParam && brandsParam?.trim()) {
+      const brandsList = brandsParam
+        .split(",")
+        .map((b) => b?.trim())
+        .filter(Boolean);
+      if (brandsList?.length > 0) {
+        query = query.in("brand", brandsList);
+      }
     }
 
     // Apply price filters

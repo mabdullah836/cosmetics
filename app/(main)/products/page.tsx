@@ -39,6 +39,7 @@ const ProductsPage = async ({
     page?: string;
     search?: string;
     category?: string;
+    categories?: string;
     brands?: string;
     minPrice?: string;
     maxPrice?: string;
@@ -49,13 +50,14 @@ const ProductsPage = async ({
   const currentPage = Math.max(parseInt(params.page || "1"), 1);
 
   // Fetch all data in parallel
-  // Note: React will automatically cache these server actions between requests
   const [categories, brands, { products: productsData, total, totalPages }] = await Promise.all([
     getAllCategories(),
     getAllBrands(),
     getFilteredProducts({
       search: params.search,
       category: params.category,
+      categories: params.categories,
+      brands: params.brands,
       minPrice: params.minPrice ? parseFloat(params.minPrice) : undefined,
       maxPrice: params.maxPrice ? parseFloat(params.maxPrice) : undefined,
       sortBy: params.sortBy || "latest",
@@ -73,6 +75,7 @@ const ProductsPage = async ({
     const searchParamsObj = new URLSearchParams();
     if (params.search) searchParamsObj.set("search", params.search);
     if (params.category) searchParamsObj.set("category", params.category);
+    if (params.categories) searchParamsObj.set("categories", params.categories);
     if (params.brands) searchParamsObj.set("brands", params.brands);
     if (params.minPrice) searchParamsObj.set("minPrice", params.minPrice);
     if (params.maxPrice) searchParamsObj.set("maxPrice", params.maxPrice);

@@ -28,24 +28,23 @@ export default function SearchInput({
   const debouncedQuery = useDebounce(query, debounceMs);
   const isFirstRender = useRef(true);
   const lastSearchedQuery = useRef(defaultValue);
+  const prevDefaultValue = useRef(defaultValue);
 
-  // Update local state when defaultValue changes from outside
+  // Keep input in sync when URL/defaultValue changes from outside (e.g. back button, filter change)
   useEffect(() => {
-    if (defaultValue !== query && defaultValue !== lastSearchedQuery.current) {
+    if (prevDefaultValue.current !== defaultValue) {
+      prevDefaultValue.current = defaultValue;
       setQuery(defaultValue);
       lastSearchedQuery.current = defaultValue;
     }
-  }, [defaultValue, query]);
+  }, [defaultValue]);
 
   useEffect(() => {
-    // Skip the first render to avoid calling onSearch with initial value
     if (isFirstRender.current) {
       isFirstRender.current = false;
       lastSearchedQuery.current = debouncedQuery;
       return;
     }
-
-    // Only call onSearch if the value actually changed
     if (debouncedQuery !== lastSearchedQuery.current) {
       lastSearchedQuery.current = debouncedQuery;
       onSearch(debouncedQuery);

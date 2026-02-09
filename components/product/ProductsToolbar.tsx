@@ -54,12 +54,14 @@ export default function ProductsToolbar({
 
   return (
     <>
-      {/* Search Bar - Mobile and Desktop */}
+      {/* Search Bar - Mobile and Desktop - key from URL keeps input in sync when URL changes */}
       <div className="mb-4">
         <SearchInput
+          key={`search-${searchParams?.get("search") ?? ""}`}
           placeholder="Search products..."
           onSearch={handleSearch}
           defaultValue={searchParams?.get("search") || ""}
+          debounceMs={400}
           className="w-full"
         />
       </div>

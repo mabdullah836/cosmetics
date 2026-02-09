@@ -15,14 +15,29 @@ interface ProductFiltersProps {
   maxPrice?: number;
 }
 
+const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+function getCategoryIdsFromParams(
+  searchParams: URLSearchParams | null,
+  categoryList: Category[]
+): string[] {
+  const multi = searchParams?.get("categories")?.split(",").map((c) => c.trim()).filter(Boolean);
+  if (multi?.length) return multi;
+
+  const single = searchParams?.get("category")?.trim();
+  if (!single) return [];
+  if (UUID_REGEX.test(single)) return [single];
+  const bySlug = categoryList?.find((c) => (c?.slug ?? "")?.toLowerCase() === single?.toLowerCase());
+  return bySlug ? [bySlug.id] : [];
+}
+
 const ProductFilters = ({ categories = [], brands = [], maxPrice = 1000 }: ProductFiltersProps) => {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [isPending, startTransition] = useTransition();
-  
-  // Local state for immediate UI updates
-  const [selectedCategory, setSelectedCategory] = useState<string | null>(
-    searchParams?.get("category") || null
+
+  const [selectedCategories, setSelectedCategories] = useState<string[]>(() =>
+    getCategoryIdsFromParams(searchParams, categories)
   );
   const [selectedBrands, setSelectedBrands] = useState<string[]>(
     searchParams?.get("brands")?.split(",").filter(Boolean) || []
@@ -32,57 +47,67 @@ const ProductFilters = ({ categories = [], brands = [], maxPrice = 1000 }: Produ
     Number(searchParams?.get("maxPrice")) || maxPrice,
   ]);
 
-  // Refs for tracking state
   const updateTimeoutRef = useRef<NodeJS.Timeout | undefined>(undefined);
   const lastUpdateRef = useRef<string>("");
   const isUpdatingRef = useRef<boolean>(false);
 
-  // Sync state with URL params when they change externally
+  // Sync state with URL when arriving from landing (e.g. ?category=makeup) or when params change
   useEffect(() => {
-    const category = searchParams?.get("category") || null;
-    const brands = searchParams?.get("brands")?.split(",").filter(Boolean) || [];
+    if (isUpdatingRef.current) return;
+
+    const categoryIds = getCategoryIdsFromParams(searchParams, categories);
+    const brandsFromUrl = searchParams?.get("brands")?.split(",").filter(Boolean) || [];
     const minPrice = Number(searchParams?.get("minPrice")) || 0;
     const urlMaxPrice = Number(searchParams?.get("maxPrice")) || maxPrice;
 
-    setSelectedCategory(category);
-    setSelectedBrands(brands);
+    setSelectedCategories(categoryIds);
+    setSelectedBrands(brandsFromUrl);
     setPriceRange([minPrice, urlMaxPrice]);
-  }, [searchParams, maxPrice]);
+  }, [searchParams, maxPrice, categories]);
 
-  // Optimized filter update with debouncing
-  const updateFilters = useCallback((immediate = false) => {
-    // Clear any pending timeout
+  // Override state so we can pass the *next* state from click handlers (avoids stale closure)
+  type FilterOverride = {
+    selectedCategories?: string[];
+    selectedBrands?: string[];
+    priceRange?: [number, number];
+  };
+
+  const updateFilters = useCallback((immediate = false, override?: FilterOverride) => {
     if (updateTimeoutRef.current) {
       clearTimeout(updateTimeoutRef.current);
     }
 
     const applyFilters = () => {
-      // Prevent duplicate updates
       if (isUpdatingRef.current) return;
-      
+
+      const categories = override?.selectedCategories !== undefined ? override.selectedCategories : selectedCategories;
+      const brands = override?.selectedBrands !== undefined ? override.selectedBrands : selectedBrands;
+      const range = override?.priceRange !== undefined ? override.priceRange : priceRange;
+
       const params = new URLSearchParams(searchParams?.toString() || "");
-      
-      // Build new params string
-      if (selectedCategory) {
-        params.set("category", selectedCategory);
+
+      if (categories?.length) {
+        params.set("categories", categories.join(","));
+        params.delete("category");
       } else {
+        params.delete("categories");
         params.delete("category");
       }
-      
-      if (selectedBrands.length > 0) {
-        params.set("brands", selectedBrands.join(","));
+
+      if (brands?.length) {
+        params.set("brands", brands.join(","));
       } else {
         params.delete("brands");
       }
-      
-      if (priceRange?.[0] > 0) {
-        params.set("minPrice", priceRange[0]?.toString() || "0");
+
+      if (range?.[0] != null && range[0] > 0) {
+        params.set("minPrice", String(range[0]));
       } else {
         params.delete("minPrice");
       }
-      
-      if (priceRange?.[1] < maxPrice) {
-        params.set("maxPrice", priceRange[1]?.toString() || maxPrice.toString());
+
+      if (range?.[1] != null && range[1] < maxPrice) {
+        params.set("maxPrice", String(range[1]));
       } else {
         params.delete("maxPrice");
       }
@@ -90,16 +115,12 @@ const ProductFilters = ({ categories = [], brands = [], maxPrice = 1000 }: Produ
       params.delete("page");
       
       const newUrl = `/products?${params.toString()}`;
-      
-      // Only update if URL actually changed
+
       if (lastUpdateRef.current !== newUrl) {
         lastUpdateRef.current = newUrl;
         isUpdatingRef.current = true;
-        
-        // Use startTransition for non-urgent updates
         startTransition(() => {
           router.push(newUrl, { scroll: false });
-          // Reset update flag after a short delay
           setTimeout(() => {
             isUpdatingRef.current = false;
           }, 100);
@@ -110,10 +131,9 @@ const ProductFilters = ({ categories = [], brands = [], maxPrice = 1000 }: Produ
     if (immediate) {
       applyFilters();
     } else {
-      // Debounce price slider updates (500ms)
       updateTimeoutRef.current = setTimeout(applyFilters, 500);
     }
-  }, [router, searchParams, selectedCategory, selectedBrands, priceRange, maxPrice]);
+  }, [router, searchParams, selectedCategories, selectedBrands, priceRange, maxPrice]);
 
   // Cleanup timeout on unmount
   useEffect(() => {
@@ -124,28 +144,30 @@ const ProductFilters = ({ categories = [], brands = [], maxPrice = 1000 }: Produ
     };
   }, []);
 
-  const handleCategoryChange = useCallback((categorySlug: string) => {
-    setSelectedCategory(prev => prev === categorySlug ? null : categorySlug);
-    // Apply immediately for category changes
-    setTimeout(() => updateFilters(true), 0);
-  }, [updateFilters]);
+  const handleCategoryChange = useCallback((categoryId: string) => {
+    const nextCategories = selectedCategories?.includes(categoryId)
+      ? selectedCategories?.filter((id) => id !== categoryId)
+      : [...selectedCategories, categoryId];
+    setSelectedCategories(nextCategories);
+    updateFilters(true, { selectedCategories: nextCategories });
+  }, [updateFilters, selectedCategories]);
 
   const handleBrandChange = useCallback((brand: string) => {
-    setSelectedBrands((prev) =>
-      prev.includes(brand) ? prev.filter((b) => b !== brand) : [...prev, brand]
-    );
-    // Apply immediately for brand changes
-    setTimeout(() => updateFilters(true), 0);
-  }, [updateFilters]);
+    const nextBrands = selectedBrands.includes(brand)
+      ? selectedBrands.filter((b) => b !== brand)
+      : [...selectedBrands, brand];
+    setSelectedBrands(nextBrands);
+    updateFilters(true, { selectedBrands: nextBrands });
+  }, [updateFilters, selectedBrands]);
 
   const handlePriceChange = useCallback((value: number[]) => {
-    setPriceRange(value as [number, number]);
-    // Debounced update for price slider
-    updateFilters(false);
+    const nextRange = value as [number, number];
+    setPriceRange(nextRange);
+    updateFilters(false, { priceRange: nextRange });
   }, [updateFilters]);
 
   const clearFilters = useCallback(() => {
-    setSelectedCategory(null);
+    setSelectedCategories([]);
     setSelectedBrands([]);
     setPriceRange([0, maxPrice]);
     
@@ -159,7 +181,7 @@ const ProductFilters = ({ categories = [], brands = [], maxPrice = 1000 }: Produ
     });
   }, [router, maxPrice]);
 
-  const hasActiveFilters = selectedCategory || selectedBrands.length > 0 || (priceRange?.[0] || 0) > 0 || (priceRange?.[1] || maxPrice) < maxPrice;
+  const hasActiveFilters = selectedCategories?.length > 0 || selectedBrands?.length > 0 || (priceRange?.[0] || 0) > 0 || (priceRange?.[1] || maxPrice) < maxPrice;
 
   return (
     <div className="w-full">
@@ -197,39 +219,51 @@ const ProductFilters = ({ categories = [], brands = [], maxPrice = 1000 }: Produ
           </AccordionContent>
         </AccordionItem>
         
-        {categories.length > 0 && (
+        {categories?.length > 0 && (
           <AccordionItem value="category">
             <AccordionTrigger className="text-base font-semibold">Category</AccordionTrigger>
             <AccordionContent className="space-y-2 pt-2">
-              {categories.map((category) => (
-                <div key={category.id} className="flex items-center space-x-2">
+              {categories?.map((category) => {
+                const categoryId = category?.id ?? "";
+                const slug = (category?.slug ?? "").toLowerCase();
+                const categoriesFromUrl = searchParams?.get("categories")?.split(",").filter(Boolean) || [];
+                const singleCategoryFromUrl = searchParams?.get("category")?.trim().toLowerCase() || null;
+                const isChecked =
+                  Boolean(categoryId) &&
+                  (selectedCategories.includes(categoryId) ||
+                    categoriesFromUrl.includes(categoryId) ||
+                    (Boolean(singleCategoryFromUrl) &&
+                      (singleCategoryFromUrl === categoryId.toLowerCase() || singleCategoryFromUrl === slug)));
+                return (
+                <div key={category?.id} className="flex items-center space-x-2">
                   <Checkbox
-                    id={`category-${category.id}`}
-                    checked={selectedCategory === category.slug}
-                    onCheckedChange={() => handleCategoryChange(category.slug || "")}
+                    id={`category-${category?.id}`}
+                    checked={isChecked}
+                    onCheckedChange={() => handleCategoryChange(categoryId)}
                     disabled={isPending}
                   />
                   <Label 
-                    htmlFor={`category-${category.id}`} 
+                    htmlFor={`category-${category?.id}`} 
                     className="font-normal cursor-pointer"
                   >
-                    {category.name}
+                    {category?.name}
                   </Label>
                 </div>
-              ))}
+              );
+              })}
             </AccordionContent>
           </AccordionItem>
         )}
         
-        {brands.length > 0 && (
+        {brands?.length > 0 && (
           <AccordionItem value="brand">
             <AccordionTrigger className="text-base font-semibold">Brand</AccordionTrigger>
             <AccordionContent className="space-y-2 pt-2">
-              {brands.map((brand) => (
+              {brands?.map((brand) => (
                 <div key={brand} className="flex items-center space-x-2">
                   <Checkbox
                     id={`brand-${brand}`}
-                    checked={selectedBrands.includes(brand)}
+                    checked={selectedBrands?.includes(brand)}
                     onCheckedChange={() => handleBrandChange(brand)}
                     disabled={isPending}
                   />
@@ -245,10 +279,6 @@ const ProductFilters = ({ categories = [], brands = [], maxPrice = 1000 }: Produ
           </AccordionItem>
         )}
       </Accordion>
-      
-      <p className="text-xs text-muted-foreground mt-4 text-center">
-        Filters are applied automatically as you select them
-      </p>
     </div>
   );
 };
