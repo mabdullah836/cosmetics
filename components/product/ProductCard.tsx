@@ -11,6 +11,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Heart, ShoppingBag, Eye, Star, Truck, Zap } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
+import { useCartActions } from "@/lib/hooks/useCartActions";
 
 interface ProductCardProps {
   id: string;
@@ -42,8 +43,8 @@ const ProductCard = memo(function ProductCard({
   isNew = false,
 }: ProductCardProps) {
   const router = useRouter();
+  const { addToCart, adding } = useCartActions();
   const [wishlisted, setWishlisted] = useState(false);
-  const [adding, setAdding] = useState(false);
   const [imgLoaded, setImgLoaded] = useState(false);
   const [wishlisting, setWishlisting] = useState(false);
   const [showActions, setShowActions] = useState(false);
@@ -115,30 +116,27 @@ const ProductCard = memo(function ProductCard({
       e.stopPropagation();
       if (outOfStock) return;
 
-      try {
-        setAdding(true);
-        const { addToCart } = await import("@/lib/actions/cart");
-        const result = await addToCart(id, 1);
+      const result = await addToCart(
+        { id, name, price, slug, imageUrl },
+        1
+      );
 
-        if (result?.success) {
-          router.refresh();
-          toast.success("Added to cart", {
-            description: name,
-            action: {
-              label: "View Cart",
-              onClick: () => router.push("/cart"),
-            },
-          });
-        } else {
-          toast.error("Failed to add to cart");
-        }
-      } catch {
-        toast.error("Something went wrong");
-      } finally {
-        setAdding(false);
+      if (result && "success" in result && result.success) {
+        router.refresh();
+        toast.success("Added to cart", {
+          description: name,
+          action: {
+            label: "View Cart",
+            onClick: () => router.push("/cart"),
+          },
+        });
+      } else if (result && "error" in result && result.error) {
+        toast.error(result.error);
+      } else {
+        toast.error("Failed to add to cart");
       }
     },
-    [id, name, router, outOfStock]
+    [id, name, price, slug, imageUrl, addToCart, router, outOfStock]
   );
 
   return (

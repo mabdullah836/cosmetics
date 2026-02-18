@@ -30,6 +30,8 @@ import {
 import { cn } from "@/lib/utils";
 import { useCart } from "@/components/providers/CartProvider";
 import { toast } from "sonner";
+import { CART_EVENTS } from "@/lib/utils/cartEvents";
+import { getLocalCartItemCount } from "@/lib/utils/localCart";
 import { CartItem } from "@/types/supabase";
 import { NAV_CATEGORIES, SUPPORT_MENU_ITEMS } from "@/lib/constants/nav";
 import LoginForm from "@/components/auth/LoginForm";
@@ -57,22 +59,14 @@ export default function Header({ cartItems: serverCartItems = [], subtotal: serv
   // Use server cart items if available, otherwise use context cart items
   const cartItems = serverCartItems.length > 0 ? serverCartItems : contextCartItems;
   
-  // Check localStorage for guest cart count
+  // Event-driven guest cart count (no polling)
   useEffect(() => {
-    const updateLocalCartCount = () => {
-      try {
-        const { getLocalCartItemCount } = require("@/lib/utils/localCart");
-        setLocalCartCount(getLocalCartItemCount());
-      } catch {
-        setLocalCartCount(0);
-      }
+    const handleCartUpdate = () => {
+      setLocalCartCount(getLocalCartItemCount());
     };
-    
-    updateLocalCartCount();
-    // Poll for changes (localStorage doesn't trigger storage event on same tab)
-    const interval = setInterval(updateLocalCartCount, 1000);
-    
-    return () => clearInterval(interval);
+    handleCartUpdate();
+    window.addEventListener(CART_EVENTS.UPDATED, handleCartUpdate);
+    return () => window.removeEventListener(CART_EVENTS.UPDATED, handleCartUpdate);
   }, []);
   
   // Use Supabase cart count if available, otherwise use local cart count

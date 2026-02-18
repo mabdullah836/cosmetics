@@ -17,6 +17,7 @@ import {
 import { ArrowRight, Star, Truck, Zap, ShoppingBag, Eye, Heart } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
+import { useCartActions } from "@/lib/hooks/useCartActions";
 
 interface Product {
   id: string;
@@ -66,25 +67,34 @@ export default function ProductCarousel({
     [autoPlay]
   );
 
+  const { addToCart, adding } = useCartActions();
+
   if (products.length === 0) {
     return null;
   }
 
-  const handleQuickAdd = async (productId: string, productName: string) => {
-    try {
-      const { addToCart } = await import("@/lib/actions/cart");
-      const result = await addToCart(productId, 1);
-      
-      if (result?.success) {
-        toast.success("Added to cart", {
-          description: productName,
-          action: {
-            label: "View Cart",
-            onClick: () => window.location.href = "/cart",
-          },
-        });
-      }
-    } catch {
+  const handleQuickAdd = async (product: Product) => {
+    const result = await addToCart(
+      {
+        id: product.id,
+        name: product.name,
+        price: product.price,
+        slug: product.slug,
+        imageUrl: product.imageUrl,
+      },
+      1
+    );
+    if (result && "success" in result && result.success) {
+      toast.success("Added to cart", {
+        description: product.name,
+        action: {
+          label: "View Cart",
+          onClick: () => (window.location.href = "/cart"),
+        },
+      });
+    } else if (result && "error" in result && result.error) {
+      toast.error(result.error);
+    } else {
       toast.error("Failed to add to cart");
     }
   };
@@ -218,14 +228,24 @@ export default function ProductCarousel({
                             <div className="absolute bottom-6 left-6 right-6">
                               <Button
                                 size="lg"
+                                disabled={adding}
                                 onClick={(e) => {
                                   e.preventDefault();
-                                  handleQuickAdd(product.id, product.name);
+                                  handleQuickAdd(product);
                                 }}
                                 className="w-full bg-white text-gray-900 hover:bg-gray-50 font-semibold h-12 rounded-xl shadow-lg hover:scale-[1.02] transition-transform"
                               >
-                                <ShoppingBag className="h-5 w-5 mr-2" />
-                                Quick Add
+                                {adding ? (
+                                  <>
+                                    <span className="h-4 w-4 border-2 border-current border-t-transparent rounded-full animate-spin mr-2" />
+                                    Adding...
+                                  </>
+                                ) : (
+                                  <>
+                                    <ShoppingBag className="h-5 w-5 mr-2" />
+                                    Quick Add
+                                  </>
+                                )}
                               </Button>
                             </div>
                           </div>

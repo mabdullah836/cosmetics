@@ -1,11 +1,14 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { Product } from "@/types/supabase";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Star, Heart, Share2 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useCartActions } from "@/lib/hooks/useCartActions";
+import { toast } from "sonner";
 
 interface ProductInfoProps {
   product: Product & {
@@ -18,12 +21,43 @@ interface ProductInfoProps {
 }
 
 export default function ProductInfo({ product }: ProductInfoProps) {
+  const router = useRouter();
+  const { addToCart, adding } = useCartActions();
   const [quantity, setQuantity] = useState(1);
   const [isWishlisted, setIsWishlisted] = useState(false);
 
   const inStock =
     product.stock_level === "IN_STOCK" ||
     product.stock_level === "LOW_STOCK";
+
+  const handleAddToCart = async () => {
+    if (!inStock) return;
+    const result = await addToCart(
+      {
+        id: product.id,
+        name: product.name,
+        price: product.price,
+        slug: product.slug,
+        imageUrl: product.imageUrl ?? product.images?.[0]?.image_url,
+        images: product.images,
+      },
+      quantity
+    );
+    if (result && "success" in result && result.success) {
+      router.refresh();
+      toast.success("Added to cart", {
+        description: `${product.name} × ${quantity}`,
+        action: {
+          label: "View Cart",
+          onClick: () => router.push("/cart"),
+        },
+      });
+    } else if (result && "error" in result && result.error) {
+      toast.error(result.error);
+    } else {
+      toast.error("Failed to add to cart");
+    }
+  };
 
   return (
     <div className="flex flex-col gap-6">
@@ -115,8 +149,19 @@ export default function ProductInfo({ product }: ProductInfoProps) {
 
       {/* CTA */}
       <div className="flex gap-3 pt-2">
-        <Button className="flex-1" disabled={!inStock}>
-          Add to Cart
+        <Button
+          className="flex-1"
+          disabled={!inStock || adding}
+          onClick={handleAddToCart}
+        >
+          {adding ? (
+            <>
+              <span className="h-4 w-4 border-2 border-current border-t-transparent rounded-full animate-spin mr-2" />
+              Adding...
+            </>
+          ) : (
+            "Add to Cart"
+          )}
         </Button>
         <Button variant="outline" className="flex-1">
           Buy Now
