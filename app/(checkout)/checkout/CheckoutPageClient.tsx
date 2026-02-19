@@ -25,8 +25,8 @@ import { toast } from "sonner";
 import Image from "next/image";
 import LoginForm from "@/components/auth/LoginForm";
 import OTPVerificationModal from "@/components/checkout/OTPVerificationModal";
-import { getLocalCart } from "@/lib/utils/localCart";
-import { LocalCartItem } from "@/lib/utils/localCart";
+import { getLocalCart, getLocalCartAsCartItems, getLocalCartSubtotal } from "@/lib/utils/localCart";
+import type { Product } from "@/types/supabase";
 
 interface CheckoutPageClientProps {
   cartItems: CartItem[];
@@ -55,31 +55,11 @@ export default function CheckoutPageClient({
   const [localCartItems, setLocalCartItems] = useState<CartItem[]>([]);
   const [localSubtotal, setLocalSubtotal] = useState(0);
 
-  // Load local cart for guest users
+  // Load local cart for guest users (CartItem format for display)
   useEffect(() => {
     if (!isAuthenticated) {
-      const loadLocalCart = async () => {
-        const { getLocalCart } = await import("@/lib/utils/localCart");
-        const localCart = getLocalCart();
-        
-        // Convert local cart to CartItem format
-        const convertedItems: CartItem[] = localCart.map((item, index) => ({
-          id: `local-${index}`,
-          quantity: item.quantity,
-          product: item.product,
-          product_id: item.productId,
-          cart_id: "local",
-        }));
-        
-        setLocalCartItems(convertedItems);
-        const localSubtotal = convertedItems.reduce(
-          (acc, item) => acc + (item.product?.price || 0) * item.quantity,
-          0
-        );
-        setLocalSubtotal(localSubtotal);
-      };
-      
-      loadLocalCart();
+      setLocalCartItems(getLocalCartAsCartItems());
+      setLocalSubtotal(getLocalCartSubtotal());
     }
   }, [isAuthenticated]);
 
@@ -194,11 +174,24 @@ export default function CheckoutPageClient({
           is_default: false,
         };
 
-    // Convert local cart items for guest users
-    let guestCartItems: LocalCartItem[] | undefined = undefined;
+    // Convert minimal local cart to GuestCartItem shape for createOrder
+    let guestCartItems: Array<{ productId: string; product: Product; quantity: number }> | undefined = undefined;
     if (!isAuthenticated) {
       const localCart = getLocalCart();
-      guestCartItems = localCart;
+      guestCartItems = localCart.map((item) => ({
+        productId: item.productId,
+        product: {
+          id: item.productId,
+          name: item.name,
+          price: item.price,
+          description: null,
+          is_featured: false,
+          is_active: true,
+          created_at: "",
+          stock_level: "IN_STOCK",
+        } as Product,
+        quantity: item.quantity,
+      }));
     }
 
     const result = await createOrder(
@@ -213,10 +206,11 @@ export default function CheckoutPageClient({
     setIsSubmitting(false);
 
     if (result.success && result.orderId) {
-      // Clear local cart for guests
       if (!isAuthenticated) {
         const { clearLocalCart } = await import("@/lib/utils/localCart");
+        const { emitCartUpdated } = await import("@/lib/utils/cartEvents");
         clearLocalCart();
+        emitCartUpdated();
       }
       router.push(`/checkout/confirmation?orderId=${result.orderId}`);
     } else {

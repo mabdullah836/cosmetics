@@ -29,7 +29,7 @@ export async function getFeaturedCategories(): Promise<Category[]> {
   }
 }
 
-export async function getFeaturedProducts(): Promise<Product[]> {
+export const getFeaturedProducts = cache(async (): Promise<Product[]> => {
   try {
     const supabase = await createClient();
     
@@ -58,9 +58,9 @@ export async function getFeaturedProducts(): Promise<Product[]> {
     logger.error(MESSAGES.PRODUCT.FETCH_PRODUCTS_ERROR, error);
     return [];
   }
-}
+});
 
-export async function getTrendingProducts(): Promise<Product[]> {
+export const getTrendingProducts = cache(async (): Promise<Product[]> => {
   try {
     const supabase = await createClient();
     
@@ -89,9 +89,9 @@ export async function getTrendingProducts(): Promise<Product[]> {
     logger.error(MESSAGES.PRODUCT.FETCH_TRENDING_ERROR, error);
     return [];
   }
-}
+});
 
-export async function getNewArrivals(): Promise<Product[]> {
+export const getNewArrivals = cache(async (): Promise<Product[]> => {
   try {
     const supabase = await createClient();
     
@@ -120,9 +120,9 @@ export async function getNewArrivals(): Promise<Product[]> {
     logger.error(MESSAGES.PRODUCT.FETCH_NEW_ARRIVALS_ERROR, error);
     return [];
   }
-}
+});
 
-export async function getBestSellers(): Promise<Product[]> {
+export const getBestSellers = cache(async (): Promise<Product[]> => {
   try {
     const supabase = await createClient();
     
@@ -151,7 +151,7 @@ export async function getBestSellers(): Promise<Product[]> {
     logger.error(MESSAGES.PRODUCT.FETCH_BEST_SELLERS_ERROR, error);
     return [];
   }
-}
+});
 
 // Cache categories for the duration of the request
 export const getAllCategories = cache(async (): Promise<Category[]> => {

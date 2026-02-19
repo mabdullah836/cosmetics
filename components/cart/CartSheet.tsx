@@ -42,7 +42,7 @@ const CartSheet = ({ cartItems, subtotal }: CartSheetProps) => {
                   <div key={item.id} className="flex items-center border-b py-4">
                     <div className="relative w-24 h-24 mr-4">
                       <Image 
-                        src={item.product?.images?.[0]?.url || '/placeholder.svg'}
+                        src={item.product?.images?.[0]?.image_url ?? (item.product as { imageUrl?: string })?.imageUrl ?? "/placeholder.svg"}
                         alt={item.product?.name || 'Product'}
                         fill
                         className="object-cover rounded-md"

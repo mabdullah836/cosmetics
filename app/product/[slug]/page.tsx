@@ -4,22 +4,34 @@ import ProductImageGallery from "@/components/product/ProductImageGallery";
 import ProductInfo from "@/components/product/ProductInfo";
 import ProductCarousel from "@/components/home/ProductCarousel";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Shield, Truck, RotateCcw, Star, Package, Heart } from "lucide-react";
+import { Truck, Shield, RotateCcw, Star, Package, ChevronRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
 import { logger } from "@/lib/utils/logger";
-import { ROUTES } from "@/lib/constants";
+import type { ProductImage } from "@/types/supabase";
 import {
   Breadcrumb,
   BreadcrumbList,
   BreadcrumbItem,
   BreadcrumbLink,
-  BreadcrumbPage,
   BreadcrumbSeparator,
 } from "@/components/ui/breadcrumb";
 
 type ProductPageProps = {
   params: Promise<{ slug: string }>;
+};
+
+/** Matches reviews table: id, product_id, user_id, rating, comment, is_verified_purchase, created_at */
+type ProductReview = {
+  id: string;
+  product_id: string;
+  user_id: string | null;
+  rating: number;
+  comment: string | null;
+  is_verified_purchase: boolean;
+  created_at: string;
+  /** From join to profiles (profiles.id = reviews.user_id) */
+  profiles?: { full_name?: string | null; avatar_url?: string | null } | null;
 };
 
 export default async function ProductPage({ params }: ProductPageProps) {
@@ -59,16 +71,22 @@ export default async function ProductPage({ params }: ProductPageProps) {
     notFound();
   }
 
+  // Optimize images - resize to reasonable dimensions
+  const optimizedImages = (product.images || []).map((img: ProductImage) => ({
+    ...img,
+    image_url: `${img.image_url}?width=1200&height=1200&quality=85`
+  }));
+
   // Fetch variants
   const { data: variants } = await supabase
     .from('product_variants')
     .select('*')
     .eq('product_id', product.id);
 
-  // Fetch reviews
+  // Fetch reviews (schema: id, product_id, user_id, rating, comment, is_verified_purchase, created_at)
   const { data: reviews } = await supabase
     .from('reviews')
-    .select('*, profiles(full_name, avatar_url)')
+    .select('id, product_id, user_id, rating, comment, is_verified_purchase, created_at, profiles(full_name, avatar_url)')
     .eq('product_id', product.id)
     .order('created_at', { ascending: false })
     .limit(10);
@@ -76,11 +94,12 @@ export default async function ProductPage({ params }: ProductPageProps) {
   // Calculate average rating
   const averageRating = reviews && reviews.length > 0 
     ? Number((reviews.reduce((acc, review) => acc + review.rating, 0) / reviews.length).toFixed(1))
-    : 4.5;
+    : 0;
 
   // Product with enriched data
   const productWithData = {
     ...product,
+    images: optimizedImages,
     variants: variants || [],
     averageRating,
     reviewCount: reviews?.length || 0,
@@ -100,16 +119,17 @@ export default async function ProductPage({ params }: ProductPageProps) {
 
   const { data: similarProducts } = await query.limit(8);
 
-  // Prepare carousel products
+  // Prepare carousel products with optimized images
   const carouselProducts = (similarProducts || []).map(p => ({
     id: p.id,
     name: p.name,
     slug: p.slug || p.id,
     price: p.price,
     originalPrice: p.original_price || undefined,
-    imageUrl: p.images?.[0]?.image_url || 'https://images.unsplash.com/photo-1596462502278-27bfdc403348?w=600',
+    imageUrl: p.images?.[0]?.image_url ? 
+      `${p.images[0].image_url}?width=600&height=600&quality=85` : 
+      '/placeholder-product.jpg',
     rating: 4.5,
-    isNew: true,
     category: p.category || undefined,
     shortDescription: p.short_description || undefined
   }));
@@ -128,14 +148,16 @@ export default async function ProductPage({ params }: ProductPageProps) {
     slug: p.slug || p.id,
     price: p.price,
     originalPrice: p.original_price || undefined,
-    imageUrl: p.images?.[0]?.image_url || 'https://images.unsplash.com/photo-1596462502278-27bfdc403348?w=600',
+    imageUrl: p.images?.[0]?.image_url ? 
+      `${p.images[0].image_url}?width=600&height=600&quality=85` : 
+      '/placeholder-product.jpg',
     rating: 4.5,
     category: p.category || undefined
   }));
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white">
-      <div className="max-w-[1920px] mx-auto px-6 lg:px-12 xl:px-16 py-8">
+    <div className="min-h-screen bg-white">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Breadcrumb */}
         <div className="mb-8">
           <Breadcrumb>
@@ -144,7 +166,7 @@ export default async function ProductPage({ params }: ProductPageProps) {
                 <BreadcrumbLink asChild>
                   <Link 
                     href="/" 
-                    className="text-gray-600 hover:text-gray-900 transition-colors text-sm font-medium"
+                    className="text-gray-500 hover:text-gray-700 transition-colors text-sm"
                   >
                     Home
                   </Link>
@@ -155,7 +177,7 @@ export default async function ProductPage({ params }: ProductPageProps) {
                 <BreadcrumbLink asChild>
                   <Link 
                     href="/products" 
-                    className="text-gray-600 hover:text-gray-900 transition-colors text-sm font-medium"
+                    className="text-gray-500 hover:text-gray-700 transition-colors text-sm"
                   >
                     Products
                   </Link>
@@ -168,7 +190,7 @@ export default async function ProductPage({ params }: ProductPageProps) {
                     <BreadcrumbLink asChild>
                       <Link 
                         href={`/categories/${product.category_id}`}
-                        className="text-gray-600 hover:text-gray-900 transition-colors text-sm font-medium"
+                        className="text-gray-500 hover:text-gray-700 transition-colors text-sm"
                       >
                         {product.category}
                       </Link>
@@ -178,161 +200,202 @@ export default async function ProductPage({ params }: ProductPageProps) {
               )}
               <BreadcrumbSeparator />
               <BreadcrumbItem>
-                <BreadcrumbPage className="text-gray-900 font-semibold text-sm">
+                <span className="text-gray-900 font-medium text-sm">
                   {product.name}
-                </BreadcrumbPage>
+                </span>
               </BreadcrumbItem>
             </BreadcrumbList>
           </Breadcrumb>
         </div>
 
         {/* Main Product Section */}
-        <div className="mb-16">
-          <div className="grid grid-cols-1 lg:grid-cols-[1fr_1fr] gap-6 lg:gap-10 items-start">
-
-            {/* Image Gallery */}
-            <div className="lg:sticky lg:top-24">
-              <ProductImageGallery
-                images={productWithData.images || []}
-                productName={product.name}
-              />
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-16 mb-16">
+          {/* Image Gallery */}
+          <div className="lg:sticky lg:top-8">
+            <div className="space-y-4">
+              {productWithData.images.length > 0 ? (
+                <ProductImageGallery
+                  images={productWithData.images}
+                  productName={product.name}
+                />
+              ) : (
+                <div className="aspect-square bg-gray-100 rounded-lg flex items-center justify-center">
+                  <span className="text-gray-400">No image available</span>
+                </div>
+              )}
             </div>
+          </div>
 
-            {/* Product Info */}
-            <div>
-              <ProductInfo product={productWithData} />
-            </div>
-
+          {/* Product Info */}
+          <div>
+            <ProductInfo product={productWithData} />
           </div>
         </div>
 
         {/* Trust Badges */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-16">
-          <div className="bg-white rounded-xl p-6 text-center border border-gray-100 shadow-sm hover:shadow-md transition-shadow">
-            <Truck className="h-8 w-8 text-emerald-500 mx-auto mb-3" />
-            <h4 className="font-semibold text-gray-900 mb-1">Free Shipping</h4>
-            <p className="text-sm text-gray-600">On orders over $50</p>
-          </div>
-          <div className="bg-white rounded-xl p-6 text-center border border-gray-100 shadow-sm hover:shadow-md transition-shadow">
-            <RotateCcw className="h-8 w-8 text-blue-500 mx-auto mb-3" />
-            <h4 className="font-semibold text-gray-900 mb-1">30-Day Returns</h4>
-            <p className="text-sm text-gray-600">Hassle-free returns</p>
-          </div>
-          <div className="bg-white rounded-xl p-6 text-center border border-gray-100 shadow-sm hover:shadow-md transition-shadow">
-            <Shield className="h-8 w-8 text-amber-500 mx-auto mb-3" />
-            <h4 className="font-semibold text-gray-900 mb-1">Secure Payment</h4>
-            <p className="text-sm text-gray-600">100% secure checkout</p>
-          </div>
-          <div className="bg-white rounded-xl p-6 text-center border border-gray-100 shadow-sm hover:shadow-md transition-shadow">
-            <Package className="h-8 w-8 text-purple-500 mx-auto mb-3" />
-            <h4 className="font-semibold text-gray-900 mb-1">Quality Guarantee</h4>
-            <p className="text-sm text-gray-600">Premium quality products</p>
+        <div className="border-t border-b border-gray-200 py-8 mb-16">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
+            <div className="flex items-center gap-4">
+              <div className="flex-shrink-0">
+                <Truck className="h-6 w-6 text-gray-600" />
+              </div>
+              <div>
+                <h4 className="font-medium text-gray-900 text-sm">Free Shipping</h4>
+                <p className="text-gray-500 text-xs">Orders over $50</p>
+              </div>
+            </div>
+            <div className="flex items-center gap-4">
+              <div className="flex-shrink-0">
+                <RotateCcw className="h-6 w-6 text-gray-600" />
+              </div>
+              <div>
+                <h4 className="font-medium text-gray-900 text-sm">30-Day Returns</h4>
+                <p className="text-gray-500 text-xs">Easy returns</p>
+              </div>
+            </div>
+            <div className="flex items-center gap-4">
+              <div className="flex-shrink-0">
+                <Shield className="h-6 w-6 text-gray-600" />
+              </div>
+              <div>
+                <h4 className="font-medium text-gray-900 text-sm">Secure Payment</h4>
+                <p className="text-gray-500 text-xs">100% secure</p>
+              </div>
+            </div>
+            <div className="flex items-center gap-4">
+              <div className="flex-shrink-0">
+                <Package className="h-6 w-6 text-gray-600" />
+              </div>
+              <div>
+                <h4 className="font-medium text-gray-900 text-sm">Quality Guaranteed</h4>
+                <p className="text-gray-500 text-xs">Premium quality</p>
+              </div>
+            </div>
           </div>
         </div>
 
         {/* Product Details Tabs */}
         <div className="mb-16">
           <Tabs defaultValue="description" className="w-full">
-            <TabsList className="w-full justify-start border-b rounded-none bg-transparent p-0 h-auto mb-8">
+            <TabsList className="w-full border-b bg-transparent p-0 h-auto mb-8">
               <TabsTrigger 
                 value="description"
-                className="data-[state=active]:border-b-2 data-[state=active]:border-gray-900 rounded-none px-6 py-3 text-base font-medium"
+                className="data-[state=active]:text-gray-900 data-[state=active]:border-b-2 data-[state=active]:border-gray-900 rounded-none px-4 py-3 text-sm font-medium text-gray-500"
               >
                 Description
               </TabsTrigger>
               <TabsTrigger 
                 value="details"
-                className="data-[state=active]:border-b-2 data-[state=active]:border-gray-900 rounded-none px-6 py-3 text-base font-medium"
+                className="data-[state=active]:text-gray-900 data-[state=active]:border-b-2 data-[state=active]:border-gray-900 rounded-none px-4 py-3 text-sm font-medium text-gray-500"
               >
-                Details & Care
+                Details
               </TabsTrigger>
               <TabsTrigger 
                 value="reviews"
-                className="data-[state=active]:border-b-2 data-[state=active]:border-gray-900 rounded-none px-6 py-3 text-base font-medium"
+                className="data-[state=active]:text-gray-900 data-[state=active]:border-b-2 data-[state=active]:border-gray-900 rounded-none px-4 py-3 text-sm font-medium text-gray-500"
               >
                 Reviews ({productWithData.reviewCount})
               </TabsTrigger>
               <TabsTrigger 
                 value="shipping"
-                className="data-[state=active]:border-b-2 data-[state=active]:border-gray-900 rounded-none px-6 py-3 text-base font-medium"
+                className="data-[state=active]:text-gray-900 data-[state=active]:border-b-2 data-[state=active]:border-gray-900 rounded-none px-4 py-3 text-sm font-medium text-gray-500"
               >
-                Shipping & Returns
+                Shipping
               </TabsTrigger>
             </TabsList>
             
-            <TabsContent value="description" className="mt-0">
-              <div className="prose prose-lg max-w-none">
-                <h3 className="text-2xl font-bold text-gray-900 mb-6">Product Description</h3>
-                <div className="space-y-6 text-gray-700">
-                  {product.description ? (
-                    <div dangerouslySetInnerHTML={{ __html: product.description }} />
-                  ) : (
-                    <p className="text-gray-600">No description available for this product.</p>
-                  )}
-                </div>
+            <TabsContent value="description" className="mt-6">
+              <div className="prose prose-gray max-w-none">
+                <h3 className="text-xl font-semibold text-gray-900 mb-4">Product Description</h3>
+                {product.description ? (
+                  <div 
+                    className="text-gray-600 leading-relaxed"
+                    dangerouslySetInnerHTML={{ __html: product.description }} 
+                  />
+                ) : (
+                  <p className="text-gray-500">No description available.</p>
+                )}
               </div>
             </TabsContent>
             
-            <TabsContent value="details" className="mt-0">
+            <TabsContent value="details" className="mt-6">
               <div className="grid md:grid-cols-2 gap-8">
                 <div>
-                  <h3 className="text-2xl font-bold text-gray-900 mb-6">Product Details</h3>
+                  <h3 className="text-xl font-semibold text-gray-900 mb-4">Product Details</h3>
                   <ul className="space-y-3">
-                    <li className="flex items-center gap-3">
-                      <div className="h-2 w-2 bg-gray-400 rounded-full"></div>
-                      <span className="text-gray-700">High-quality materials</span>
-                    </li>
-                    <li className="flex items-center gap-3">
-                      <div className="h-2 w-2 bg-gray-400 rounded-full"></div>
-                      <span className="text-gray-700">Cruelty-free formula</span>
-                    </li>
-                    <li className="flex items-center gap-3">
-                      <div className="h-2 w-2 bg-gray-400 rounded-full"></div>
-                      <span className="text-gray-700">Suitable for all skin types</span>
-                    </li>
+                    {product.specifications?.map((spec: string, index: number) => (
+                      <li key={index} className="flex items-start gap-3">
+                        <div className="h-1.5 w-1.5 bg-gray-400 rounded-full mt-2"></div>
+                        <span className="text-gray-600">{spec}</span>
+                      </li>
+                    )) || (
+                      <>
+                        <li className="flex items-start gap-3">
+                          <div className="h-1.5 w-1.5 bg-gray-400 rounded-full mt-2"></div>
+                          <span className="text-gray-600">High-quality materials</span>
+                        </li>
+                        <li className="flex items-start gap-3">
+                          <div className="h-1.5 w-1.5 bg-gray-400 rounded-full mt-2"></div>
+                          <span className="text-gray-600">Premium craftsmanship</span>
+                        </li>
+                      </>
+                    )}
                   </ul>
                 </div>
                 <div>
-                  <h3 className="text-2xl font-bold text-gray-900 mb-6">Care Instructions</h3>
-                  <p className="text-gray-700">
-                    Store in a cool, dry place away from direct sunlight. Use within 12 months of opening.
-                    Avoid contact with eyes. If irritation occurs, discontinue use immediately.
+                  <h3 className="text-xl font-semibold text-gray-900 mb-4">Care Instructions</h3>
+                  <p className="text-gray-600 leading-relaxed">
+                    Store in a cool, dry place. Avoid direct sunlight and extreme temperatures.
+                    Follow specific care instructions included with product.
                   </p>
                 </div>
               </div>
             </TabsContent>
             
-            <TabsContent value="reviews" className="mt-0">
+            <TabsContent value="reviews" className="mt-6">
               <div className="space-y-8">
-                <div className="flex items-start justify-between">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                   <div>
-                    <h3 className="text-2xl font-bold text-gray-900 mb-2">Customer Reviews</h3>
-                    <div className="flex items-center gap-4">
+                    <h3 className="text-xl font-semibold text-gray-900 mb-2">Customer Reviews</h3>
+                    <div className="flex items-center gap-3">
                       <div className="flex items-center gap-2">
-                        <Star className="h-6 w-6 fill-amber-400 text-amber-400" />
-                        <span className="text-3xl font-bold">{averageRating}</span>
+                        <Star className="h-5 w-5 fill-amber-400 text-amber-400" />
+                        <span className="text-2xl font-bold text-gray-900">{averageRating}</span>
                         <span className="text-gray-500">/5</span>
                       </div>
-                      <span className="text-gray-600">Based on {productWithData.reviewCount} reviews</span>
+                      <span className="text-gray-500 text-sm">
+                        • {productWithData.reviewCount} {productWithData.reviewCount === 1 ? 'review' : 'reviews'}
+                      </span>
                     </div>
                   </div>
-                  <Button>Write a Review</Button>
+                  <Button variant="outline" className="border-gray-300">
+                    Write a Review
+                  </Button>
                 </div>
                 
                 {productWithData.reviews.length > 0 ? (
                   <div className="space-y-6">
-                    {productWithData.reviews.slice(0, 3).map((review) => (
-                      <div key={review.id} className="bg-gray-50 rounded-xl p-6">
-                        <div className="flex items-center justify-between mb-4">
+                    {productWithData.reviews.slice(0, 5).map((review: ProductReview) => (
+                      <div key={review.id} className="border border-gray-200 rounded-lg p-6">
+                        <div className="flex items-start justify-between mb-4">
                           <div className="flex items-center gap-3">
-                            <div className="h-10 w-10 bg-gradient-to-br from-gray-300 to-gray-400 rounded-full flex items-center justify-center">
-                              <span className="text-white font-semibold">
+                            <div className="h-10 w-10 bg-gray-100 rounded-full flex items-center justify-center">
+                              <span className="text-gray-600 font-medium">
                                 {review.profiles?.full_name?.charAt(0) || 'U'}
                               </span>
                             </div>
                             <div>
-                              <h4 className="font-semibold">{review.profiles?.full_name || 'Anonymous'}</h4>
-                              <div className="flex items-center gap-1">
+                              <div className="flex items-center gap-2 flex-wrap">
+                                <h4 className="font-medium text-gray-900">
+                                  {review.profiles?.full_name || 'Anonymous'}
+                                </h4>
+                                {review.is_verified_purchase && (
+                                  <span className="text-xs font-medium text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded">
+                                    Verified purchase
+                                  </span>
+                                )}
+                              </div>
+                              <div className="flex items-center gap-1 mt-1">
                                 {[...Array(5)].map((_, i) => (
                                   <Star
                                     key={i}
@@ -343,40 +406,73 @@ export default async function ProductPage({ params }: ProductPageProps) {
                             </div>
                           </div>
                           <span className="text-sm text-gray-500">
-                            {new Date(review.created_at).toLocaleDateString()}
+                            {new Date(review.created_at).toLocaleDateString('en-US', {
+                              month: 'short',
+                              day: 'numeric',
+                              year: 'numeric'
+                            })}
                           </span>
                         </div>
-                        <p className="text-gray-700">{review.comment}</p>
+                        <p className="text-gray-600">{review.comment}</p>
                       </div>
                     ))}
                   </div>
                 ) : (
-                  <div className="text-center py-12 bg-gray-50 rounded-2xl">
-                    <p className="text-gray-600 mb-4">No reviews yet. Be the first to review this product!</p>
-                    <Button>Write First Review</Button>
+                  <div className="text-center py-12 border border-gray-200 rounded-lg">
+                    <div className="inline-flex items-center justify-center h-12 w-12 rounded-full bg-gray-100 mb-4">
+                      <Star className="h-6 w-6 text-gray-400" />
+                    </div>
+                    <p className="text-gray-500 mb-4">No reviews yet</p>
+                    <Button variant="outline" className="border-gray-300">
+                      Be the first to review
+                    </Button>
                   </div>
                 )}
               </div>
             </TabsContent>
             
-            <TabsContent value="shipping" className="mt-0">
+            <TabsContent value="shipping" className="mt-6">
               <div className="space-y-8">
                 <div>
-                  <h3 className="text-2xl font-bold text-gray-900 mb-4">Shipping Information</h3>
-                  <div className="space-y-4 text-gray-700">
-                    <p>• Free standard shipping on orders over $50</p>
-                    <p>• Express shipping available at checkout</p>
-                    <p>• Typically ships within 1-2 business days</p>
-                    <p>• International shipping available to select countries</p>
+                  <h3 className="text-xl font-semibold text-gray-900 mb-4">Shipping Information</h3>
+                  <div className="space-y-3 text-gray-600">
+                    <p className="flex items-start gap-2">
+                      <span className="text-gray-900 font-medium">• Standard Shipping:</span>
+                      <span>3-5 business days • Free on orders over $50</span>
+                    </p>
+                    <p className="flex items-start gap-2">
+                      <span className="text-gray-900 font-medium">• Express Shipping:</span>
+                      <span>1-2 business days • $9.99</span>
+                    </p>
+                    <p className="flex items-start gap-2">
+                      <span className="text-gray-900 font-medium">• Processing Time:</span>
+                      <span>1-2 business days</span>
+                    </p>
+                    <p className="flex items-start gap-2">
+                      <span className="text-gray-900 font-medium">• International:</span>
+                      <span>Available to select countries</span>
+                    </p>
                   </div>
                 </div>
                 <div>
-                  <h3 className="text-2xl font-bold text-gray-900 mb-4">Return Policy</h3>
-                  <div className="space-y-4 text-gray-700">
-                    <p>• 30-day return window from delivery date</p>
-                    <p>• Items must be in original condition with all tags attached</p>
-                    <p>• Refunds processed within 5-10 business days</p>
-                    <p>• Free returns for defective or damaged items</p>
+                  <h3 className="text-xl font-semibold text-gray-900 mb-4">Return Policy</h3>
+                  <div className="space-y-3 text-gray-600">
+                    <p className="flex items-start gap-2">
+                      <span className="text-gray-900 font-medium">• Return Window:</span>
+                      <span>30 days from delivery date</span>
+                    </p>
+                    <p className="flex items-start gap-2">
+                      <span className="text-gray-900 font-medium">• Condition:</span>
+                      <span>Unused, in original packaging with tags</span>
+                    </p>
+                    <p className="flex items-start gap-2">
+                      <span className="text-gray-900 font-medium">• Refund Time:</span>
+                      <span>5-10 business days after return receipt</span>
+                    </p>
+                    <p className="flex items-start gap-2">
+                      <span className="text-gray-900 font-medium">• Defective Items:</span>
+                      <span>Free returns and replacement</span>
+                    </p>
                   </div>
                 </div>
               </div>
@@ -386,27 +482,45 @@ export default async function ProductPage({ params }: ProductPageProps) {
 
         {/* Similar Products */}
         {carouselProducts.length > 0 && (
-          <ProductCarousel
-            products={carouselProducts}
-            title="You Might Also Like"
-            subtitle="Similar products you might be interested in"
-            autoPlay={false}
-            itemsPerView={4}
-            variant="default"
-          />
+          <div className="mb-16">
+            <div className="flex items-center justify-between mb-6">
+              <div>
+                <h2 className="text-2xl font-semibold text-gray-900">Similar Products</h2>
+                <p className="text-gray-500 mt-1">You might also like</p>
+              </div>
+              <Link 
+                href="/products" 
+                className="text-sm font-medium text-gray-900 hover:text-gray-700 flex items-center gap-1"
+              >
+                View all
+                <ChevronRight className="h-4 w-4" />
+              </Link>
+            </div>
+            <ProductCarousel
+              products={carouselProducts}
+              title=""
+              subtitle=""
+              autoPlay={false}
+              itemsPerView={4}
+              variant="default"
+            />
+          </div>
         )}
 
         {/* Frequently Bought Together */}
         {alsoBoughtProducts.length > 0 && (
-          <ProductCarousel
-            products={alsoBoughtProducts}
-            title="Frequently Bought Together"
-            subtitle="Often purchased with this item"
-            showViewAll={false}
-            autoPlay={false}
-            itemsPerView={4}
-            variant="minimal"
-          />
+          <div className="mb-16">
+            <h2 className="text-2xl font-semibold text-gray-900 mb-6">Frequently Bought Together</h2>
+            <ProductCarousel
+              products={alsoBoughtProducts}
+              title=""
+              subtitle=""
+              showViewAll={false}
+              autoPlay={false}
+              itemsPerView={4}
+              variant="minimal"
+            />
+          </div>
         )}
       </div>
     </div>
