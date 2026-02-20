@@ -1,24 +1,24 @@
 "use server";
 
-import { createClient } from "@/lib/supabase/server";
+import { createClient, createServiceClient } from "@/lib/supabase/server";
 import { auth } from "@/auth";
 import { logger } from "@/lib/utils/logger";
-import { Product } from "@/types/supabase";
 
-// Check if user is admin
+// Check if user is admin (uses Supabase Auth app_metadata.role, no public.users table)
+// Reads from session JWT first; if role not in JWT, fetches user from DB via service role
 export async function isAdmin(): Promise<boolean> {
   try {
     const session = await auth();
     if (!session?.user) return false;
-    
-    const supabase = await createClient();
-    const { data } = await supabase
-      .from("users")
-      .select("role")
-      .eq("id", session.user.id)
-      .single();
-    
-    return data?.role === "admin";
+    // JWT may not include custom app_metadata.role; fetch from Supabase to be sure
+    try {
+      const service = createServiceClient();
+      const { data: { user } } = await service.auth.admin.getUserById(session.user.id);
+      const dbRole = (user?.app_metadata as { role?: string } | undefined)?.role;
+      return dbRole === "admin";
+    } catch {
+      return false;
+    }
   } catch {
     return false;
   }
@@ -26,6 +26,17 @@ export async function isAdmin(): Promise<boolean> {
 
 // Get admin dashboard stats
 export async function getAdminStats() {
+  if (!(await isAdmin())) {
+    return {
+      totalProducts: 0,
+      activeProducts: 0,
+      totalOrders: 0,
+      pendingOrders: 0,
+      totalRevenue: 0,
+      lowStockProducts: 0,
+      recentOrders: 0,
+    };
+  }
   try {
     const supabase = await createClient();
     
@@ -99,6 +110,7 @@ export async function getAdminStats() {
 
 // Get all products for admin
 export async function getAllProducts() {
+  if (!(await isAdmin())) return [];
   try {
     const supabase = await createClient();
     
@@ -128,6 +140,7 @@ export async function getAllProducts() {
 
 // Get all orders for admin
 export async function getAllOrders() {
+  if (!(await isAdmin())) return [];
   try {
     const supabase = await createClient();
     
@@ -163,6 +176,7 @@ export async function getAllOrders() {
 
 // Update order status
 export async function updateOrderStatus(orderId: string, status: string) {
+  if (!(await isAdmin())) return { error: "Unauthorized" };
   try {
     const supabase = await createClient();
     
@@ -181,6 +195,7 @@ export async function updateOrderStatus(orderId: string, status: string) {
 
 // Update payment status
 export async function updatePaymentStatus(orderId: string, paymentStatus: string) {
+  if (!(await isAdmin())) return { error: "Unauthorized" };
   try {
     const supabase = await createClient();
     
@@ -199,6 +214,7 @@ export async function updatePaymentStatus(orderId: string, paymentStatus: string
 
 // Get products with stock levels
 export async function getProductsWithStock() {
+  if (!(await isAdmin())) return [];
   try {
     const supabase = await createClient();
     
@@ -229,6 +245,7 @@ export async function getProductsWithStock() {
 
 // Get payments data
 export async function getPaymentsData() {
+  if (!(await isAdmin())) return [];
   try {
     const supabase = await createClient();
     

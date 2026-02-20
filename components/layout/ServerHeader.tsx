@@ -4,6 +4,7 @@ import Header from './Header';
 import { CartItem } from '@/types/supabase';
 import { logger } from '@/lib/utils/logger';
 
+// Log when cart query is slow; ensure DB has index on carts(user_id) and cart_items(cart_id)
 const CART_SLOW_QUERY_MS = 500;
 
 const ServerHeader = async () => {
