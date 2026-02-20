@@ -21,7 +21,8 @@ export async function proxy(request: NextRequest) {
     }
   )
 
-  await supabase.auth.getSession()
+  // Validate session with Auth server (getSession() from storage can be insecure)
+  await supabase.auth.getUser()
 
   return response
 }

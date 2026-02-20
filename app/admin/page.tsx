@@ -11,14 +11,13 @@ import {
 } from "@/components/ui/breadcrumb";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { getAdminStats } from "@/lib/actions/admin";
+import { getAdminStats, isAdmin } from "@/lib/actions/admin";
 import { 
   Package, 
   ShoppingCart, 
   DollarSign, 
   AlertTriangle,
   TrendingUp,
-  Users,
   ArrowRight
 } from "lucide-react";
 
@@ -27,6 +26,11 @@ const AdminDashboardPage = async () => {
   
   if (!session?.user) {
     redirect("/login?redirect=/admin");
+  }
+
+  const admin = await isAdmin();
+  if (!admin) {
+    redirect("/");
   }
 
   const stats = await getAdminStats();
