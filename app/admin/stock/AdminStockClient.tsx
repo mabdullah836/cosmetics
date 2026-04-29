@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useTransition } from "react";
 import Image from "next/image";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -14,14 +14,30 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import {
+  Dialog,
+  DialogContent,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { Label } from "@/components/ui/label";
+import { updateProductStock } from "@/lib/actions/admin";
+import { useRouter } from "next/navigation";
+import { toast } from "sonner";
 
 interface AdminStockClientProps {
   products: any[];
 }
 
 export default function AdminStockClient({ products }: AdminStockClientProps) {
+  const router = useRouter();
   const [searchQuery, setSearchQuery] = useState("");
   const [stockFilter, setStockFilter] = useState<string>("all");
+  const [showStockDialog, setShowStockDialog] = useState(false);
+  const [selectedProduct, setSelectedProduct] = useState<any | null>(null);
+  const [selectedStockLevel, setSelectedStockLevel] = useState<string>("IN_STOCK");
+  const [isPending, startTransition] = useTransition();
 
   const filteredProducts = useMemo(() => {
     return products.filter((product) => {
@@ -76,6 +92,29 @@ export default function AdminStockClient({ products }: AdminStockClientProps) {
       default:
         return <Badge variant="outline">Unknown</Badge>;
     }
+  };
+
+  const openStockDialog = (product: any) => {
+    setSelectedProduct(product);
+    setSelectedStockLevel(product.stock_level || "IN_STOCK");
+    setShowStockDialog(true);
+  };
+
+  const handleSaveStock = () => {
+    if (!selectedProduct) return;
+    startTransition(async () => {
+      const result = await updateProductStock(
+        selectedProduct.id,
+        selectedStockLevel as "IN_STOCK" | "LOW_STOCK" | "OUT_OF_STOCK" | "DISCONTINUED"
+      );
+      if (result.error) {
+        toast.error(result.error);
+        return;
+      }
+      toast.success("Stock updated");
+      setShowStockDialog(false);
+      router.refresh();
+    });
   };
 
   return (
@@ -239,7 +278,11 @@ export default function AdminStockClient({ products }: AdminStockClientProps) {
                           )}
                         </td>
                         <td className="p-4">
-                          <Button variant="outline" size="sm">
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => openStockDialog(product)}
+                          >
                             Update Stock
                           </Button>
                         </td>
@@ -252,6 +295,42 @@ export default function AdminStockClient({ products }: AdminStockClientProps) {
           </div>
         </CardContent>
       </Card>
+
+      <Dialog open={showStockDialog} onOpenChange={setShowStockDialog}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Update Stock Level</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 py-2">
+            <div>
+              <p className="text-sm text-muted-foreground">Product</p>
+              <p className="font-medium">{selectedProduct?.name || "-"}</p>
+            </div>
+            <div className="space-y-2">
+              <Label>Stock Level</Label>
+              <Select value={selectedStockLevel} onValueChange={setSelectedStockLevel}>
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="IN_STOCK">In Stock</SelectItem>
+                  <SelectItem value="LOW_STOCK">Low Stock</SelectItem>
+                  <SelectItem value="OUT_OF_STOCK">Out of Stock</SelectItem>
+                  <SelectItem value="DISCONTINUED">Discontinued</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShowStockDialog(false)} disabled={isPending}>
+              Cancel
+            </Button>
+            <Button onClick={handleSaveStock} disabled={isPending}>
+              {isPending ? "Saving..." : "Save"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </>
   );
 }

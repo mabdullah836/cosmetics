@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useTransition } from "react";
 import Link from "next/link";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -15,18 +15,22 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { updateOrderStatus } from "@/lib/actions/admin";
+import { toast } from "sonner";
 
 interface AdminOrdersClientProps {
   initialOrders: any[];
 }
 
 export default function AdminOrdersClient({ initialOrders }: AdminOrdersClientProps) {
+  const [orders, setOrders] = useState(initialOrders);
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [paymentFilter, setPaymentFilter] = useState<string>("all");
+  const [isPending, startTransition] = useTransition();
 
   const filteredOrders = useMemo(() => {
-    return initialOrders.filter((order) => {
+    return orders.filter((order) => {
       // Search filter
       const matchesSearch =
         !searchQuery ||
@@ -46,7 +50,24 @@ export default function AdminOrdersClient({ initialOrders }: AdminOrdersClientPr
 
       return matchesSearch && matchesStatus && matchesPayment;
     });
-  }, [initialOrders, searchQuery, statusFilter, paymentFilter]);
+  }, [orders, searchQuery, statusFilter, paymentFilter]);
+
+  const handleStatusChange = (orderId: string, nextStatus: string) => {
+    startTransition(async () => {
+      const result = await updateOrderStatus(orderId, nextStatus);
+      if (result.error) {
+        toast.error(result.error);
+        return;
+      }
+
+      setOrders((prev) =>
+        prev.map((order) =>
+          order.id === orderId ? { ...order, status: nextStatus } : order
+        )
+      );
+      toast.success("Order status updated");
+    });
+  };
 
   const getStatusBadge = (status: string) => {
     const statusMap: Record<string, { label: string; className: string }> = {
@@ -55,6 +76,7 @@ export default function AdminOrdersClient({ initialOrders }: AdminOrdersClientPr
         label: "Pending Confirmation",
         className: "bg-orange-100 text-orange-800",
       },
+      CONFIRMED: { label: "Confirmed", className: "bg-emerald-100 text-emerald-800" },
       PROCESSING: { label: "Processing", className: "bg-blue-100 text-blue-800" },
       SHIPPED: { label: "Shipped", className: "bg-purple-100 text-purple-800" },
       DELIVERED: { label: "Delivered", className: "bg-green-100 text-green-800" },
@@ -113,6 +135,7 @@ export default function AdminOrdersClient({ initialOrders }: AdminOrdersClientPr
                 <SelectItem value="all">All Statuses</SelectItem>
                 <SelectItem value="PENDING">Pending</SelectItem>
                 <SelectItem value="PENDING_CONFIRMATION">Pending Confirmation</SelectItem>
+                <SelectItem value="CONFIRMED">Confirmed</SelectItem>
                 <SelectItem value="PROCESSING">Processing</SelectItem>
                 <SelectItem value="SHIPPED">Shipped</SelectItem>
                 <SelectItem value="DELIVERED">Delivered</SelectItem>
@@ -212,6 +235,24 @@ export default function AdminOrdersClient({ initialOrders }: AdminOrdersClientPr
                         </td>
                         <td className="p-4">
                           <div className="flex items-center gap-2">
+                            <Select
+                              value={order.status}
+                              onValueChange={(value) => handleStatusChange(order.id, value)}
+                              disabled={isPending}
+                            >
+                              <SelectTrigger className="w-[180px]">
+                                <SelectValue placeholder="Update status" />
+                              </SelectTrigger>
+                              <SelectContent>
+                                <SelectItem value="PENDING">Pending</SelectItem>
+                                <SelectItem value="PENDING_CONFIRMATION">Pending Confirmation</SelectItem>
+                                <SelectItem value="CONFIRMED">Confirmed</SelectItem>
+                                <SelectItem value="PROCESSING">Processing</SelectItem>
+                                <SelectItem value="SHIPPED">Shipped</SelectItem>
+                                <SelectItem value="DELIVERED">Delivered</SelectItem>
+                                <SelectItem value="CANCELLED">Cancelled</SelectItem>
+                              </SelectContent>
+                            </Select>
                             <Button variant="ghost" size="sm" asChild>
                               <Link href={`/account/orders/${order.id}`}>
                                 <Eye className="h-4 w-4" />
