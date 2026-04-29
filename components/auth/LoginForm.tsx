@@ -98,13 +98,17 @@ const LoginForm = ({
           }
         }
 
+        const isAdmin = user.app_metadata?.role === "admin";
+        const shouldRedirectAdminToDashboard = isAdmin && redirectTo.startsWith("/account");
+        const destination = shouldRedirectAdminToDashboard ? "/admin" : redirectTo;
+
         toast.success("Logged in successfully");
         onOpenChange(false);
         onSuccess?.();
         
         // Navigate to trigger new request with cookies
         // Use window.location for full page reload to ensure cookies are sent
-        window.location.href = redirectTo;
+        window.location.href = destination;
       }
     } catch (error) {
       toast.error("An error occurred. Please try again.");

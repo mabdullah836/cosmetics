@@ -37,7 +37,7 @@ const AddToCartButton = ({
       router.refresh();
       toast.success("Added to cart");
       setTimeout(() => setResult(null), 3000);
-    } else if (res?.error) {
+    } else if ("error" in res && res.error) {
       setResult({ error: res.error });
       toast.error(res.error);
       setTimeout(() => setResult(null), 3000);

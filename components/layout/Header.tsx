@@ -279,6 +279,20 @@ export default function Header({ cartItems: serverCartItems = [], subtotal: serv
                         </div>
                       </details>
                     </div>
+                    <div className="border-b border-border/30 last:border-0">
+                      <Link
+                        href="/track-order"
+                        onClick={() => setMobileMenuOpen(false)}
+                        className={cn(
+                          "flex items-center gap-2 py-3 text-base font-medium transition-colors",
+                          isActive("/track-order")
+                            ? "text-primary"
+                            : "text-foreground hover:text-primary"
+                        )}
+                      >
+                        Track Order
+                      </Link>
+                    </div>
                   </div>
                 </nav>
 
@@ -484,6 +498,16 @@ export default function Header({ cartItems: serverCartItems = [], subtotal: serv
                 </DropdownMenuContent>
               </DropdownMenu>
             </div>
+            <Button
+              variant="ghost"
+              asChild
+              className={cn(
+                "text-sm font-medium",
+                isActive("/track-order") && "text-primary bg-primary/10"
+              )}
+            >
+              <Link href="/track-order">Track Order</Link>
+            </Button>
           </nav>
 
           {/* Right Actions */}
