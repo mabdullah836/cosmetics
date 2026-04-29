@@ -2,10 +2,11 @@ import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { CheckCircle2 } from "lucide-react";
-import { createClient } from "@/lib/supabase/server";
+import { createServiceClient } from "@/lib/supabase/server";
 import { notFound } from "next/navigation";
 import { auth } from "@/auth";
 import ConfirmationPageClient from "./ConfirmationPageClient";
+import { verifyOrderAccessToken } from "@/lib/utils/tracking-token";
 import {
   Breadcrumb,
   BreadcrumbList,
@@ -16,7 +17,7 @@ import {
 } from "@/components/ui/breadcrumb";
 
 interface ConfirmationPageProps {
-  searchParams: Promise<{ orderId?: string }>;
+  searchParams: Promise<{ orderId?: string; token?: string }>;
 }
 
 const ConfirmationPage = async ({ searchParams }: ConfirmationPageProps) => {
@@ -27,10 +28,28 @@ const ConfirmationPage = async ({ searchParams }: ConfirmationPageProps) => {
     notFound();
   }
 
-  const supabase = await createClient();
+  const supabase = createServiceClient();
   const { data: order, error } = await supabase
     .from('orders')
-    .select('*')
+    .select(`
+      *,
+      items:order_items (
+        id,
+        product_name,
+        price,
+        quantity
+      ),
+      shipping_address:addresses!orders_shipping_address_id_fkey (
+        full_name,
+        phone,
+        address_line_1,
+        address_line_2,
+        city,
+        state,
+        postal_code,
+        country
+      )
+    `)
     .eq('id', params.orderId)
     .single();
 
@@ -38,13 +57,33 @@ const ConfirmationPage = async ({ searchParams }: ConfirmationPageProps) => {
     notFound();
   }
 
+  const orderEmail = order.guest_email || order.customer_email || "";
+  const orderPhone = order.guest_phone || order.customer_phone || "";
+  const hasValidToken = params.token
+    ? verifyOrderAccessToken(params.token, params.orderId, orderEmail, orderPhone)
+    : false;
+  const isOwner = !!session?.user?.id && session.user.id === order.user_id;
+
+  if (!isOwner && !hasValidToken) {
+    notFound();
+  }
+
+  const itemCount = order.items?.reduce(
+    (sum: number, item: { quantity?: number }) => sum + (item.quantity || 0),
+    0
+  ) || 0;
   const orderNumber = order.order_number || order.id?.slice(0, 8).toUpperCase() || 'N/A';
   const total = typeof order.total === 'number' ? order.total : parseFloat(order.total || '0');
   const paymentMethod = order.payment_method || 'N/A';
   const isBankTransfer = paymentMethod === 'BANK_TRANSFER';
-  const isGuest = !order.user_id;
-  const guestEmail = order.guest_email || order.customer_email || '';
-  const guestPhone = order.guest_phone || order.customer_phone || '';
+  const guestEmail = orderEmail;
+  const guestPhone = orderPhone;
+  const whatsappNumber = process.env.NEXT_PUBLIC_WHATSAPP_NUMBER || "+923001234567";
+  const bankAccountTitle = process.env.NEXT_PUBLIC_BANK_ACCOUNT_TITLE || "Bloom Cosmetics";
+  const bankAccountNumber = process.env.NEXT_PUBLIC_BANK_ACCOUNT_NUMBER || "0000-0000000-0";
+  const bankName = process.env.NEXT_PUBLIC_BANK_NAME || "Meezan Bank";
+  const bankIban = process.env.NEXT_PUBLIC_BANK_IBAN || "PK00MEEZ0000000000000000";
+  const estimatedDeliveryText = process.env.NEXT_PUBLIC_ESTIMATED_DELIVERY || "2-4 business days";
 
   return (
     <div className="container mx-auto px-4 py-16 max-w-2xl">
@@ -77,11 +116,13 @@ const ConfirmationPage = async ({ searchParams }: ConfirmationPageProps) => {
         <div className="inline-flex items-center justify-center w-20 h-20 rounded-full bg-green-100 text-green-600 mb-6">
           <CheckCircle2 className="h-10 w-10" />
         </div>
-        <h1 className="text-4xl font-bold mb-4">Thank you! Your order has been placed.</h1>
+        <h1 className="text-4xl font-bold mb-4">
+          {isBankTransfer ? "Order received. Please complete your bank transfer." : "Thank you! Your COD order has been received."}
+        </h1>
         <p className="text-lg text-muted-foreground">
           {isBankTransfer 
-            ? "Please transfer the payment using the bank details below. Use your order ID as the payment reference."
-            : "You'll pay when the order is delivered."}
+            ? "Transfer the exact order amount using the bank details below."
+            : "Our team is reviewing your order before dispatch."}
         </p>
       </div>
 
@@ -95,6 +136,10 @@ const ConfirmationPage = async ({ searchParams }: ConfirmationPageProps) => {
             <span className="font-medium">{orderNumber}</span>
           </div>
           <div className="flex justify-between">
+            <span className="text-muted-foreground">Items</span>
+            <span className="font-medium">{itemCount}</span>
+          </div>
+          <div className="flex justify-between">
             <span className="text-muted-foreground">Total</span>
             <span className="font-bold text-lg">${total.toFixed(2)}</span>
           </div>
@@ -104,7 +149,7 @@ const ConfirmationPage = async ({ searchParams }: ConfirmationPageProps) => {
           </div>
           <div className="pt-4 border-t">
             <p className="text-sm text-muted-foreground">
-              You will receive an email confirmation shortly.
+              Tracking link will be shared in your confirmation email after admin approval.
             </p>
           </div>
         </CardContent>
@@ -118,31 +163,80 @@ const ConfirmationPage = async ({ searchParams }: ConfirmationPageProps) => {
           <CardContent className="space-y-3">
             <div className="space-y-2">
               <div className="flex justify-between">
-                <span className="text-muted-foreground">Bank Name</span>
-                <span className="font-medium">Example Bank</span>
+                <span className="text-muted-foreground">Account Title</span>
+                <span className="font-medium">{bankAccountTitle}</span>
               </div>
               <div className="flex justify-between">
                 <span className="text-muted-foreground">Account Number</span>
-                <span className="font-medium">1234567890</span>
+                <span className="font-medium">{bankAccountNumber}</span>
               </div>
               <div className="flex justify-between">
-                <span className="text-muted-foreground">IFSC Code</span>
-                <span className="font-medium">EXAM0001234</span>
+                <span className="text-muted-foreground">Bank Name</span>
+                <span className="font-medium">{bankName}</span>
               </div>
               <div className="flex justify-between">
-                <span className="text-muted-foreground">Account Holder</span>
-                <span className="font-medium">Your Company Name</span>
+                <span className="text-muted-foreground">IBAN</span>
+                <span className="font-medium">{bankIban}</span>
               </div>
             </div>
             <div className="pt-4 border-t">
-              <p className="text-sm font-semibold mb-2">Payment Reference</p>
+              <p className="text-sm font-semibold mb-2">Instructions</p>
               <p className="text-sm text-muted-foreground">
-                Please use your order ID <strong>{orderNumber}</strong> as the payment reference when making the transfer.
+                Transfer the exact amount and use order ID <strong>{orderNumber}</strong> as payment reference.
               </p>
               <p className="text-sm text-muted-foreground mt-2">
-                Please complete the transfer within 24 hours to avoid order cancellation.
+                Send your receipt on WhatsApp for verification:{" "}
+                <a
+                  href={`https://wa.me/${whatsappNumber.replace(/[^\d]/g, "")}`}
+                  className="underline font-medium"
+                  target="_blank"
+                  rel="noreferrer"
+                >
+                  {whatsappNumber}
+                </a>
+              </p>
+              <p className="text-sm text-muted-foreground mt-2">
+                Your order will be confirmed after payment verification. Once confirmed, you will receive an email with order details and tracking information.
               </p>
             </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {!isBankTransfer && (
+        <Card className="hover:shadow-md transition-shadow mb-6">
+          <CardHeader>
+            <CardTitle>Cash on Delivery Instructions</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-3">
+            <p className="text-sm text-muted-foreground">
+              Our delivery partner will collect payment upon delivery. Please ensure the exact amount is available.
+            </p>
+            <p className="text-sm text-muted-foreground">
+              Estimated delivery time: <span className="font-medium">{estimatedDeliveryText}</span>
+            </p>
+            <p className="text-sm text-muted-foreground">
+              Your order is under review. Once confirmed, you will receive an email with order details and tracking information.
+            </p>
+          </CardContent>
+        </Card>
+      )}
+
+      {!isBankTransfer && order.shipping_address && (
+        <Card className="hover:shadow-md transition-shadow mb-6">
+          <CardHeader>
+            <CardTitle>Delivery Address</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <p className="font-medium">{order.shipping_address.full_name}</p>
+            <p className="text-sm text-muted-foreground">
+              {order.shipping_address.address_line_1}
+              {order.shipping_address.address_line_2 ? `, ${order.shipping_address.address_line_2}` : ""}
+            </p>
+            <p className="text-sm text-muted-foreground">
+              {order.shipping_address.city}, {order.shipping_address.state} {order.shipping_address.postal_code}
+            </p>
+            <p className="text-sm text-muted-foreground">{order.shipping_address.country}</p>
           </CardContent>
         </Card>
       )}
@@ -159,7 +253,7 @@ const ConfirmationPage = async ({ searchParams }: ConfirmationPageProps) => {
       </div>
 
       <ConfirmationPageClient
-        isGuest={isGuest}
+        isGuest={!order.user_id}
         email={guestEmail}
         phone={guestPhone}
         orderId={params.orderId}
