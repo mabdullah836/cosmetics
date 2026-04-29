@@ -90,7 +90,7 @@ export default function CheckoutPageClient({
   const [billingPostalCode, setBillingPostalCode] = useState("");
 
   // Payment method
-  const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>("COD");
+  const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>("BANK_TRANSFER");
 
   const isFormValid = () => {
     if (!email || !phone) return false;
@@ -212,7 +212,10 @@ export default function CheckoutPageClient({
         clearLocalCart();
         emitCartUpdated();
       }
-      router.push(`/checkout/confirmation?orderId=${result.orderId}`);
+      const tokenQuery = result.accessToken
+        ? `&token=${encodeURIComponent(result.accessToken)}`
+        : "";
+      router.push(`/checkout/confirmation?orderId=${result.orderId}${tokenQuery}`);
     } else {
       toast.error(result.error || "Failed to place order. Please try again.");
     }
@@ -509,25 +512,6 @@ export default function CheckoutPageClient({
                   >
                     <div className="border rounded-lg p-4 hover:border-primary/50 hover:bg-primary/5 transition-all cursor-pointer">
                       <label className="flex items-start gap-3 cursor-pointer">
-                        <RadioGroupItem value="COD" id="cod" className="mt-1" />
-                        <div className="flex-1">
-                          <div className="flex items-center gap-2">
-                            <span className="font-medium">
-                              Cash on Delivery (COD)
-                            </span>
-                            <span className="text-xs bg-yellow-100 text-yellow-800 px-2 py-1 rounded">
-                              Email verification required
-                            </span>
-                          </div>
-                          <p className="text-sm text-muted-foreground mt-1">
-                            Pay when your order is delivered. Email verification required.
-                          </p>
-                        </div>
-                      </label>
-                    </div>
-
-                    <div className="border rounded-lg p-4 hover:border-primary/50 hover:bg-primary/5 transition-all cursor-pointer">
-                      <label className="flex items-start gap-3 cursor-pointer">
                         <RadioGroupItem
                           value="BANK_TRANSFER"
                           id="bank"
@@ -553,6 +537,25 @@ export default function CheckoutPageClient({
                               </p>
                             </div>
                           )}
+                        </div>
+                      </label>
+                    </div>
+
+                    <div className="border rounded-lg p-4 hover:border-primary/50 hover:bg-primary/5 transition-all cursor-pointer">
+                      <label className="flex items-start gap-3 cursor-pointer">
+                        <RadioGroupItem value="COD" id="cod" className="mt-1" />
+                        <div className="flex-1">
+                          <div className="flex items-center gap-2">
+                            <span className="font-medium">
+                              Cash on Delivery (COD)
+                            </span>
+                            <span className="text-xs bg-yellow-100 text-yellow-800 px-2 py-1 rounded">
+                              Email verification required
+                            </span>
+                          </div>
+                          <p className="text-sm text-muted-foreground mt-1">
+                            Pay when your order is delivered. Email verification required.
+                          </p>
                         </div>
                       </label>
                     </div>
