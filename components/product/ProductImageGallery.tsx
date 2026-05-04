@@ -34,8 +34,8 @@ export default function ProductImageGallery({ images, productName }: Props) {
             className={cn(
               "h-16 w-16 border rounded-lg overflow-hidden transition",
               active === img?.image_url
-                ? "border-gray-900"
-                : "border-gray-200 hover:border-gray-400"
+                ? "border-foreground"
+                : "border-border hover:border-muted-foreground/50"
             )}
           >
             <Image
@@ -50,7 +50,7 @@ export default function ProductImageGallery({ images, productName }: Props) {
       </div>
 
       {/* Main Image */}
-      <div className="relative flex-1 aspect-square border rounded-xl bg-white overflow-hidden">
+      <div className="relative flex-1 aspect-square border border-border rounded-xl bg-card overflow-hidden">
         <Image
           src={active}
           alt={productName}

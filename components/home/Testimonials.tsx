@@ -101,7 +101,7 @@ export default function Testimonials() {
           </div>
           <h2 
             id="testimonials-heading"
-            className="text-3xl md:text-4xl lg:text-5xl font-display font-bold text-foreground mb-4"
+            className="text-3xl md:text-4xl lg:text-5xl font-display font-bold text-primary mb-4"
           >
             Loved by Thousands
           </h2>

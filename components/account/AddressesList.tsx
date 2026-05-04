@@ -54,9 +54,9 @@ export default function AddressesList({ initialAddresses }: AddressesListProps) 
     return (
       <Card>
         <CardContent className="flex flex-col items-center justify-center py-12">
-          <MapPin className="h-16 w-16 text-gray-300 mb-4" />
-          <h3 className="text-xl font-semibold text-gray-900 mb-2">No addresses yet</h3>
-          <p className="text-gray-600 mb-6 text-center">
+          <MapPin className="h-16 w-16 text-muted-foreground/45 mb-4" />
+          <h3 className="text-xl font-semibold text-foreground mb-2">No addresses yet</h3>
+          <p className="text-muted-foreground mb-6 text-center">
             Add an address to make checkout faster
           </p>
           <Button asChild>
@@ -102,14 +102,14 @@ export default function AddressesList({ initialAddresses }: AddressesListProps) 
             </div>
           </CardHeader>
           <CardContent>
-            <div className="space-y-1 text-gray-700">
+            <div className="space-y-1 text-muted-foreground">
               <p>{address.address_line_1}</p>
               {address.address_line_2 && <p>{address.address_line_2}</p>}
               <p>
                 {address.city}, {address.state} {address.postal_code}
               </p>
               <p>{address.country}</p>
-              <p className="mt-2 text-sm text-gray-600">Phone: {address.phone}</p>
+              <p className="mt-2 text-sm text-muted-foreground">Phone: {address.phone}</p>
             </div>
           </CardContent>
         </Card>

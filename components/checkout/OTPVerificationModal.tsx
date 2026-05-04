@@ -84,12 +84,12 @@ export default function OTPVerificationModal({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-md bg-white">
+      <DialogContent className="sm:max-w-md">
         <DialogHeader>
-          <DialogTitle className="text-gray-900 font-bold text-xl">
+          <DialogTitle className="text-foreground font-bold text-xl">
             Verify Your Email Address
           </DialogTitle>
-          <DialogDescription className="text-gray-600 mt-2">
+          <DialogDescription className="text-muted-foreground mt-2">
             We need to verify your email address for Cash on Delivery orders. 
             An OTP has been sent to <strong>{email}</strong>
           </DialogDescription>
@@ -97,7 +97,7 @@ export default function OTPVerificationModal({
 
         <form onSubmit={handleVerifyOTP} className="space-y-4">
           <div className="space-y-2">
-            <Label htmlFor="otp" className="text-gray-900 font-medium">
+            <Label htmlFor="otp" className="text-foreground font-medium">
               Enter OTP
             </Label>
             <Input
@@ -112,7 +112,7 @@ export default function OTPVerificationModal({
               maxLength={6}
               required
               disabled={isVerifying || !otpSent}
-              className="border-2 border-gray-300 focus:border-primary text-center text-2xl tracking-widest"
+              className="border-2 border-border focus:border-primary text-center text-2xl tracking-widest"
             />
             <p className="text-xs text-muted-foreground">
               Enter the 6-digit code sent to your email

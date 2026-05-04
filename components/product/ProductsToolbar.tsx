@@ -67,8 +67,8 @@ export default function ProductsToolbar({
       </div>
 
       {/* Toolbar */}
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6 bg-white p-4 rounded-xl border">
-        <p className="text-sm text-gray-600">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6 bg-card p-4 rounded-xl border">
+        <p className="text-sm text-muted-foreground">
           Showing {currentCount} of {totalCount}
         </p>
 

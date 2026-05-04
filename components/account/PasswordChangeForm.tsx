@@ -64,7 +64,7 @@ export default function PasswordChangeForm() {
           disabled={isLoading}
           minLength={6}
         />
-        <p className="text-xs text-gray-500">
+        <p className="text-xs text-muted-foreground">
           Password must be at least 6 characters long
         </p>
       </div>

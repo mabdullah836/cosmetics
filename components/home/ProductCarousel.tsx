@@ -109,7 +109,7 @@ export default function ProductCarousel({
   return (
     <section className={cn(
       "py-16 md:py-20",
-      isFeatured && "bg-gradient-to-b from-gray-50/50 to-white"
+      isFeatured && "bg-gradient-to-b from-muted/50 to-background"
     )}>
       <div className="max-w-[1920px] mx-auto px-6 lg:px-12 xl:px-16">
         {/* Header */}
@@ -122,14 +122,14 @@ export default function ProductCarousel({
             )}
             <h2 className={cn(
               "font-bold tracking-tight",
-              isFeatured ? "text-5xl text-gray-900" : "text-4xl text-gray-900"
+              isFeatured ? "text-5xl text-primary" : "text-4xl text-primary"
             )}>
               {title}
             </h2>
             {subtitle && (
               <p className={cn(
                 "mt-4",
-                isFeatured ? "text-xl text-gray-600" : "text-lg text-gray-600"
+                isFeatured ? "text-xl text-muted-foreground" : "text-lg text-muted-foreground"
               )}>
                 {subtitle}
               </p>
@@ -142,7 +142,7 @@ export default function ProductCarousel({
               size="lg"
               asChild
               className={cn(
-                "group border-gray-300 hover:border-gray-900 hover:bg-gray-900 hover:text-white transition-all duration-300",
+                "group border-border hover:border-foreground hover:bg-foreground hover:text-background transition-all duration-300",
                 isFeatured && "px-8"
               )}
             >
@@ -190,14 +190,14 @@ export default function ProductCarousel({
                       className="group block h-full"
                     >
                       <div className={cn(
-                        "h-full bg-white rounded-2xl overflow-hidden",
+                        "h-full bg-card rounded-2xl overflow-hidden",
                         "transition-all duration-300",
                         "hover:shadow-2xl hover:-translate-y-2",
-                        isFeatured && "border border-gray-100"
+                        isFeatured && "border border-border"
                       )}>
                         {/* Image Container */}
                         <div className={cn(
-                          "relative overflow-hidden bg-gradient-to-b from-gray-50 to-gray-100",
+                          "relative overflow-hidden bg-gradient-to-b from-muted/80 to-muted",
                           isFeatured ? "aspect-[4/5]" : "aspect-[3/4]"
                         )}>
                           <Image
@@ -233,7 +233,7 @@ export default function ProductCarousel({
                                   e.preventDefault();
                                   handleQuickAdd(product);
                                 }}
-                                className="w-full bg-white text-gray-900 hover:bg-gray-50 font-semibold h-12 rounded-xl shadow-lg hover:scale-[1.02] transition-transform"
+                                className="w-full bg-background text-foreground hover:bg-muted font-semibold h-12 rounded-xl shadow-lg hover:scale-[1.02] transition-transform border border-border"
                               >
                                 {adding ? (
                                   <>
@@ -259,7 +259,7 @@ export default function ProductCarousel({
                                 e.preventDefault();
                                 handleWishlist(product.id);
                               }}
-                              className="h-11 w-11 rounded-full bg-white/90 backdrop-blur-sm shadow-lg hover:shadow-xl border-0"
+                              className="h-11 w-11 rounded-full bg-background/90 backdrop-blur-sm shadow-lg hover:shadow-xl border border-border text-foreground"
                             >
                               <Heart className="h-5 w-5" />
                             </Button>
@@ -270,7 +270,7 @@ export default function ProductCarousel({
                                 e.preventDefault();
                                 window.location.href = `/product/${product.slug}?quickview=true`;
                               }}
-                              className="h-11 w-11 rounded-full bg-white/90 backdrop-blur-sm shadow-lg hover:shadow-xl border-0"
+                              className="h-11 w-11 rounded-full bg-background/90 backdrop-blur-sm shadow-lg hover:shadow-xl border border-border text-foreground"
                             >
                               <Eye className="h-5 w-5" />
                             </Button>
@@ -280,21 +280,21 @@ export default function ProductCarousel({
                         {/* Content */}
                         <div className={cn("p-5", isMinimal && "p-4")}>
                           {product.category && (
-                            <p className="text-xs font-medium text-gray-500 uppercase tracking-wider mb-2">
+                            <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-2">
                               {product.category}
                             </p>
                           )}
                           
                           <h3 className={cn(
-                            "font-semibold text-gray-900 line-clamp-2 mb-3",
+                            "font-semibold text-foreground line-clamp-2 mb-3",
                             isFeatured ? "text-xl" : "text-lg",
-                            "group-hover:text-gray-700 transition-colors"
+                            "group-hover:text-primary transition-colors"
                           )}>
                             {product.name}
                           </h3>
                           
                           {product.shortDescription && !isMinimal && (
-                            <p className="text-sm text-gray-600 line-clamp-2 mb-4">
+                            <p className="text-sm text-muted-foreground line-clamp-2 mb-4">
                               {product.shortDescription}
                             </p>
                           )}
@@ -310,12 +310,12 @@ export default function ProductCarousel({
                                       "h-4 w-4",
                                       i < Math.floor(product.rating || 0)
                                         ? "fill-amber-400 text-amber-400"
-                                        : "text-gray-300"
+                                        : "text-muted-foreground/45"
                                     )}
                                   />
                                 ))}
                               </div>
-                              <span className="text-sm text-gray-500">
+                              <span className="text-sm text-muted-foreground">
                                 ({product.rating})
                               </span>
                             </div>
@@ -333,7 +333,7 @@ export default function ProductCarousel({
                                 </span>
                                 {product.originalPrice && product.originalPrice > product.price && (
                                   <span className={cn(
-                                    "text-gray-400 line-through",
+                                    "text-muted-foreground line-through",
                                     isFeatured ? "text-lg" : "text-base"
                                   )}>
                                     ${product.originalPrice.toFixed(2)}
@@ -343,7 +343,7 @@ export default function ProductCarousel({
                               
                               {/* Shipping Info */}
                               {!isMinimal && (
-                                <div className="flex items-center gap-1.5 mt-2 text-sm text-gray-600">
+                                <div className="flex items-center gap-1.5 mt-2 text-sm text-muted-foreground">
                                   <Truck className="h-4 w-4" />
                                   <span>Free shipping</span>
                                 </div>
@@ -355,7 +355,7 @@ export default function ProductCarousel({
                               <Button
                                 size="sm"
                                 variant="outline"
-                                className="rounded-full border-gray-300 hover:border-gray-900"
+                                className="rounded-full border-border hover:border-foreground"
                               >
                                 <ShoppingBag className="h-4 w-4" />
                               </Button>
@@ -371,8 +371,8 @@ export default function ProductCarousel({
             
             {/* Navigation */}
             <div className="absolute top-1/2 -translate-y-1/2 left-0 right-0 pointer-events-none">
-              <CarouselPrevious className="pointer-events-auto -left-12 h-14 w-14 rounded-full border-gray-300 bg-white/90 backdrop-blur-sm shadow-xl hover:bg-white hover:shadow-2xl hover:scale-110 transition-all hidden lg:flex" />
-              <CarouselNext className="pointer-events-auto -right-12 h-14 w-14 rounded-full border-gray-300 bg-white/90 backdrop-blur-sm shadow-xl hover:bg-white hover:shadow-2xl hover:scale-110 transition-all hidden lg:flex" />
+              <CarouselPrevious className="pointer-events-auto -left-12 h-14 w-14 rounded-full border-border bg-card/95 text-foreground backdrop-blur-sm shadow-xl hover:bg-muted hover:shadow-2xl hover:scale-110 transition-all hidden lg:flex" />
+              <CarouselNext className="pointer-events-auto -right-12 h-14 w-14 rounded-full border-border bg-card/95 text-foreground backdrop-blur-sm shadow-xl hover:bg-muted hover:shadow-2xl hover:scale-110 transition-all hidden lg:flex" />
             </div>
             
             {/* Dots Indicator */}

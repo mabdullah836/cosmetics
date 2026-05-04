@@ -273,12 +273,14 @@ const CarouselDots = React.forwardRef<
     setScrollSnaps(api.scrollSnapList())
     setSelectedIndex(api.selectedScrollSnap())
 
-    api.on("select", () => {
+    const onSelect = () => {
       setSelectedIndex(api.selectedScrollSnap())
-    })
+    }
+
+    api.on("select", onSelect)
 
     return () => {
-      api.off("select")
+      api.off("select", onSelect)
     }
   }, [api])
 
@@ -297,7 +299,7 @@ const CarouselDots = React.forwardRef<
             "h-2 rounded-full transition-all duration-300",
             selectedIndex === index
               ? "w-8 bg-primary"
-              : "w-2 bg-gray-300 hover:bg-gray-400"
+              : "w-2 bg-muted-foreground/35 hover:bg-muted-foreground/55"
           )}
           aria-label={`Go to slide ${index + 1}`}
         />

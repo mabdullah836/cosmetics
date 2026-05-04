@@ -34,14 +34,14 @@ export default async function SettingsPage() {
     .single();
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white">
+    <div className="min-h-screen bg-gradient-to-b from-muted/40 to-background">
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Breadcrumb */}
         <Breadcrumb className="mb-8">
           <BreadcrumbList>
             <BreadcrumbItem>
               <BreadcrumbLink asChild>
-                <Link href="/" className="text-gray-600 hover:text-gray-900">
+                <Link href="/" className="text-muted-foreground hover:text-foreground">
                   Home
                 </Link>
               </BreadcrumbLink>
@@ -49,14 +49,14 @@ export default async function SettingsPage() {
             <BreadcrumbSeparator />
             <BreadcrumbItem>
               <BreadcrumbLink asChild>
-                <Link href="/account" className="text-gray-600 hover:text-gray-900">
+                <Link href="/account" className="text-muted-foreground hover:text-foreground">
                   Account
                 </Link>
               </BreadcrumbLink>
             </BreadcrumbItem>
             <BreadcrumbSeparator />
             <BreadcrumbItem>
-              <BreadcrumbPage className="text-gray-900">Settings</BreadcrumbPage>
+              <BreadcrumbPage className="text-foreground">Settings</BreadcrumbPage>
             </BreadcrumbItem>
           </BreadcrumbList>
         </Breadcrumb>
@@ -64,8 +64,8 @@ export default async function SettingsPage() {
         {/* Header */}
         <div className="mb-8 flex items-center justify-between">
           <div>
-            <h1 className="text-3xl font-bold text-gray-900 mb-2">Account Settings</h1>
-            <p className="text-gray-600">Manage your account information and preferences</p>
+            <h1 className="text-3xl font-bold text-foreground mb-2">Account Settings</h1>
+            <p className="text-muted-foreground">Manage your account information and preferences</p>
           </div>
           <Button variant="outline" asChild>
             <Link href="/account">
@@ -122,17 +122,17 @@ export default async function SettingsPage() {
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="flex items-center gap-3">
-                <Mail className="h-5 w-5 text-gray-400" />
+                <Mail className="h-5 w-5 text-muted-foreground" />
                 <div>
-                  <p className="text-sm text-gray-600">Email Address</p>
-                  <p className="font-medium text-gray-900">{session.user.email}</p>
+                  <p className="text-sm text-muted-foreground">Email Address</p>
+                  <p className="font-medium text-foreground">{session.user.email}</p>
                 </div>
               </div>
               <div className="flex items-center gap-3">
-                <User className="h-5 w-5 text-gray-400" />
+                <User className="h-5 w-5 text-muted-foreground" />
                 <div>
-                  <p className="text-sm text-gray-600">User ID</p>
-                  <p className="font-medium text-gray-900 text-sm">{userId}</p>
+                  <p className="text-sm text-muted-foreground">User ID</p>
+                  <p className="font-medium text-foreground text-sm">{userId}</p>
                 </div>
               </div>
             </CardContent>

@@ -64,9 +64,9 @@ export default function ProductInfo({ product }: ProductInfoProps) {
       {/* Title */}
       <div className="space-y-2">
         {product.category && (
-          <p className="text-sm text-gray-500">{product.category}</p>
+          <p className="text-sm text-muted-foreground">{product.category}</p>
         )}
-        <h1 className="text-2xl lg:text-3xl font-semibold text-gray-900">
+        <h1 className="text-2xl lg:text-3xl font-semibold text-foreground">
           {product.name}
         </h1>
       </div>
@@ -81,12 +81,12 @@ export default function ProductInfo({ product }: ProductInfoProps) {
                 "h-4 w-4",
                 i < Math.floor(product.averageRating || 4)
                   ? "fill-yellow-400 text-yellow-400"
-                  : "text-gray-300"
+                  : "text-muted-foreground/40"
               )}
             />
           ))}
         </div>
-        <span className="text-gray-500">
+        <span className="text-muted-foreground">
           ({product.reviewCount || 0} reviews)
         </span>
         <span
@@ -101,11 +101,11 @@ export default function ProductInfo({ product }: ProductInfoProps) {
 
       {/* Price */}
       <div className="flex items-center gap-3">
-        <span className="text-3xl font-bold text-gray-900">
+        <span className="text-3xl font-bold text-foreground">
           ${product.price.toFixed(2)}
         </span>
         {product.original_price && (
-          <span className="text-lg line-through text-gray-400">
+          <span className="text-lg line-through text-muted-foreground">
             ${product.original_price.toFixed(2)}
           </span>
         )}
@@ -113,26 +113,26 @@ export default function ProductInfo({ product }: ProductInfoProps) {
 
       {/* Description */}
       {product.description && (
-        <p className="text-gray-600 leading-relaxed">
+        <p className="text-muted-foreground leading-relaxed">
           {product.description}
         </p>
       )}
 
       {/* Quantity */}
-      <div className="flex items-center gap-6 pt-4 border-t">
+      <div className="flex items-center gap-6 pt-4 border-t border-border">
         <div>
           <Label>Quantity</Label>
-          <div className="flex items-center border rounded-lg mt-1">
+          <div className="flex items-center border border-border rounded-lg mt-1">
             <button
               onClick={() => setQuantity((q) => Math.max(1, q - 1))}
-              className="px-3 py-2 hover:bg-gray-100"
+              className="px-3 py-2 hover:bg-muted"
             >
               −
             </button>
-            <span className="w-12 text-center">{quantity}</span>
+            <span className="w-12 text-center text-foreground">{quantity}</span>
             <button
               onClick={() => setQuantity((q) => q + 1)}
-              className="px-3 py-2 hover:bg-gray-100"
+              className="px-3 py-2 hover:bg-muted"
             >
               +
             </button>
@@ -140,8 +140,8 @@ export default function ProductInfo({ product }: ProductInfoProps) {
         </div>
 
         <div>
-          <p className="text-sm text-gray-500">Total</p>
-          <p className="text-xl font-semibold">
+          <p className="text-sm text-muted-foreground">Total</p>
+          <p className="text-xl font-semibold text-foreground">
             ${(product.price * quantity).toFixed(2)}
           </p>
         </div>
@@ -172,7 +172,7 @@ export default function ProductInfo({ product }: ProductInfoProps) {
       <div className="flex gap-4 pt-2">
         <button
           onClick={() => setIsWishlisted((v) => !v)}
-          className="flex items-center gap-2 text-sm text-gray-600 hover:text-gray-900"
+          className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground"
         >
           <Heart
             className={cn(
@@ -183,7 +183,7 @@ export default function ProductInfo({ product }: ProductInfoProps) {
           Wishlist
         </button>
 
-        <button className="flex items-center gap-2 text-sm text-gray-600 hover:text-gray-900">
+        <button className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground">
           <Share2 className="h-4 w-4" />
           Share
         </button>
