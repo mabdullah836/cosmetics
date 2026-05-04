@@ -15,7 +15,7 @@ export default function BrandValues() {
         <div className="text-center mb-12">
           <h2 
             id="brand-values-heading"
-            className="text-3xl md:text-4xl font-display font-bold text-foreground mb-8"
+            className="text-3xl md:text-4xl font-display font-bold text-primary mb-8"
           >
             Our Commitment
           </h2>

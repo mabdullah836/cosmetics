@@ -21,7 +21,7 @@ export default function FAQ() {
         <div className="text-center mb-12">
           <h2 
             id="faq-heading"
-            className="text-3xl md:text-4xl font-display font-bold text-foreground mb-4"
+            className="text-3xl md:text-4xl font-display font-bold text-primary mb-4"
           >
             Frequently Asked Questions
           </h2>

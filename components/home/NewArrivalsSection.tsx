@@ -53,7 +53,7 @@ export default function NewArrivalsSection({ products }: NewArrivalsSectionProps
   return (
     <section className="relative py-20 md:py-28 overflow-hidden">
       {/* Background Pattern */}
-      <div className="absolute inset-0 bg-gradient-to-b from-gray-50/30 to-white -z-10" />
+      <div className="absolute inset-0 bg-gradient-to-b from-muted/30 to-background -z-10" />
       <div className="absolute top-0 right-0 w-1/3 h-1/3 bg-gradient-to-bl from-purple-100/20 to-pink-100/10 rounded-full -translate-y-1/2 translate-x-1/3 blur-3xl" />
       
       <div className="max-w-[1920px] mx-auto px-6 lg:px-12 xl:px-16">
@@ -72,25 +72,25 @@ export default function NewArrivalsSection({ products }: NewArrivalsSectionProps
             </Badge>
           </div>
           
-          <h2 className="text-4xl md:text-5xl lg:text-6xl font-bold text-gray-900 mb-6">
+          <h2 className="text-4xl md:text-5xl lg:text-6xl font-bold text-primary mb-6">
             Discover <span className="text-transparent bg-clip-text bg-gradient-to-r from-purple-600 to-pink-600">New Arrivals</span>
           </h2>
-          <p className="text-xl text-gray-600 max-w-2xl mx-auto mb-8">
+          <p className="text-xl text-muted-foreground max-w-2xl mx-auto mb-8">
             Be the first to explore our latest innovations in beauty and cosmetics
           </p>
           
           <div className="flex flex-wrap justify-center gap-3">
-            <Button variant="outline" size="lg" className="rounded-full border-gray-300 px-8">
+            <Button variant="outline" size="lg" className="rounded-full border-border px-8">
               <Sparkles className="h-4 w-4 mr-2" />
               Featured
             </Button>
-            <Button variant="outline" size="lg" className="rounded-full border-gray-300 px-8">
+            <Button variant="outline" size="lg" className="rounded-full border-border px-8">
               Skincare
             </Button>
-            <Button variant="outline" size="lg" className="rounded-full border-gray-300 px-8">
+            <Button variant="outline" size="lg" className="rounded-full border-border px-8">
               Makeup
             </Button>
-            <Button variant="outline" size="lg" className="rounded-full border-gray-300 px-8">
+            <Button variant="outline" size="lg" className="rounded-full border-border px-8">
               Haircare
             </Button>
             <Button
@@ -111,16 +111,16 @@ export default function NewArrivalsSection({ products }: NewArrivalsSectionProps
           className="w-full mb-8"
           onValueChange={(v) => setViewMode(v as "featured" | "carousel")}
         >
-          <TabsList className="w-fit mx-auto bg-gray-100/50 rounded-full p-1">
+          <TabsList className="w-fit mx-auto bg-muted/60 rounded-full p-1">
             <TabsTrigger 
               value="featured"
-              className="rounded-full px-6 data-[state=active]:bg-white data-[state=active]:shadow-sm"
+              className="rounded-full px-6 data-[state=active]:bg-background data-[state=active]:shadow-sm"
             >
               Featured View
             </TabsTrigger>
             <TabsTrigger 
               value="carousel"
-              className="rounded-full px-6 data-[state=active]:bg-white data-[state=active]:shadow-sm"
+              className="rounded-full px-6 data-[state=active]:bg-background data-[state=active]:shadow-sm"
             >
               Carousel View
             </TabsTrigger>
@@ -132,7 +132,7 @@ export default function NewArrivalsSection({ products }: NewArrivalsSectionProps
               {/* Main Featured Product */}
               <div className="lg:col-span-2">
                 <Link href={`/product/${featuredProduct.slug}`} className="group block">
-                  <div className="relative h-[500px] md:h-[600px] rounded-3xl overflow-hidden bg-gradient-to-br from-gray-100 to-gray-50 border border-gray-200 shadow-xl hover:shadow-2xl transition-all duration-500">
+                  <div className="relative h-[500px] md:h-[600px] rounded-3xl overflow-hidden bg-gradient-to-br from-muted to-muted/70 border border-border shadow-xl hover:shadow-2xl transition-all duration-500">
                     {/* Background Pattern */}
                     <div className="absolute inset-0 bg-[radial-gradient(circle_at_30%_30%,rgba(168,85,247,0.1)_0%,transparent_50%)]" />
                     
@@ -205,7 +205,7 @@ export default function NewArrivalsSection({ products }: NewArrivalsSectionProps
                         <div className="flex flex-col sm:flex-row gap-4">
                           <Button
                             size="lg"
-                            className="bg-white text-gray-900 hover:bg-white/90 shadow-xl hover:shadow-2xl px-8 rounded-full font-semibold"
+                            className="bg-white text-foreground hover:bg-white/90 shadow-xl hover:shadow-2xl px-8 rounded-full font-semibold"
                             onClick={(e) => {
                               e.preventDefault();
                               handleQuickAdd(featuredProduct.id, featuredProduct.name);
@@ -236,8 +236,8 @@ export default function NewArrivalsSection({ products }: NewArrivalsSectionProps
               {/* Trending Products Sidebar */}
               <div>
                 <div className="mb-6">
-                  <h3 className="text-2xl font-bold text-gray-900 mb-2">Trending Now</h3>
-                  <p className="text-gray-600">Others are loving these</p>
+                  <h3 className="text-2xl font-bold text-primary mb-2">Trending Now</h3>
+                  <p className="text-muted-foreground">Others are loving these</p>
                 </div>
                 
                 <div className="space-y-4">
@@ -247,8 +247,8 @@ export default function NewArrivalsSection({ products }: NewArrivalsSectionProps
                       href={`/product/${product.slug}`}
                       className="group block"
                     >
-                      <div className="flex gap-4 p-4 bg-white rounded-2xl border border-gray-200 hover:border-gray-300 hover:shadow-lg transition-all duration-300">
-                        <div className="relative w-20 h-20 flex-shrink-0 rounded-xl overflow-hidden bg-gradient-to-br from-gray-100 to-gray-50">
+                      <div className="flex gap-4 p-4 bg-card rounded-2xl border border-border hover:shadow-lg transition-all duration-300">
+                        <div className="relative w-20 h-20 flex-shrink-0 rounded-xl overflow-hidden bg-gradient-to-br from-muted to-muted/70">
                           <Image
                             src={product.imageUrl}
                             alt={product.name}
@@ -265,7 +265,7 @@ export default function NewArrivalsSection({ products }: NewArrivalsSectionProps
                         
                         <div className="flex-1 min-w-0">
                           <div className="flex items-start justify-between mb-1">
-                            <h4 className="font-semibold text-gray-900 line-clamp-2 group-hover:text-purple-600 transition-colors">
+                            <h4 className="font-semibold text-foreground line-clamp-2 group-hover:text-primary transition-colors">
                               {product.name}
                             </h4>
                             <Button
@@ -288,24 +288,24 @@ export default function NewArrivalsSection({ products }: NewArrivalsSectionProps
                             </Button>
                           </div>
                           
-                          <p className="text-xs text-gray-500 uppercase mb-2 truncate">
+                          <p className="text-xs text-muted-foreground uppercase mb-2 truncate">
                             {product.category || "Cosmetics"}
                           </p>
                           
                           <div className="flex items-center justify-between">
                             <div className="flex items-center gap-1">
                               <Star className="h-3 w-3 fill-amber-400 text-amber-400" />
-                              <span className="text-sm font-medium text-gray-700">
+                              <span className="text-sm font-medium text-muted-foreground">
                                 {product.rating?.toFixed(1) || "4.5"}
                               </span>
                             </div>
                             
                             <div className="text-right">
-                              <div className="font-bold text-gray-900">
+                              <div className="font-bold text-foreground">
                                 ${product.price.toFixed(2)}
                               </div>
                               {product.originalPrice && product.originalPrice > product.price && (
-                                <div className="text-xs line-through text-gray-500">
+                                <div className="text-xs line-through text-muted-foreground">
                                   ${product.originalPrice.toFixed(2)}
                                 </div>
                               )}
@@ -338,8 +338,8 @@ export default function NewArrivalsSection({ products }: NewArrivalsSectionProps
                     className="pl-4 md:pl-6 basis-[85%] sm:basis-1/2 lg:basis-1/3 xl:basis-1/4"
                   >
                     <Link href={`/product/${product.slug}`} className="group block h-full">
-                      <div className="h-full bg-white rounded-2xl overflow-hidden border border-gray-200 hover:border-gray-300 transition-all duration-300 hover:shadow-xl hover:-translate-y-2">
-                        <div className="relative aspect-[3/4] bg-gradient-to-br from-gray-50 to-gray-100 overflow-hidden">
+                      <div className="h-full bg-card rounded-2xl overflow-hidden border border-border transition-all duration-300 hover:shadow-xl hover:-translate-y-2">
+                        <div className="relative aspect-[3/4] bg-gradient-to-br from-muted/70 to-muted overflow-hidden">
                           <Image
                             src={product.imageUrl}
                             alt={product.name}
@@ -366,7 +366,7 @@ export default function NewArrivalsSection({ products }: NewArrivalsSectionProps
                             <Button
                               size="icon"
                               variant="secondary"
-                              className="h-11 w-11 rounded-full bg-white/90 backdrop-blur-sm shadow-lg border-0"
+                              className="h-11 w-11 rounded-full bg-background/90 text-foreground backdrop-blur-sm shadow-lg border border-border"
                               onClick={(e) => {
                                 e.preventDefault();
                                 setWishlisted(prev => 
@@ -384,7 +384,7 @@ export default function NewArrivalsSection({ products }: NewArrivalsSectionProps
                             <Button
                               size="icon"
                               variant="secondary"
-                              className="h-11 w-11 rounded-full bg-white/90 backdrop-blur-sm shadow-lg border-0"
+                              className="h-11 w-11 rounded-full bg-background/90 text-foreground backdrop-blur-sm shadow-lg border border-border"
                               onClick={(e) => {
                                 e.preventDefault();
                                 window.location.href = `/product/${product.slug}?quickview=true`;
@@ -397,7 +397,7 @@ export default function NewArrivalsSection({ products }: NewArrivalsSectionProps
                           {/* Quick Add Overlay */}
                           <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/60 via-transparent to-transparent p-6 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
                             <Button
-                              className="w-full bg-white text-gray-900 hover:bg-white/90 font-semibold h-12 rounded-xl shadow-lg hover:scale-[1.02] transition-transform"
+                              className="w-full bg-background text-foreground hover:bg-muted font-semibold h-12 rounded-xl shadow-lg hover:scale-[1.02] transition-transform border border-border"
                               onClick={(e) => {
                                 e.preventDefault();
                                 handleQuickAdd(product.id, product.name);
@@ -410,11 +410,11 @@ export default function NewArrivalsSection({ products }: NewArrivalsSectionProps
                         </div>
                         
                         <div className="p-5">
-                          <p className="text-xs font-medium text-gray-500 uppercase tracking-wider mb-2">
+                          <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-2">
                             {product.category || "Cosmetics"}
                           </p>
                           
-                          <h4 className="font-semibold text-gray-900 line-clamp-2 mb-3 group-hover:text-purple-600 transition-colors">
+                          <h4 className="font-semibold text-foreground line-clamp-2 mb-3 group-hover:text-primary transition-colors">
                             {product.name}
                           </h4>
                           
@@ -427,28 +427,28 @@ export default function NewArrivalsSection({ products }: NewArrivalsSectionProps
                                     "h-4 w-4",
                                     i < Math.floor(product.rating || 0)
                                       ? "fill-amber-400 text-amber-400"
-                                      : "text-gray-300"
+                                      : "text-muted-foreground/45"
                                   )}
                                 />
                               ))}
                             </div>
-                            <span className="text-sm text-gray-600">
+                            <span className="text-sm text-muted-foreground">
                               ({product.rating?.toFixed(1) || "4.5"})
                             </span>
                           </div>
                           
                           <div className="flex items-center justify-between">
                             <div className="flex items-center gap-2">
-                              <span className="text-xl font-bold text-gray-900">
+                              <span className="text-xl font-bold text-foreground">
                                 ${product.price.toFixed(2)}
                               </span>
                               {product.originalPrice && product.originalPrice > product.price && (
-                                <span className="text-base line-through text-gray-500">
+                                <span className="text-base line-through text-muted-foreground">
                                   ${product.originalPrice.toFixed(2)}
                                 </span>
                               )}
                             </div>
-                            <span className="text-sm text-gray-500">Free Shipping</span>
+                            <span className="text-sm text-muted-foreground">Free Shipping</span>
                           </div>
                         </div>
                       </div>
@@ -457,8 +457,8 @@ export default function NewArrivalsSection({ products }: NewArrivalsSectionProps
                 ))}
               </CarouselContent>
               
-              <CarouselPrevious className="absolute top-1/2 -translate-y-1/2 -left-12 h-14 w-14 rounded-full border-gray-300 bg-white/90 backdrop-blur-sm shadow-xl hover:shadow-2xl hover:scale-110 transition-all hidden xl:flex" />
-              <CarouselNext className="absolute top-1/2 -translate-y-1/2 -right-12 h-14 w-14 rounded-full border-gray-300 bg-white/90 backdrop-blur-sm shadow-xl hover:shadow-2xl hover:scale-110 transition-all hidden xl:flex" />
+              <CarouselPrevious className="absolute top-1/2 -translate-y-1/2 -left-12 h-14 w-14 rounded-full border-border bg-card/95 text-foreground backdrop-blur-sm shadow-xl hover:bg-muted hover:shadow-2xl hover:scale-110 transition-all hidden xl:flex" />
+              <CarouselNext className="absolute top-1/2 -translate-y-1/2 -right-12 h-14 w-14 rounded-full border-border bg-card/95 text-foreground backdrop-blur-sm shadow-xl hover:bg-muted hover:shadow-2xl hover:scale-110 transition-all hidden xl:flex" />
             </Carousel>
           </TabsContent>
         </Tabs>
@@ -467,13 +467,13 @@ export default function NewArrivalsSection({ products }: NewArrivalsSectionProps
         <div className="mt-16">
           <div className="flex items-center justify-between mb-8">
             <div>
-              <h3 className="text-2xl font-bold text-gray-900 mb-2">More New Arrivals</h3>
-              <p className="text-gray-600">Complete your collection</p>
+              <h3 className="text-2xl font-bold text-primary mb-2">More New Arrivals</h3>
+              <p className="text-muted-foreground">Complete your collection</p>
             </div>
             <Button
               variant="ghost"
               asChild
-              className="text-gray-700 hover:text-gray-900"
+              className="text-muted-foreground hover:text-foreground"
             >
               <Link href="/products?new=true">
                 View All
@@ -489,8 +489,8 @@ export default function NewArrivalsSection({ products }: NewArrivalsSectionProps
                 href={`/product/${product.slug}`}
                 className="group block"
               >
-                <div className="bg-white rounded-2xl border border-gray-200 hover:border-gray-300 hover:shadow-lg transition-all duration-300 overflow-hidden">
-                  <div className="relative aspect-[4/5] bg-gradient-to-br from-gray-50 to-gray-100">
+                <div className="bg-card rounded-2xl border border-border hover:shadow-lg transition-all duration-300 overflow-hidden">
+                  <div className="relative aspect-[4/5] bg-gradient-to-br from-muted/70 to-muted">
                     <Image
                       src={product.imageUrl}
                       alt={product.name}
@@ -504,11 +504,11 @@ export default function NewArrivalsSection({ products }: NewArrivalsSectionProps
                   </div>
                   
                   <div className="p-4">
-                    <h4 className="font-semibold text-gray-900 line-clamp-2 mb-2 group-hover:text-purple-600 transition-colors">
+                    <h4 className="font-semibold text-foreground line-clamp-2 mb-2 group-hover:text-primary transition-colors">
                       {product.name}
                     </h4>
                     <div className="flex items-center justify-between">
-                      <div className="text-lg font-bold text-gray-900">
+                      <div className="text-lg font-bold text-foreground">
                         ${product.price.toFixed(2)}
                       </div>
                       <Star className="h-4 w-4 fill-amber-400 text-amber-400" />

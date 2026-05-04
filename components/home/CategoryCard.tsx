@@ -40,15 +40,15 @@ export default function CategoryGrid({
   };
 
   return (
-    <section className="py-12 md:py-16 bg-gray-50">
+    <section className="py-12 md:py-16 bg-muted/40">
       <div className="container mx-auto px-4">
         {/* Header */}
         <div className="text-center mb-10">
-          <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-3">
+          <h2 className="text-3xl md:text-4xl font-bold text-primary mb-3">
             {title}
           </h2>
           {subtitle && (
-            <p className="text-gray-600 text-lg max-w-2xl mx-auto">
+            <p className="text-muted-foreground text-lg max-w-2xl mx-auto">
               {subtitle}
             </p>
           )}
@@ -65,7 +65,7 @@ export default function CategoryGrid({
                 category.isFeatured && columns === 4 ? "md:col-span-2 md:row-span-2" : ""
               )}
             >
-              <Card className="h-full overflow-hidden border border-gray-200 hover:border-primary/50 hover:shadow-lg transition-all">
+              <Card className="h-full overflow-hidden border border-border hover:border-primary/50 hover:shadow-lg transition-all">
                 <div className="relative aspect-square overflow-hidden">
                   <Image
                     src={category.imageUrl}
@@ -96,14 +96,14 @@ export default function CategoryGrid({
                       </div>
                       
                       {category.description && (
-                        <p className="text-sm text-gray-200 mb-3 line-clamp-2">
+                        <p className="text-sm text-white/85 mb-3 line-clamp-2">
                           {category.description}
                         </p>
                       )}
                       
                       <div className="flex items-center justify-between">
                         {category.productCount && (
-                          <span className="text-sm text-gray-300">
+                          <span className="text-sm text-white/75">
                             {category.productCount} products
                           </span>
                         )}

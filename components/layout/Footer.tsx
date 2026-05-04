@@ -41,7 +41,7 @@ export default function Footer() {
           <div className="space-y-4">
             <Link href="/" className="inline-flex items-center gap-2">
               <Sparkles className="h-5 w-5 text-primary" />
-              <h2 className="text-xl font-display font-bold">
+              <h2 className="text-xl font-display font-bold text-primary">
                 Bloom Beauty
               </h2>
             </Link>
