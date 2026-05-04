@@ -35,6 +35,7 @@ import { getLocalCartItemCount } from "@/lib/utils/localCart";
 import { CartItem } from "@/types/supabase";
 import { NAV_CATEGORIES, SUPPORT_MENU_ITEMS } from "@/lib/constants/nav";
 import LoginForm from "@/components/auth/LoginForm";
+import { ThemeToggle } from "@/components/layout/ThemeToggle";
 
 interface HeaderProps {
   cartItems?: CartItem[];
@@ -299,6 +300,7 @@ export default function Header({ cartItems: serverCartItems = [], subtotal: serv
                 {/* Mobile Actions */}
                 <div className="border-t border-border pt-4 space-y-4">
                   <div className="flex items-center justify-around">
+                    <ThemeToggle />
                     <Button
                       variant="ghost"
                       size="icon"
@@ -355,7 +357,7 @@ export default function Header({ cartItems: serverCartItems = [], subtotal: serv
               <div className="absolute -inset-1 bg-primary/10 rounded-full blur-sm" />
               <Sparkles className="relative h-6 w-6 text-primary" />
             </div>
-            <h1 className="text-2xl md:text-3xl font-display font-bold bg-gradient-to-r from-primary to-pink-600 bg-clip-text text-transparent">
+            <h1 className="text-2xl md:text-3xl font-display font-bold bg-gradient-to-r from-primary to-fuchsia-500 bg-clip-text text-transparent dark:to-fuchsia-400">
               Bloom
             </h1>
             <span className="hidden sm:inline-block text-xs font-medium bg-primary/10 text-primary px-2 py-0.5 rounded-full">
@@ -406,7 +408,7 @@ export default function Header({ cartItems: serverCartItems = [], subtotal: serv
                   </DropdownMenuTrigger>
                   <DropdownMenuContent
                     align="start"
-                    className="w-[280px] min-w-[280px] rounded-lg bg-white p-0 shadow-lg md:w-[320px] md:min-w-[320px]"
+                    className="w-[280px] min-w-[280px] rounded-lg bg-popover text-popover-foreground p-0 shadow-lg md:w-[320px] md:min-w-[320px]"
                     onCloseAutoFocus={(e) => e.preventDefault()}
                   >
                     <div className="p-2">
@@ -479,7 +481,7 @@ export default function Header({ cartItems: serverCartItems = [], subtotal: serv
                 </DropdownMenuTrigger>
                 <DropdownMenuContent
                   align="end"
-                  className="w-52 rounded-lg bg-white shadow-lg"
+                  className="w-52 rounded-lg bg-popover text-popover-foreground shadow-lg"
                   onCloseAutoFocus={(e) => e.preventDefault()}
                 >
                   {SUPPORT_MENU_ITEMS.map((item) => (
@@ -558,6 +560,8 @@ export default function Header({ cartItems: serverCartItems = [], subtotal: serv
                 </div>
               </div>
             )}
+
+            <ThemeToggle />
 
             {/* Wishlist */}
             <Button
