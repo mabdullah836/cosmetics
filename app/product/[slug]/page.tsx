@@ -156,7 +156,7 @@ export default async function ProductPage({ params }: ProductPageProps) {
   }));
 
   return (
-    <div className="min-h-screen bg-white">
+    <div className="min-h-screen bg-background">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Breadcrumb */}
         <div className="mb-8">
@@ -166,7 +166,7 @@ export default async function ProductPage({ params }: ProductPageProps) {
                 <BreadcrumbLink asChild>
                   <Link 
                     href="/" 
-                    className="text-gray-500 hover:text-gray-700 transition-colors text-sm"
+                    className="text-muted-foreground hover:text-foreground transition-colors text-sm"
                   >
                     Home
                   </Link>
@@ -177,7 +177,7 @@ export default async function ProductPage({ params }: ProductPageProps) {
                 <BreadcrumbLink asChild>
                   <Link 
                     href="/products" 
-                    className="text-gray-500 hover:text-gray-700 transition-colors text-sm"
+                    className="text-muted-foreground hover:text-foreground transition-colors text-sm"
                   >
                     Products
                   </Link>
@@ -190,7 +190,7 @@ export default async function ProductPage({ params }: ProductPageProps) {
                     <BreadcrumbLink asChild>
                       <Link 
                         href={`/categories/${product.category_id}`}
-                        className="text-gray-500 hover:text-gray-700 transition-colors text-sm"
+                        className="text-muted-foreground hover:text-foreground transition-colors text-sm"
                       >
                         {product.category}
                       </Link>
@@ -200,7 +200,7 @@ export default async function ProductPage({ params }: ProductPageProps) {
               )}
               <BreadcrumbSeparator />
               <BreadcrumbItem>
-                <span className="text-gray-900 font-medium text-sm">
+                <span className="text-foreground font-medium text-sm">
                   {product.name}
                 </span>
               </BreadcrumbItem>
@@ -219,8 +219,8 @@ export default async function ProductPage({ params }: ProductPageProps) {
                   productName={product.name}
                 />
               ) : (
-                <div className="aspect-square bg-gray-100 rounded-lg flex items-center justify-center">
-                  <span className="text-gray-400">No image available</span>
+                <div className="aspect-square bg-muted rounded-lg flex items-center justify-center">
+                  <span className="text-muted-foreground">No image available</span>
                 </div>
               )}
             </div>
@@ -233,42 +233,42 @@ export default async function ProductPage({ params }: ProductPageProps) {
         </div>
 
         {/* Trust Badges */}
-        <div className="border-t border-b border-gray-200 py-8 mb-16">
+        <div className="border-t border-b border-border py-8 mb-16">
           <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
             <div className="flex items-center gap-4">
               <div className="flex-shrink-0">
-                <Truck className="h-6 w-6 text-gray-600" />
+                <Truck className="h-6 w-6 text-muted-foreground" />
               </div>
               <div>
-                <h4 className="font-medium text-gray-900 text-sm">Free Shipping</h4>
-                <p className="text-gray-500 text-xs">Orders over $50</p>
+                <h4 className="font-medium text-foreground text-sm">Free Shipping</h4>
+                <p className="text-muted-foreground text-xs">Orders over $50</p>
               </div>
             </div>
             <div className="flex items-center gap-4">
               <div className="flex-shrink-0">
-                <RotateCcw className="h-6 w-6 text-gray-600" />
+                <RotateCcw className="h-6 w-6 text-muted-foreground" />
               </div>
               <div>
-                <h4 className="font-medium text-gray-900 text-sm">30-Day Returns</h4>
-                <p className="text-gray-500 text-xs">Easy returns</p>
+                <h4 className="font-medium text-foreground text-sm">30-Day Returns</h4>
+                <p className="text-muted-foreground text-xs">Easy returns</p>
               </div>
             </div>
             <div className="flex items-center gap-4">
               <div className="flex-shrink-0">
-                <Shield className="h-6 w-6 text-gray-600" />
+                <Shield className="h-6 w-6 text-muted-foreground" />
               </div>
               <div>
-                <h4 className="font-medium text-gray-900 text-sm">Secure Payment</h4>
-                <p className="text-gray-500 text-xs">100% secure</p>
+                <h4 className="font-medium text-foreground text-sm">Secure Payment</h4>
+                <p className="text-muted-foreground text-xs">100% secure</p>
               </div>
             </div>
             <div className="flex items-center gap-4">
               <div className="flex-shrink-0">
-                <Package className="h-6 w-6 text-gray-600" />
+                <Package className="h-6 w-6 text-muted-foreground" />
               </div>
               <div>
-                <h4 className="font-medium text-gray-900 text-sm">Quality Guaranteed</h4>
-                <p className="text-gray-500 text-xs">Premium quality</p>
+                <h4 className="font-medium text-foreground text-sm">Quality Guaranteed</h4>
+                <p className="text-muted-foreground text-xs">Premium quality</p>
               </div>
             </div>
           </div>
@@ -280,25 +280,25 @@ export default async function ProductPage({ params }: ProductPageProps) {
             <TabsList className="w-full border-b bg-transparent p-0 h-auto mb-8">
               <TabsTrigger 
                 value="description"
-                className="data-[state=active]:text-gray-900 data-[state=active]:border-b-2 data-[state=active]:border-gray-900 rounded-none px-4 py-3 text-sm font-medium text-gray-500"
+                className="data-[state=active]:text-foreground data-[state=active]:border-b-2 data-[state=active]:border-foreground rounded-none px-4 py-3 text-sm font-medium text-muted-foreground"
               >
                 Description
               </TabsTrigger>
               <TabsTrigger 
                 value="details"
-                className="data-[state=active]:text-gray-900 data-[state=active]:border-b-2 data-[state=active]:border-gray-900 rounded-none px-4 py-3 text-sm font-medium text-gray-500"
+                className="data-[state=active]:text-foreground data-[state=active]:border-b-2 data-[state=active]:border-foreground rounded-none px-4 py-3 text-sm font-medium text-muted-foreground"
               >
                 Details
               </TabsTrigger>
               <TabsTrigger 
                 value="reviews"
-                className="data-[state=active]:text-gray-900 data-[state=active]:border-b-2 data-[state=active]:border-gray-900 rounded-none px-4 py-3 text-sm font-medium text-gray-500"
+                className="data-[state=active]:text-foreground data-[state=active]:border-b-2 data-[state=active]:border-foreground rounded-none px-4 py-3 text-sm font-medium text-muted-foreground"
               >
                 Reviews ({productWithData.reviewCount})
               </TabsTrigger>
               <TabsTrigger 
                 value="shipping"
-                className="data-[state=active]:text-gray-900 data-[state=active]:border-b-2 data-[state=active]:border-gray-900 rounded-none px-4 py-3 text-sm font-medium text-gray-500"
+                className="data-[state=active]:text-foreground data-[state=active]:border-b-2 data-[state=active]:border-foreground rounded-none px-4 py-3 text-sm font-medium text-muted-foreground"
               >
                 Shipping
               </TabsTrigger>
@@ -306,14 +306,14 @@ export default async function ProductPage({ params }: ProductPageProps) {
             
             <TabsContent value="description" className="mt-6">
               <div className="prose prose-gray max-w-none">
-                <h3 className="text-xl font-semibold text-gray-900 mb-4">Product Description</h3>
+                <h3 className="text-xl font-semibold text-foreground mb-4">Product Description</h3>
                 {product.description ? (
                   <div 
-                    className="text-gray-600 leading-relaxed"
+                    className="text-muted-foreground leading-relaxed"
                     dangerouslySetInnerHTML={{ __html: product.description }} 
                   />
                 ) : (
-                  <p className="text-gray-500">No description available.</p>
+                  <p className="text-muted-foreground">No description available.</p>
                 )}
               </div>
             </TabsContent>
@@ -321,30 +321,30 @@ export default async function ProductPage({ params }: ProductPageProps) {
             <TabsContent value="details" className="mt-6">
               <div className="grid md:grid-cols-2 gap-8">
                 <div>
-                  <h3 className="text-xl font-semibold text-gray-900 mb-4">Product Details</h3>
+                  <h3 className="text-xl font-semibold text-foreground mb-4">Product Details</h3>
                   <ul className="space-y-3">
                     {product.specifications?.map((spec: string, index: number) => (
                       <li key={index} className="flex items-start gap-3">
-                        <div className="h-1.5 w-1.5 bg-gray-400 rounded-full mt-2"></div>
-                        <span className="text-gray-600">{spec}</span>
+                        <div className="h-1.5 w-1.5 bg-muted-foreground rounded-full mt-2"></div>
+                        <span className="text-muted-foreground">{spec}</span>
                       </li>
                     )) || (
                       <>
                         <li className="flex items-start gap-3">
-                          <div className="h-1.5 w-1.5 bg-gray-400 rounded-full mt-2"></div>
-                          <span className="text-gray-600">High-quality materials</span>
+                          <div className="h-1.5 w-1.5 bg-muted-foreground rounded-full mt-2"></div>
+                          <span className="text-muted-foreground">High-quality materials</span>
                         </li>
                         <li className="flex items-start gap-3">
-                          <div className="h-1.5 w-1.5 bg-gray-400 rounded-full mt-2"></div>
-                          <span className="text-gray-600">Premium craftsmanship</span>
+                          <div className="h-1.5 w-1.5 bg-muted-foreground rounded-full mt-2"></div>
+                          <span className="text-muted-foreground">Premium craftsmanship</span>
                         </li>
                       </>
                     )}
                   </ul>
                 </div>
                 <div>
-                  <h3 className="text-xl font-semibold text-gray-900 mb-4">Care Instructions</h3>
-                  <p className="text-gray-600 leading-relaxed">
+                  <h3 className="text-xl font-semibold text-foreground mb-4">Care Instructions</h3>
+                  <p className="text-muted-foreground leading-relaxed">
                     Store in a cool, dry place. Avoid direct sunlight and extreme temperatures.
                     Follow specific care instructions included with product.
                   </p>
@@ -356,19 +356,19 @@ export default async function ProductPage({ params }: ProductPageProps) {
               <div className="space-y-8">
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                   <div>
-                    <h3 className="text-xl font-semibold text-gray-900 mb-2">Customer Reviews</h3>
+                    <h3 className="text-xl font-semibold text-foreground mb-2">Customer Reviews</h3>
                     <div className="flex items-center gap-3">
                       <div className="flex items-center gap-2">
                         <Star className="h-5 w-5 fill-amber-400 text-amber-400" />
-                        <span className="text-2xl font-bold text-gray-900">{averageRating}</span>
-                        <span className="text-gray-500">/5</span>
+                        <span className="text-2xl font-bold text-foreground">{averageRating}</span>
+                        <span className="text-muted-foreground">/5</span>
                       </div>
-                      <span className="text-gray-500 text-sm">
+                      <span className="text-muted-foreground text-sm">
                         • {productWithData.reviewCount} {productWithData.reviewCount === 1 ? 'review' : 'reviews'}
                       </span>
                     </div>
                   </div>
-                  <Button variant="outline" className="border-gray-300">
+                  <Button variant="outline" className="border-border">
                     Write a Review
                   </Button>
                 </div>
@@ -376,17 +376,17 @@ export default async function ProductPage({ params }: ProductPageProps) {
                 {productWithData.reviews.length > 0 ? (
                   <div className="space-y-6">
                     {productWithData.reviews.slice(0, 5).map((review: ProductReview) => (
-                      <div key={review.id} className="border border-gray-200 rounded-lg p-6">
+                      <div key={review.id} className="border border-border rounded-lg p-6">
                         <div className="flex items-start justify-between mb-4">
                           <div className="flex items-center gap-3">
-                            <div className="h-10 w-10 bg-gray-100 rounded-full flex items-center justify-center">
-                              <span className="text-gray-600 font-medium">
+                            <div className="h-10 w-10 bg-muted rounded-full flex items-center justify-center">
+                              <span className="text-muted-foreground font-medium">
                                 {review.profiles?.full_name?.charAt(0) || 'U'}
                               </span>
                             </div>
                             <div>
                               <div className="flex items-center gap-2 flex-wrap">
-                                <h4 className="font-medium text-gray-900">
+                                <h4 className="font-medium text-foreground">
                                   {review.profiles?.full_name || 'Anonymous'}
                                 </h4>
                                 {review.is_verified_purchase && (
@@ -399,13 +399,13 @@ export default async function ProductPage({ params }: ProductPageProps) {
                                 {[...Array(5)].map((_, i) => (
                                   <Star
                                     key={i}
-                                    className={`h-4 w-4 ${i < review.rating ? 'fill-amber-400 text-amber-400' : 'text-gray-300'}`}
+                                    className={`h-4 w-4 ${i < review.rating ? 'fill-amber-400 text-amber-400' : 'text-muted-foreground/45'}`}
                                   />
                                 ))}
                               </div>
                             </div>
                           </div>
-                          <span className="text-sm text-gray-500">
+                          <span className="text-sm text-muted-foreground">
                             {new Date(review.created_at).toLocaleDateString('en-US', {
                               month: 'short',
                               day: 'numeric',
@@ -413,17 +413,17 @@ export default async function ProductPage({ params }: ProductPageProps) {
                             })}
                           </span>
                         </div>
-                        <p className="text-gray-600">{review.comment}</p>
+                        <p className="text-muted-foreground">{review.comment}</p>
                       </div>
                     ))}
                   </div>
                 ) : (
-                  <div className="text-center py-12 border border-gray-200 rounded-lg">
-                    <div className="inline-flex items-center justify-center h-12 w-12 rounded-full bg-gray-100 mb-4">
-                      <Star className="h-6 w-6 text-gray-400" />
+                  <div className="text-center py-12 border border-border rounded-lg">
+                    <div className="inline-flex items-center justify-center h-12 w-12 rounded-full bg-muted mb-4">
+                      <Star className="h-6 w-6 text-muted-foreground" />
                     </div>
-                    <p className="text-gray-500 mb-4">No reviews yet</p>
-                    <Button variant="outline" className="border-gray-300">
+                    <p className="text-muted-foreground mb-4">No reviews yet</p>
+                    <Button variant="outline" className="border-border">
                       Be the first to review
                     </Button>
                   </div>
@@ -434,43 +434,43 @@ export default async function ProductPage({ params }: ProductPageProps) {
             <TabsContent value="shipping" className="mt-6">
               <div className="space-y-8">
                 <div>
-                  <h3 className="text-xl font-semibold text-gray-900 mb-4">Shipping Information</h3>
-                  <div className="space-y-3 text-gray-600">
+                  <h3 className="text-xl font-semibold text-foreground mb-4">Shipping Information</h3>
+                  <div className="space-y-3 text-muted-foreground">
                     <p className="flex items-start gap-2">
-                      <span className="text-gray-900 font-medium">• Standard Shipping:</span>
+                      <span className="text-foreground font-medium">• Standard Shipping:</span>
                       <span>3-5 business days • Free on orders over $50</span>
                     </p>
                     <p className="flex items-start gap-2">
-                      <span className="text-gray-900 font-medium">• Express Shipping:</span>
+                      <span className="text-foreground font-medium">• Express Shipping:</span>
                       <span>1-2 business days • $9.99</span>
                     </p>
                     <p className="flex items-start gap-2">
-                      <span className="text-gray-900 font-medium">• Processing Time:</span>
+                      <span className="text-foreground font-medium">• Processing Time:</span>
                       <span>1-2 business days</span>
                     </p>
                     <p className="flex items-start gap-2">
-                      <span className="text-gray-900 font-medium">• International:</span>
+                      <span className="text-foreground font-medium">• International:</span>
                       <span>Available to select countries</span>
                     </p>
                   </div>
                 </div>
                 <div>
-                  <h3 className="text-xl font-semibold text-gray-900 mb-4">Return Policy</h3>
-                  <div className="space-y-3 text-gray-600">
+                  <h3 className="text-xl font-semibold text-foreground mb-4">Return Policy</h3>
+                  <div className="space-y-3 text-muted-foreground">
                     <p className="flex items-start gap-2">
-                      <span className="text-gray-900 font-medium">• Return Window:</span>
+                      <span className="text-foreground font-medium">• Return Window:</span>
                       <span>30 days from delivery date</span>
                     </p>
                     <p className="flex items-start gap-2">
-                      <span className="text-gray-900 font-medium">• Condition:</span>
+                      <span className="text-foreground font-medium">• Condition:</span>
                       <span>Unused, in original packaging with tags</span>
                     </p>
                     <p className="flex items-start gap-2">
-                      <span className="text-gray-900 font-medium">• Refund Time:</span>
+                      <span className="text-foreground font-medium">• Refund Time:</span>
                       <span>5-10 business days after return receipt</span>
                     </p>
                     <p className="flex items-start gap-2">
-                      <span className="text-gray-900 font-medium">• Defective Items:</span>
+                      <span className="text-foreground font-medium">• Defective Items:</span>
                       <span>Free returns and replacement</span>
                     </p>
                   </div>
@@ -485,12 +485,12 @@ export default async function ProductPage({ params }: ProductPageProps) {
           <div className="mb-16">
             <div className="flex items-center justify-between mb-6">
               <div>
-                <h2 className="text-2xl font-semibold text-gray-900">Similar Products</h2>
-                <p className="text-gray-500 mt-1">You might also like</p>
+                <h2 className="text-2xl font-semibold text-foreground">Similar Products</h2>
+                <p className="text-muted-foreground mt-1">You might also like</p>
               </div>
               <Link 
                 href="/products" 
-                className="text-sm font-medium text-gray-900 hover:text-gray-700 flex items-center gap-1"
+                className="text-sm font-medium text-foreground hover:text-foreground flex items-center gap-1"
               >
                 View all
                 <ChevronRight className="h-4 w-4" />
@@ -510,7 +510,7 @@ export default async function ProductPage({ params }: ProductPageProps) {
         {/* Frequently Bought Together */}
         {alsoBoughtProducts.length > 0 && (
           <div className="mb-16">
-            <h2 className="text-2xl font-semibold text-gray-900 mb-6">Frequently Bought Together</h2>
+            <h2 className="text-2xl font-semibold text-foreground mb-6">Frequently Bought Together</h2>
             <ProductCarousel
               products={alsoBoughtProducts}
               title=""

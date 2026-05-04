@@ -35,14 +35,14 @@ export default async function AddressesPage() {
     .order("created_at", { ascending: false });
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white">
+    <div className="min-h-screen bg-gradient-to-b from-muted/40 to-background">
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Breadcrumb */}
         <Breadcrumb className="mb-8">
           <BreadcrumbList>
             <BreadcrumbItem>
               <BreadcrumbLink asChild>
-                <Link href="/" className="text-gray-600 hover:text-gray-900">
+                <Link href="/" className="text-muted-foreground hover:text-foreground">
                   Home
                 </Link>
               </BreadcrumbLink>
@@ -50,14 +50,14 @@ export default async function AddressesPage() {
             <BreadcrumbSeparator />
             <BreadcrumbItem>
               <BreadcrumbLink asChild>
-                <Link href="/account" className="text-gray-600 hover:text-gray-900">
+                <Link href="/account" className="text-muted-foreground hover:text-foreground">
                   Account
                 </Link>
               </BreadcrumbLink>
             </BreadcrumbItem>
             <BreadcrumbSeparator />
             <BreadcrumbItem>
-              <BreadcrumbPage className="text-gray-900">Addresses</BreadcrumbPage>
+              <BreadcrumbPage className="text-foreground">Addresses</BreadcrumbPage>
             </BreadcrumbItem>
           </BreadcrumbList>
         </Breadcrumb>
@@ -65,8 +65,8 @@ export default async function AddressesPage() {
         {/* Header */}
         <div className="mb-8 flex items-center justify-between">
           <div>
-            <h1 className="text-3xl font-bold text-gray-900 mb-2">My Addresses</h1>
-            <p className="text-gray-600">Manage your shipping and billing addresses</p>
+            <h1 className="text-3xl font-bold text-foreground mb-2">My Addresses</h1>
+            <p className="text-muted-foreground">Manage your shipping and billing addresses</p>
           </div>
           <div className="flex gap-2">
             <Button variant="outline" asChild>

@@ -20,14 +20,14 @@ export default async function NewAddressPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white">
+    <div className="min-h-screen bg-gradient-to-b from-muted/40 to-background">
       <div className="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Breadcrumb */}
         <Breadcrumb className="mb-8">
           <BreadcrumbList>
             <BreadcrumbItem>
               <BreadcrumbLink asChild>
-                <Link href="/" className="text-gray-600 hover:text-gray-900">
+                <Link href="/" className="text-muted-foreground hover:text-foreground">
                   Home
                 </Link>
               </BreadcrumbLink>
@@ -35,7 +35,7 @@ export default async function NewAddressPage() {
             <BreadcrumbSeparator />
             <BreadcrumbItem>
               <BreadcrumbLink asChild>
-                <Link href="/account" className="text-gray-600 hover:text-gray-900">
+                <Link href="/account" className="text-muted-foreground hover:text-foreground">
                   Account
                 </Link>
               </BreadcrumbLink>
@@ -43,14 +43,14 @@ export default async function NewAddressPage() {
             <BreadcrumbSeparator />
             <BreadcrumbItem>
               <BreadcrumbLink asChild>
-                <Link href="/account/addresses" className="text-gray-600 hover:text-gray-900">
+                <Link href="/account/addresses" className="text-muted-foreground hover:text-foreground">
                   Addresses
                 </Link>
               </BreadcrumbLink>
             </BreadcrumbItem>
             <BreadcrumbSeparator />
             <BreadcrumbItem>
-              <BreadcrumbPage className="text-gray-900">New Address</BreadcrumbPage>
+              <BreadcrumbPage className="text-foreground">New Address</BreadcrumbPage>
             </BreadcrumbItem>
           </BreadcrumbList>
         </Breadcrumb>
@@ -59,13 +59,13 @@ export default async function NewAddressPage() {
         <div className="mb-8">
           <Link
             href="/account/addresses"
-            className="inline-flex items-center text-gray-600 hover:text-gray-900 mb-4"
+            className="inline-flex items-center text-muted-foreground hover:text-foreground mb-4"
           >
             <ArrowLeft className="mr-2 h-4 w-4" />
             Back to Addresses
           </Link>
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">Add New Address</h1>
-          <p className="text-gray-600">Add a new shipping or billing address</p>
+          <h1 className="text-3xl font-bold text-foreground mb-2">Add New Address</h1>
+          <p className="text-muted-foreground">Add a new shipping or billing address</p>
         </div>
 
         <AddressForm />

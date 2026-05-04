@@ -34,7 +34,7 @@ export default function AboutPage() {
         </Breadcrumb>
 
         <div className="max-w-3xl mx-auto">
-          <h1 className="text-3xl md:text-4xl font-display font-bold text-foreground mb-2">
+          <h1 className="text-3xl md:text-4xl font-display font-bold text-primary mb-2">
             About Bloom Beauty
           </h1>
           <p className="text-muted-foreground mb-10">

@@ -102,12 +102,12 @@ export default function PostPurchaseAccountModal({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-md bg-white">
+      <DialogContent className="sm:max-w-md">
         <DialogHeader>
-          <DialogTitle className="text-gray-900 font-bold text-xl">
+          <DialogTitle className="text-foreground font-bold text-xl">
             Create an Account to Track Your Order
           </DialogTitle>
-          <DialogDescription className="text-gray-600 mt-2">
+          <DialogDescription className="text-muted-foreground mt-2">
             Create a free account to track your order status, view order history, 
             and enjoy faster checkout next time. Your email and phone are pre-filled.
           </DialogDescription>
@@ -115,7 +115,7 @@ export default function PostPurchaseAccountModal({
 
         <form onSubmit={handleCreateAccount} className="space-y-4">
           <div className="space-y-2">
-            <Label htmlFor="post-name" className="text-gray-900 font-medium">
+            <Label htmlFor="post-name" className="text-foreground font-medium">
               Full Name
             </Label>
             <Input
@@ -126,12 +126,12 @@ export default function PostPurchaseAccountModal({
               placeholder="Your full name"
               required
               disabled={isLoading}
-              className="border-2 border-gray-300 focus:border-primary"
+              className="border-2 border-border focus:border-primary"
             />
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="post-email" className="text-gray-900 font-medium">
+            <Label htmlFor="post-email" className="text-foreground font-medium">
               Email
             </Label>
             <Input
@@ -139,7 +139,7 @@ export default function PostPurchaseAccountModal({
               type="email"
               value={email}
               disabled
-              className="border-2 border-gray-300 bg-gray-50"
+              className="border-2 border-border bg-muted"
             />
             <p className="text-xs text-muted-foreground">
               This email will be used for your account
@@ -147,7 +147,7 @@ export default function PostPurchaseAccountModal({
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="post-phone" className="text-gray-900 font-medium">
+            <Label htmlFor="post-phone" className="text-foreground font-medium">
               Phone
             </Label>
             <Input
@@ -155,12 +155,12 @@ export default function PostPurchaseAccountModal({
               type="tel"
               value={phone}
               disabled
-              className="border-2 border-gray-300 bg-gray-50"
+              className="border-2 border-border bg-muted"
             />
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="post-password" className="text-gray-900 font-medium">
+            <Label htmlFor="post-password" className="text-foreground font-medium">
               Create Password
             </Label>
             <Input
@@ -171,7 +171,7 @@ export default function PostPurchaseAccountModal({
               placeholder="••••••••"
               required
               disabled={isLoading}
-              className="border-2 border-gray-300 focus:border-primary"
+              className="border-2 border-border focus:border-primary"
             />
             <p className="text-xs text-muted-foreground">
               At least 6 characters
@@ -179,7 +179,7 @@ export default function PostPurchaseAccountModal({
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="post-confirm-password" className="text-gray-900 font-medium">
+            <Label htmlFor="post-confirm-password" className="text-foreground font-medium">
               Confirm Password
             </Label>
             <Input
@@ -190,7 +190,7 @@ export default function PostPurchaseAccountModal({
               placeholder="••••••••"
               required
               disabled={isLoading}
-              className="border-2 border-gray-300 focus:border-primary"
+              className="border-2 border-border focus:border-primary"
             />
           </div>
 

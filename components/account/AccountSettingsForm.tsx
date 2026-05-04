@@ -93,9 +93,9 @@ export default function AccountSettingsForm({ initialData }: AccountSettingsForm
           type="email"
           value={initialData.email}
           disabled
-          className="bg-gray-50"
+          className="bg-muted/50"
         />
-        <p className="text-xs text-gray-500">
+        <p className="text-xs text-muted-foreground">
           Email cannot be changed. Contact support if you need to update it.
         </p>
       </div>

@@ -56,14 +56,14 @@ export default async function OrdersPage() {
 
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white">
+    <div className="min-h-screen bg-gradient-to-b from-muted/40 to-background">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Breadcrumb */}
         <Breadcrumb className="mb-8">
           <BreadcrumbList>
             <BreadcrumbItem>
               <BreadcrumbLink asChild>
-                <Link href="/" className="text-gray-600 hover:text-gray-900">
+                <Link href="/" className="text-muted-foreground hover:text-foreground">
                   Home
                 </Link>
               </BreadcrumbLink>
@@ -71,14 +71,14 @@ export default async function OrdersPage() {
             <BreadcrumbSeparator />
             <BreadcrumbItem>
               <BreadcrumbLink asChild>
-                <Link href="/account" className="text-gray-600 hover:text-gray-900">
+                <Link href="/account" className="text-muted-foreground hover:text-foreground">
                   Account
                 </Link>
               </BreadcrumbLink>
             </BreadcrumbItem>
             <BreadcrumbSeparator />
             <BreadcrumbItem>
-              <BreadcrumbPage className="text-gray-900">Orders</BreadcrumbPage>
+              <BreadcrumbPage className="text-foreground">Orders</BreadcrumbPage>
             </BreadcrumbItem>
           </BreadcrumbList>
         </Breadcrumb>
@@ -86,8 +86,8 @@ export default async function OrdersPage() {
         {/* Header */}
         <div className="mb-8 flex items-center justify-between">
           <div>
-            <h1 className="text-3xl font-bold text-gray-900 mb-2">My Orders</h1>
-            <p className="text-gray-600">View and track your order history</p>
+            <h1 className="text-3xl font-bold text-foreground mb-2">My Orders</h1>
+            <p className="text-muted-foreground">View and track your order history</p>
           </div>
           <Button variant="outline" asChild>
             <Link href="/account">
@@ -136,9 +136,9 @@ export default async function OrdersPage() {
                         || item.product?.images?.[0];
                       
                       return (
-                        <div key={item.id} className="flex items-center gap-4 p-3 bg-gray-50 rounded-lg">
+                        <div key={item.id} className="flex items-center gap-4 p-3 bg-muted/50 rounded-lg">
                           {primaryImage && (
-                            <div className="w-16 h-16 rounded-md overflow-hidden bg-gray-200 flex-shrink-0">
+                            <div className="w-16 h-16 rounded-md overflow-hidden bg-muted flex-shrink-0">
                               <img
                                 src={primaryImage.image_url}
                                 alt={item.product_name}
@@ -149,16 +149,16 @@ export default async function OrdersPage() {
                           <div className="flex-1">
                             <Link
                               href={`/product/${item.product?.slug || item.product?.id}`}
-                              className="font-medium text-gray-900 hover:text-primary"
+                              className="font-medium text-foreground hover:text-primary"
                             >
                               {item.product_name}
                             </Link>
-                            <p className="text-sm text-gray-600">
+                            <p className="text-sm text-muted-foreground">
                               Quantity: {item.quantity} × ${item.price.toFixed(2)}
                             </p>
                           </div>
                           <div className="text-right">
-                            <p className="font-semibold text-gray-900">
+                            <p className="font-semibold text-foreground">
                               ${(item.price * item.quantity).toFixed(2)}
                             </p>
                           </div>
@@ -170,24 +170,24 @@ export default async function OrdersPage() {
                   {/* Order Summary */}
                   <div className="border-t pt-4">
                     <div className="flex justify-between items-center mb-2">
-                      <span className="text-gray-600">Subtotal</span>
+                      <span className="text-muted-foreground">Subtotal</span>
                       <span className="font-medium">${order.subtotal.toFixed(2)}</span>
                     </div>
                     {order.shipping > 0 && (
                       <div className="flex justify-between items-center mb-2">
-                        <span className="text-gray-600">Shipping</span>
+                        <span className="text-muted-foreground">Shipping</span>
                         <span className="font-medium">${order.shipping.toFixed(2)}</span>
                       </div>
                     )}
                     {order.tax > 0 && (
                       <div className="flex justify-between items-center mb-2">
-                        <span className="text-gray-600">Tax</span>
+                        <span className="text-muted-foreground">Tax</span>
                         <span className="font-medium">${order.tax.toFixed(2)}</span>
                       </div>
                     )}
                     <div className="flex justify-between items-center pt-2 border-t">
-                      <span className="text-lg font-bold text-gray-900">Total</span>
-                      <span className="text-lg font-bold text-gray-900">${order.total.toFixed(2)}</span>
+                      <span className="text-lg font-bold text-foreground">Total</span>
+                      <span className="text-lg font-bold text-foreground">${order.total.toFixed(2)}</span>
                     </div>
                     <div className="mt-4 flex gap-2">
                       <Button variant="outline" asChild>
@@ -205,9 +205,9 @@ export default async function OrdersPage() {
         ) : (
           <Card>
             <CardContent className="flex flex-col items-center justify-center py-12">
-              <Package className="h-16 w-16 text-gray-300 mb-4" />
-              <h3 className="text-xl font-semibold text-gray-900 mb-2">No orders yet</h3>
-              <p className="text-gray-600 mb-6 text-center">
+              <Package className="h-16 w-16 text-muted-foreground/45 mb-4" />
+              <h3 className="text-xl font-semibold text-foreground mb-2">No orders yet</h3>
+              <p className="text-muted-foreground mb-6 text-center">
                 Start shopping to see your orders here
               </p>
               <Button asChild>
