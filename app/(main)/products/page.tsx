@@ -26,11 +26,8 @@ import { Suspense } from "react";
 import Link from "next/link";
 import ProductsToolbar from "@/components/product/ProductsToolbar";
 
-// Enable revalidation every 5 minutes for static content
-export const revalidate = 300;
-
-// Enable dynamic rendering for search params
-export const dynamic = 'force-dynamic';
+/** Safety-net ISR; primary freshness via unstable_cache + revalidateTag (admin). */
+export const revalidate = 86400;
 
 const ProductsPage = async ({
   searchParams,

@@ -1,4 +1,4 @@
-import { createClient } from "@/lib/supabase/server";
+import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import ProductImageGallery from "@/components/product/ProductImageGallery";
 import ProductInfo from "@/components/product/ProductInfo";
@@ -8,7 +8,10 @@ import { Truck, Shield, RotateCcw, Star, Package, ChevronRight } from "lucide-re
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
 import { logger } from "@/lib/utils/logger";
-import type { ProductImage } from "@/types/supabase";
+import {
+  getCachedProductPageData,
+  type ProductReviewRow,
+} from "@/lib/data/product-detail";
 import {
   Breadcrumb,
   BreadcrumbList,
@@ -21,139 +24,63 @@ type ProductPageProps = {
   params: Promise<{ slug: string }>;
 };
 
-/** Matches reviews table: id, product_id, user_id, rating, comment, is_verified_purchase, created_at */
-type ProductReview = {
-  id: string;
-  product_id: string;
-  user_id: string | null;
-  rating: number;
-  comment: string | null;
-  is_verified_purchase: boolean;
-  created_at: string;
-  /** From join to profiles (profiles.id = reviews.user_id) */
-  profiles?: { full_name?: string | null; avatar_url?: string | null } | null;
-};
+function seoPlainText(html: string | null | undefined, max = 160): string {
+  if (!html) return "";
+  return html
+    .replace(/<[^>]*>/g, " ")
+    .replace(/\s+/g, " ")
+    .trim()
+    .slice(0, max);
+}
+
+/** ISR: long TTL with on-demand revalidation via revalidateTag from admin. */
+export const revalidate = 86400;
+
+export async function generateMetadata({
+  params,
+}: ProductPageProps): Promise<Metadata> {
+  const { slug } = await params;
+  const data = await getCachedProductPageData(slug);
+  if (!data) {
+    return { title: "Product | Premium Cosmetics" };
+  }
+  const p = data.productWithData;
+  const title = `${p.name} | Premium Cosmetics`;
+  const shortDesc = p.short_description;
+  const description =
+    seoPlainText(typeof p.description === "string" ? p.description : null) ||
+    (typeof shortDesc === "string" ? seoPlainText(shortDesc) : "") ||
+    `Shop ${p.name} at Premium Cosmetics.`;
+  const og = p.images?.[0]?.image_url;
+  const base = process.env.NEXT_PUBLIC_SITE_URL || "";
+  const pathSlug = encodeURIComponent(p.slug || slug);
+  return {
+    title,
+    description,
+    openGraph: {
+      title: p.name,
+      description,
+      type: "website",
+      ...(og
+        ? { images: [{ url: og, width: 1200, height: 1200, alt: p.name }] }
+        : {}),
+    },
+    ...(base ? { alternates: { canonical: `${base}/product/${pathSlug}` } } : {}),
+  };
+}
 
 export default async function ProductPage({ params }: ProductPageProps) {
   const { slug } = await params;
-  const supabase = await createClient();
+  const data = await getCachedProductPageData(slug);
 
-  // Try to fetch by slug first, then by ID
-  let product = null;
-  let productError = null;
-
-  const { data: productBySlug, error: slugError } = await supabase
-    .from('products')
-    .select('*, images:product_images(*)')
-    .eq('slug', slug)
-    .eq('is_active', true)
-    .single();
-
-  if (productBySlug) {
-    product = productBySlug;
-  } else {
-    const { data: productById, error: idError } = await supabase
-      .from('products')
-      .select('*, images:product_images(*)')
-      .eq('id', slug)
-      .eq('is_active', true)
-      .single();
-
-    if (productById) {
-      product = productById;
-    } else {
-      productError = idError || slugError;
-    }
-  }
-
-  if (productError || !product) {
-    logger.error('Product not found:', { slug, error: productError });
+  if (!data) {
+    logger.error("Product not found:", { slug });
     notFound();
   }
 
-  // Optimize images - resize to reasonable dimensions
-  const optimizedImages = (product.images || []).map((img: ProductImage) => ({
-    ...img,
-    image_url: `${img.image_url}?width=1200&height=1200&quality=85`
-  }));
-
-  // Fetch variants
-  const { data: variants } = await supabase
-    .from('product_variants')
-    .select('*')
-    .eq('product_id', product.id);
-
-  // Fetch reviews (schema: id, product_id, user_id, rating, comment, is_verified_purchase, created_at)
-  const { data: reviews } = await supabase
-    .from('reviews')
-    .select('id, product_id, user_id, rating, comment, is_verified_purchase, created_at, profiles(full_name, avatar_url)')
-    .eq('product_id', product.id)
-    .order('created_at', { ascending: false })
-    .limit(10);
-
-  // Calculate average rating
-  const averageRating = reviews && reviews.length > 0 
-    ? Number((reviews.reduce((acc, review) => acc + review.rating, 0) / reviews.length).toFixed(1))
-    : 0;
-
-  // Product with enriched data
-  const productWithData = {
-    ...product,
-    images: optimizedImages,
-    variants: variants || [],
-    averageRating,
-    reviewCount: reviews?.length || 0,
-    reviews: reviews || []
-  };
-
-  // Fetch similar products
-  let query = supabase
-    .from('products')
-    .select('*, images:product_images(*)')
-    .eq('is_active', true)
-    .neq('id', product.id);
-
-  if (product.category_id) {
-    query = query.eq('category_id', product.category_id);
-  }
-
-  const { data: similarProducts } = await query.limit(8);
-
-  // Prepare carousel products with optimized images
-  const carouselProducts = (similarProducts || []).map(p => ({
-    id: p.id,
-    name: p.name,
-    slug: p.slug || p.id,
-    price: p.price,
-    originalPrice: p.original_price || undefined,
-    imageUrl: p.images?.[0]?.image_url ? 
-      `${p.images[0].image_url}?width=600&height=600&quality=85` : 
-      '/placeholder-product.jpg',
-    rating: 4.5,
-    category: p.category || undefined,
-    shortDescription: p.short_description || undefined
-  }));
-
-  // Fetch also bought products
-  const { data: alsoBought } = await supabase
-    .from('products')
-    .select('*, images:product_images(*)')
-    .eq('is_active', true)
-    .neq('id', product.id)
-    .limit(4);
-
-  const alsoBoughtProducts = (alsoBought || []).map(p => ({
-    id: p.id,
-    name: p.name,
-    slug: p.slug || p.id,
-    price: p.price,
-    originalPrice: p.original_price || undefined,
-    imageUrl: p.images?.[0]?.image_url ? 
-      `${p.images[0].image_url}?width=600&height=600&quality=85` : 
-      '/placeholder-product.jpg',
-    rating: 4.5,
-    category: p.category || undefined
-  }));
+  const { productWithData, carouselProducts, alsoBoughtProducts } = data;
+  const product = productWithData;
+  const averageRating = product.averageRating ?? 0;
 
   return (
     <div className="min-h-screen bg-background">
@@ -375,7 +302,7 @@ export default async function ProductPage({ params }: ProductPageProps) {
                 
                 {productWithData.reviews.length > 0 ? (
                   <div className="space-y-6">
-                    {productWithData.reviews.slice(0, 5).map((review: ProductReview) => (
+                    {productWithData.reviews.slice(0, 5).map((review: ProductReviewRow) => (
                       <div key={review.id} className="border border-border rounded-lg p-6">
                         <div className="flex items-start justify-between mb-4">
                           <div className="flex items-center gap-3">

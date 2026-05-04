@@ -6,6 +6,7 @@ import { logger } from "@/lib/utils/logger";
 import nodemailer from "nodemailer";
 import { createOrderAccessToken } from "@/lib/utils/tracking-token";
 import { buildOrderConfirmationEmailHtml } from "@/lib/email/order-confirmation-template";
+import { revalidateAfterProductMutation } from "@/lib/cache/revalidate-catalog";
 
 // Check if user is admin (uses Supabase Auth app_metadata.role, no public.users table)
 // Reads from session JWT first; if role not in JWT, fetches user from DB via service role
@@ -417,12 +418,27 @@ export async function upsertProduct(
       is_active: input.isActive,
     };
 
+    let previousSlug: string | null = null;
+    if (input.id) {
+      const { data: prev } = await supabase
+        .from("products")
+        .select("slug")
+        .eq("id", input.id)
+        .maybeSingle();
+      previousSlug = prev?.slug ?? null;
+    }
+
     if (input.id) {
       const { error } = await supabase
         .from("products")
         .update(basePayload)
         .eq("id", input.id);
       if (error) throw error;
+      revalidateAfterProductMutation({
+        productId: input.id,
+        previousSlug,
+        slug: basePayload.slug,
+      });
       return { success: true, productId: input.id };
     }
 
@@ -436,6 +452,10 @@ export async function upsertProduct(
       .single();
     if (error) throw error;
     if (!created?.id) return { error: "Failed to create product" };
+    revalidateAfterProductMutation({
+      productId: created.id,
+      slug: basePayload.slug,
+    });
     return { success: true, productId: created.id };
   } catch (error) {
     logger.error("Error upserting product:", error);
@@ -471,6 +491,15 @@ export async function replaceProductImages(
     if (delError) throw delError;
 
     if (unique.length === 0) {
+      const { data: row } = await supabase
+        .from("products")
+        .select("slug")
+        .eq("id", productId)
+        .maybeSingle();
+      revalidateAfterProductMutation({
+        productId,
+        slug: row?.slug ?? null,
+      });
       return { success: true };
     }
 
@@ -483,6 +512,16 @@ export async function replaceProductImages(
 
     const { error } = await supabase.from("product_images").insert(rows);
     if (error) throw error;
+
+    const { data: row } = await supabase
+      .from("products")
+      .select("slug")
+      .eq("id", productId)
+      .maybeSingle();
+    revalidateAfterProductMutation({
+      productId,
+      slug: row?.slug ?? null,
+    });
     return { success: true };
   } catch (error) {
     logger.error("Error replacing product images:", error);
@@ -503,6 +542,16 @@ export async function updateProductStock(
       .eq("id", productId);
 
     if (error) throw error;
+
+    const { data: row } = await supabase
+      .from("products")
+      .select("slug")
+      .eq("id", productId)
+      .maybeSingle();
+    revalidateAfterProductMutation({
+      productId,
+      slug: row?.slug ?? null,
+    });
     return { success: true };
   } catch (error) {
     logger.error("Error updating product stock:", error);

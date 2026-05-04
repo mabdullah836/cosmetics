@@ -12,7 +12,7 @@ import {
   getNewArrivals,
   getBestSellers 
 } from "@/lib/actions/product";
-import type { HeroProduct, CategoryData, ProductCarouselItem } from "@/types/homepage";
+import type { CategoryData, ProductCarouselItem } from "@/types/homepage";
 import type { Product, Category } from "@/types/supabase";
 import { logger } from "@/lib/utils/logger";
 
@@ -171,4 +171,5 @@ export default async function HomePage() {
   );
 }
 
-export const revalidate = 3600; // Revalidate every hour for ISR
+/** Safety-net ISR; catalog data uses Data Cache with on-demand revalidation. */
+export const revalidate = 86400;
