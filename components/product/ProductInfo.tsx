@@ -9,6 +9,7 @@ import { Star, Heart, Share2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useCartActions } from "@/lib/hooks/useCartActions";
 import { toast } from "sonner";
+import { formatPrice } from "@/lib/utils/format";
 
 interface ProductInfoProps {
   product: Product & {
@@ -102,11 +103,11 @@ export default function ProductInfo({ product }: ProductInfoProps) {
       {/* Price */}
       <div className="flex items-center gap-3">
         <span className="text-3xl font-bold text-foreground">
-          ${product.price.toFixed(2)}
+          {formatPrice(product.price)}
         </span>
         {product.original_price && (
           <span className="text-lg line-through text-muted-foreground">
-            ${product.original_price.toFixed(2)}
+            {formatPrice(product.original_price)}
           </span>
         )}
       </div>
@@ -142,7 +143,7 @@ export default function ProductInfo({ product }: ProductInfoProps) {
         <div>
           <p className="text-sm text-muted-foreground">Total</p>
           <p className="text-xl font-semibold text-foreground">
-            ${(product.price * quantity).toFixed(2)}
+            {formatPrice(product.price * quantity)}
           </p>
         </div>
       </div>

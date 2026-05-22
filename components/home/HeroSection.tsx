@@ -16,6 +16,8 @@ import {
 } from "@/components/ui/carousel";
 import { ArrowRight, Sparkles, Tag, Award, Check } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { CONFIG } from "@/lib/constants";
+import { formatPrice } from "@/lib/utils/format";
 
 interface HeroSlide {
   id: string;
@@ -251,8 +253,14 @@ export default function HeroSection({
               ))}
             </CarouselContent>
 
-            <CarouselPrevious className="left-3 top-1/2 z-20 h-12 w-12 -translate-y-1/2 border-white/25 bg-black/30 text-white opacity-0 shadow-xl backdrop-blur-md transition-all hover:bg-black/45 hover:opacity-100 md:left-6 md:h-14 md:w-14 lg:opacity-0 lg:group-hover:opacity-100" />
-            <CarouselNext className="right-3 top-1/2 z-20 h-12 w-12 -translate-y-1/2 border-white/25 bg-black/30 text-white opacity-0 shadow-xl backdrop-blur-md transition-all hover:bg-black/45 hover:opacity-100 md:right-6 md:h-14 md:w-14 lg:opacity-0 lg:group-hover:opacity-100" />
+            <CarouselPrevious
+              variant="outline"
+              className="left-3 top-1/2 z-20 h-12 w-12 -translate-y-1/2 border-white/25 bg-black/30 text-white opacity-0 shadow-xl backdrop-blur-md transition-[opacity,background-color,transform] duration-200 group-hover:opacity-100 hover:scale-105 hover:border-white/50 hover:bg-black/50 hover:text-white hover:opacity-100 focus-visible:opacity-100 md:left-6 md:h-14 md:w-14"
+            />
+            <CarouselNext
+              variant="outline"
+              className="right-3 top-1/2 z-20 h-12 w-12 -translate-y-1/2 border-white/25 bg-black/30 text-white opacity-0 shadow-xl backdrop-blur-md transition-[opacity,background-color,transform] duration-200 group-hover:opacity-100 hover:scale-105 hover:border-white/50 hover:bg-black/50 hover:text-white hover:opacity-100 focus-visible:opacity-100 md:right-6 md:h-14 md:w-14"
+            />
 
             <div className="absolute bottom-0 left-0 right-0 z-20 flex items-center gap-4 px-4 pb-4 md:px-8 md:pb-5">
               <div className="h-1 min-w-0 flex-1 overflow-hidden rounded-full bg-white/20">
@@ -322,7 +330,7 @@ export default function HeroSection({
             {
               icon: Check,
               stat: "Free",
-              label: "Shipping $50+",
+              label: `Shipping ${formatPrice(CONFIG.FREE_SHIPPING_THRESHOLD)}+`,
               iconClass:
                 "from-amber-500/15 to-orange-500/10 text-amber-600 dark:text-amber-400",
             },

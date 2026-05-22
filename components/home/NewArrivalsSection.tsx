@@ -17,6 +17,7 @@ import {
 import { ArrowRight, Sparkles, Star, ShoppingBag, Eye, Heart, Zap, TrendingUp } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { ProductCarouselItem } from "@/types/homepage";
+import { formatPrice } from "@/lib/utils/format";
 
 interface NewArrivalsSectionProps {
   products: ProductCarouselItem[];
@@ -192,11 +193,11 @@ export default function NewArrivalsSection({ products }: NewArrivalsSectionProps
                           
                           <div className="flex items-center gap-3">
                             <span className="text-4xl font-bold text-white">
-                              ${featuredProduct.price.toFixed(2)}
+                              {formatPrice(featuredProduct.price)}
                             </span>
                             {featuredProduct.originalPrice && featuredProduct.originalPrice > featuredProduct.price && (
                               <span className="text-xl line-through text-white/60">
-                                ${featuredProduct.originalPrice.toFixed(2)}
+                                {formatPrice(featuredProduct.originalPrice)}
                               </span>
                             )}
                           </div>
@@ -302,11 +303,11 @@ export default function NewArrivalsSection({ products }: NewArrivalsSectionProps
                             
                             <div className="text-right">
                               <div className="font-bold text-foreground">
-                                ${product.price.toFixed(2)}
+                                {formatPrice(product.price)}
                               </div>
                               {product.originalPrice && product.originalPrice > product.price && (
                                 <div className="text-xs line-through text-muted-foreground">
-                                  ${product.originalPrice.toFixed(2)}
+                                  {formatPrice(product.originalPrice)}
                                 </div>
                               )}
                             </div>
@@ -440,11 +441,11 @@ export default function NewArrivalsSection({ products }: NewArrivalsSectionProps
                           <div className="flex items-center justify-between">
                             <div className="flex items-center gap-2">
                               <span className="text-xl font-bold text-foreground">
-                                ${product.price.toFixed(2)}
+                                {formatPrice(product.price)}
                               </span>
                               {product.originalPrice && product.originalPrice > product.price && (
                                 <span className="text-base line-through text-muted-foreground">
-                                  ${product.originalPrice.toFixed(2)}
+                                  {formatPrice(product.originalPrice)}
                                 </span>
                               )}
                             </div>
@@ -509,7 +510,7 @@ export default function NewArrivalsSection({ products }: NewArrivalsSectionProps
                     </h4>
                     <div className="flex items-center justify-between">
                       <div className="text-lg font-bold text-foreground">
-                        ${product.price.toFixed(2)}
+                        {formatPrice(product.price)}
                       </div>
                       <Star className="h-4 w-4 fill-amber-400 text-amber-400" />
                     </div>
