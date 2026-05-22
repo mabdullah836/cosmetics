@@ -3,6 +3,7 @@ import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { getTrackableOrder } from "@/lib/actions/order-tracking";
+import { formatPrice } from "@/lib/utils/format";
 
 interface TrackOrderPageProps {
   searchParams: Promise<{
@@ -173,14 +174,14 @@ export default async function TrackOrderPage({ searchParams }: TrackOrderPagePro
                 {order.items?.map((item: { id: string; product_name: string; quantity: number; price: number }) => (
                   <div key={item.id} className="flex justify-between text-sm">
                     <span>{item.product_name} x {item.quantity}</span>
-                    <span>${(Number(item.price || 0) * item.quantity).toFixed(2)}</span>
+                    <span>{formatPrice(Number(item.price || 0) * item.quantity)}</span>
                   </div>
                 ))}
               </div>
             </div>
             <div className="flex justify-between border-t pt-4">
               <span className="text-muted-foreground">Total</span>
-              <span className="font-semibold">${Number(order.total || 0).toFixed(2)}</span>
+              <span className="font-semibold">{formatPrice(Number(order.total || 0))}</span>
             </div>
             {(() => {
               const ship = Array.isArray(order.shipping_address)

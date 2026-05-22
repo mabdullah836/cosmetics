@@ -15,6 +15,7 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Package, ArrowLeft } from "lucide-react";
 import { getOrderStatusColor, getPaymentStatusColor } from "@/lib/constants/status";
+import { formatPrice } from "@/lib/utils/format";
 
 export default async function OrdersPage() {
   const session = await auth();
@@ -154,12 +155,12 @@ export default async function OrdersPage() {
                               {item.product_name}
                             </Link>
                             <p className="text-sm text-muted-foreground">
-                              Quantity: {item.quantity} × ${item.price.toFixed(2)}
+                              Quantity: {item.quantity} × {formatPrice(item.price)}
                             </p>
                           </div>
                           <div className="text-right">
                             <p className="font-semibold text-foreground">
-                              ${(item.price * item.quantity).toFixed(2)}
+                              {formatPrice(item.price * item.quantity)}
                             </p>
                           </div>
                         </div>
@@ -171,23 +172,23 @@ export default async function OrdersPage() {
                   <div className="border-t pt-4">
                     <div className="flex justify-between items-center mb-2">
                       <span className="text-muted-foreground">Subtotal</span>
-                      <span className="font-medium">${order.subtotal.toFixed(2)}</span>
+                      <span className="font-medium">{formatPrice(order.subtotal)}</span>
                     </div>
                     {order.shipping > 0 && (
                       <div className="flex justify-between items-center mb-2">
                         <span className="text-muted-foreground">Shipping</span>
-                        <span className="font-medium">${order.shipping.toFixed(2)}</span>
+                        <span className="font-medium">{formatPrice(order.shipping)}</span>
                       </div>
                     )}
                     {order.tax > 0 && (
                       <div className="flex justify-between items-center mb-2">
                         <span className="text-muted-foreground">Tax</span>
-                        <span className="font-medium">${order.tax.toFixed(2)}</span>
+                        <span className="font-medium">{formatPrice(order.tax)}</span>
                       </div>
                     )}
                     <div className="flex justify-between items-center pt-2 border-t">
                       <span className="text-lg font-bold text-foreground">Total</span>
-                      <span className="text-lg font-bold text-foreground">${order.total.toFixed(2)}</span>
+                      <span className="text-lg font-bold text-foreground">{formatPrice(order.total)}</span>
                     </div>
                     <div className="mt-4 flex gap-2">
                       <Button variant="outline" asChild>
