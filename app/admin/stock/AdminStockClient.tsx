@@ -23,6 +23,7 @@ import {
 } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { updateProductStock } from "@/lib/actions/admin";
+import { formatPrice } from "@/lib/utils/format";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 
@@ -266,7 +267,7 @@ export default function AdminStockClient({ products }: AdminStockClientProps) {
                         </td>
                         <td className="p-4">
                           <span className="font-semibold text-gray-900">
-                            ${product.price?.toFixed(2) || "0.00"}
+                            {formatPrice(product.price ?? 0)}
                           </span>
                         </td>
                         <td className="p-4">{getStockBadge(product.stock_level)}</td>
