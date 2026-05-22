@@ -16,7 +16,7 @@ const testimonials = [
     avatar: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=100&h=100&fit=crop&crop=face",
     rating: 5,
     quote:
-      "These products have completely transformed my skincare routine. My skin has never looked better, and I love knowing they're cruelty-free!",
+      "These products have completely transformed my skincare routine. My skin has never looked better!",
     product: "Daily Moisturizer",
     verified: true,
   },
@@ -174,8 +174,6 @@ export default function Testimonials() {
             </p>
             <div className="flex flex-wrap justify-center items-center gap-8 md:gap-12 opacity-60">
               <span className="text-sm font-medium">⭐ 100% Satisfaction</span>
-              <span className="text-sm font-medium">🌱 Vegan Certified</span>
-              <span className="text-sm font-medium">🐰 Cruelty-Free</span>
               <span className="text-sm font-medium">♻️ Eco Packaging</span>
               <span className="text-sm font-medium">🔒 Secure Checkout</span>
             </div>
