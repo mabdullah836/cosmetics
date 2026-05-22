@@ -2,7 +2,7 @@ import HeroSection from "@/components/home/HeroSection";
 import CategoryGrid from "@/components/home/CategoryCard";
 import ProductCarousel from "@/components/home/ProductCarousel";
 import NewArrivalsSection from "@/components/home/NewArrivalsSection";
-import BrandValues from "@/components/home/BrandValues";
+import WhyShopSection from "@/components/home/WhyShopSection";
 import Testimonials from "@/components/home/Testimonials";
 import Newsletter from "@/components/common/Newsletter";
 import { 
@@ -159,8 +159,7 @@ export default async function HomePage() {
         showViewAll={true}
       />
 
-      {/* Brand Values */}
-      <BrandValues />
+      <WhyShopSection />
 
       {/* Testimonials */}
       <Testimonials />
