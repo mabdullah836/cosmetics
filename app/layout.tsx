@@ -7,6 +7,8 @@ import Footer from "@/components/layout/Footer";
 import { CartProvider } from "@/components/providers/CartProvider";
 import { ThemeProvider } from "@/components/providers/ThemeProvider";
 import { Toaster } from "@/components/ui/sonner"
+import { CONFIG } from "@/lib/constants";
+import { formatPrice } from "@/lib/utils/format";
 
 const poppins = Poppins({
   subsets: ["latin"],
@@ -20,7 +22,7 @@ export const metadata: Metadata = {
     default: "Premium Cosmetics | Natural Beauty Products",
     template: "%s | Premium Cosmetics",
   },
-  description: "Discover our curated collection of premium cosmetics and natural beauty products. Free shipping on orders over $50.",
+  description: `Discover our curated collection of premium cosmetics and natural beauty products. Free shipping on orders over ${formatPrice(CONFIG.FREE_SHIPPING_THRESHOLD)}.`,
   keywords: ["cosmetics", "beauty", "makeup", "skincare", "natural"],
   openGraph: {
     type: "website",
