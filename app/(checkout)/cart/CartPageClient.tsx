@@ -12,6 +12,7 @@ import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { CartItem } from "@/types/supabase";
 import CheckoutEntryModal from "@/components/checkout/CheckoutEntryModal";
+import { formatPrice } from "@/lib/utils/format";
 
 interface CartPageClientProps {
   initialCartItems?: CartItem[];
@@ -141,7 +142,7 @@ export default function CartPageClient({
                       </h3>
                     </Link>
                     <p className="text-muted-foreground mb-4">
-                      ${(item.product?.price ?? 0).toFixed(2)}
+                      {formatPrice(item.product?.price ?? 0)}
                     </p>
 
                     <div className="flex items-center justify-between">
@@ -174,10 +175,7 @@ export default function CartPageClient({
 
                       <div className="flex items-center gap-4">
                         <p className="font-bold text-lg">
-                          $
-                          {(
-                            (item.product?.price ?? 0) * item.quantity
-                          ).toFixed(2)}
+                          {formatPrice((item.product?.price ?? 0) * item.quantity)}
                         </p>
                         <Button
                           variant="ghost"
@@ -205,7 +203,7 @@ export default function CartPageClient({
               <div className="space-y-2">
                 <div className="flex justify-between text-sm">
                   <span className="text-muted-foreground">Subtotal</span>
-                  <span>${subtotal.toFixed(2)}</span>
+                  <span>{formatPrice(subtotal)}</span>
                 </div>
                 <div className="flex justify-between text-sm">
                   <span className="text-muted-foreground">Shipping</span>
@@ -214,7 +212,7 @@ export default function CartPageClient({
                 <Separator />
                 <div className="flex justify-between text-lg font-bold">
                   <span>Total</span>
-                  <span>${subtotal.toFixed(2)}</span>
+                  <span>{formatPrice(subtotal)}</span>
                 </div>
               </div>
 
