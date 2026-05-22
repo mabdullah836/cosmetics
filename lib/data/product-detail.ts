@@ -70,6 +70,9 @@ function toCarouselItem(p: Record<string, unknown>): ProductCarouselRow {
 async function loadProductPage(pathSegment: string): Promise<ProductPagePayload | null> {
   try {
     const supabase = getPublicSupabase();
+    const segment = decodeURIComponent(pathSegment).trim();
+    if (!segment) return null;
+
     const uuidRegex =
       /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
@@ -78,19 +81,29 @@ async function loadProductPage(pathSegment: string): Promise<ProductPagePayload 
     const { data: bySlug } = await supabase
       .from("products")
       .select("*, images:product_images(*), categories(name)")
-      .eq("slug", pathSegment)
+      .eq("slug", segment)
       .eq("is_active", true)
       .maybeSingle();
 
     if (bySlug) row = bySlug as Record<string, unknown>;
-    else if (uuidRegex.test(pathSegment)) {
+    else if (uuidRegex.test(segment)) {
       const { data: byId } = await supabase
         .from("products")
         .select("*, images:product_images(*), categories(name)")
-        .eq("id", pathSegment)
+        .eq("id", segment)
         .eq("is_active", true)
         .maybeSingle();
       if (byId) row = byId as Record<string, unknown>;
+    }
+
+    if (!row) {
+      const { data: bySlugIlike } = await supabase
+        .from("products")
+        .select("*, images:product_images(*), categories(name)")
+        .ilike("slug", segment)
+        .eq("is_active", true)
+        .maybeSingle();
+      if (bySlugIlike) row = bySlugIlike as Record<string, unknown>;
     }
 
     if (!row) return null;

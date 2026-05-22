@@ -19,6 +19,8 @@ import {
   BreadcrumbLink,
   BreadcrumbSeparator,
 } from "@/components/ui/breadcrumb";
+import { CONFIG } from "@/lib/constants";
+import { formatPrice } from "@/lib/utils/format";
 
 type ProductPageProps = {
   params: Promise<{ slug: string }>;
@@ -168,7 +170,7 @@ export default async function ProductPage({ params }: ProductPageProps) {
               </div>
               <div>
                 <h4 className="font-medium text-foreground text-sm">Free Shipping</h4>
-                <p className="text-muted-foreground text-xs">Orders over $50</p>
+                <p className="text-muted-foreground text-xs">Orders over {formatPrice(CONFIG.FREE_SHIPPING_THRESHOLD)}</p>
               </div>
             </div>
             <div className="flex items-center gap-4">
@@ -365,11 +367,11 @@ export default async function ProductPage({ params }: ProductPageProps) {
                   <div className="space-y-3 text-muted-foreground">
                     <p className="flex items-start gap-2">
                       <span className="text-foreground font-medium">• Standard Shipping:</span>
-                      <span>3-5 business days • Free on orders over $50</span>
+                      <span>3-5 business days • Free on orders over {formatPrice(CONFIG.FREE_SHIPPING_THRESHOLD)}</span>
                     </p>
                     <p className="flex items-start gap-2">
                       <span className="text-foreground font-medium">• Express Shipping:</span>
-                      <span>1-2 business days • $9.99</span>
+                      <span>1-2 business days • {formatPrice(CONFIG.EXPRESS_SHIPPING_COST)}</span>
                     </p>
                     <p className="flex items-start gap-2">
                       <span className="text-foreground font-medium">• Processing Time:</span>
