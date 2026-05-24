@@ -27,6 +27,7 @@ import LoginForm from "@/components/auth/LoginForm";
 import OTPVerificationModal from "@/components/checkout/OTPVerificationModal";
 import { getLocalCart, getLocalCartAsCartItems, getLocalCartSubtotal } from "@/lib/utils/localCart";
 import type { Product } from "@/types/supabase";
+import { formatPrice } from "@/lib/utils/format";
 
 interface CheckoutPageClientProps {
   cartItems: CartItem[];
@@ -594,7 +595,7 @@ export default function CheckoutPageClient({
                             Qty: {item.quantity}
                           </p>
                           <p className="text-sm font-semibold mt-1">
-                            ${((item.product?.price || 0) * item.quantity).toFixed(2)}
+                            {formatPrice((item.product?.price || 0) * item.quantity)}
                           </p>
                         </div>
                       </div>
@@ -606,26 +607,26 @@ export default function CheckoutPageClient({
                   <div className="space-y-2">
                     <div className="flex justify-between text-sm">
                       <span className="text-muted-foreground">Items total</span>
-                      <span>${displaySubtotal.toFixed(2)}</span>
+                      <span>{formatPrice(displaySubtotal)}</span>
                     </div>
                     <div className="flex justify-between text-sm">
                       <span className="text-muted-foreground">
                         Delivery charges
                       </span>
                       <span className={shipping === 0 ? "text-green-600" : ""}>
-                        {shipping === 0 ? "FREE" : `$${shipping.toFixed(2)}`}
+                        {shipping === 0 ? "FREE" : formatPrice(shipping)}
                       </span>
                     </div>
                     {discount > 0 && (
                       <div className="flex justify-between text-sm text-green-600">
                         <span>Discount</span>
-                        <span>-${discount.toFixed(2)}</span>
+                        <span>-{formatPrice(discount)}</span>
                       </div>
                     )}
                     <Separator />
                     <div className="flex justify-between text-lg font-bold">
                       <span>Total amount</span>
-                      <span>${displayTotal.toFixed(2)}</span>
+                      <span>{formatPrice(displayTotal)}</span>
                     </div>
                   </div>
 

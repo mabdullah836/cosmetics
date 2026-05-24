@@ -16,6 +16,7 @@ import { Package, User, MapPin, ShoppingBag, Heart, Settings } from "lucide-reac
 import { Badge } from "@/components/ui/badge";
 import SignOutButton from "@/components/account/SignOutButton";
 import { getOrderStatusColor } from "@/lib/constants/status";
+import { formatPrice } from "@/lib/utils/format";
 
 export default async function AccountPage() {
   const session = await auth();
@@ -174,7 +175,7 @@ export default async function AccountPage() {
                             </p>
                           </div>
                           <div className="text-right">
-                            <p className="font-bold text-foreground">${order.total.toFixed(2)}</p>
+                            <p className="font-bold text-foreground">{formatPrice(order.total)}</p>
                             <p className="text-xs text-muted-foreground capitalize">{order.payment_status}</p>
                           </div>
                         </div>

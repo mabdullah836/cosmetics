@@ -15,6 +15,7 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { ArrowLeft, Package, Truck, CreditCard, MapPin } from "lucide-react";
 import { getOrderStatusColor } from "@/lib/constants/status";
+import { formatPrice } from "@/lib/utils/format";
 
 type OrderDetailPageProps = {
   params: Promise<{ id: string }>;
@@ -178,12 +179,12 @@ export default async function OrderDetailPage({ params }: OrderDetailPageProps) 
                           Quantity: {item.quantity}
                         </p>
                         <p className="text-sm text-muted-foreground">
-                          Price: ${item.price.toFixed(2)} each
+                          Price: {formatPrice(item.price)} each
                         </p>
                       </div>
                       <div className="text-right">
                         <p className="font-bold text-lg text-foreground">
-                          ${(item.price * item.quantity).toFixed(2)}
+                          {formatPrice(item.price * item.quantity)}
                         </p>
                       </div>
                     </div>
@@ -261,23 +262,23 @@ export default async function OrderDetailPage({ params }: OrderDetailPageProps) 
               <div className="space-y-3">
                 <div className="flex justify-between">
                   <span className="text-muted-foreground">Subtotal</span>
-                  <span className="font-medium">${order.subtotal.toFixed(2)}</span>
+                  <span className="font-medium">{formatPrice(order.subtotal)}</span>
                 </div>
                 {order.shipping > 0 && (
                   <div className="flex justify-between">
                     <span className="text-muted-foreground">Shipping</span>
-                    <span className="font-medium">${order.shipping.toFixed(2)}</span>
+                    <span className="font-medium">{formatPrice(order.shipping)}</span>
                   </div>
                 )}
                 {order.tax > 0 && (
                   <div className="flex justify-between">
                     <span className="text-muted-foreground">Tax</span>
-                    <span className="font-medium">${order.tax.toFixed(2)}</span>
+                    <span className="font-medium">{formatPrice(order.tax)}</span>
                   </div>
                 )}
                 <div className="flex justify-between pt-3 border-t text-lg font-bold">
                   <span>Total</span>
-                  <span>${order.total.toFixed(2)}</span>
+                  <span>{formatPrice(order.total)}</span>
                 </div>
               </div>
             </CardContent>

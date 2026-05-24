@@ -1,3 +1,5 @@
+import { formatPrice } from "@/lib/utils/format";
+
 type OrderItem = {
   product_name: string;
   quantity: number;
@@ -24,9 +26,9 @@ export function buildOrderConfirmationEmailHtml(params: {
   const rows = params.items
     .map(
       (item) =>
-        `<tr><td style="padding:8px 0;">${item.product_name} x ${item.quantity}</td><td style="padding:8px 0;text-align:right;">$${(
+        `<tr><td style="padding:8px 0;">${item.product_name} x ${item.quantity}</td><td style="padding:8px 0;text-align:right;">${formatPrice(
           Number(item.price || 0) * item.quantity
-        ).toFixed(2)}</td></tr>`
+        )}</td></tr>`
     )
     .join("");
 
@@ -56,7 +58,7 @@ export function buildOrderConfirmationEmailHtml(params: {
         </thead>
         <tbody>${rows}</tbody>
       </table>
-      <p><strong>Order Total:</strong> $${Number(params.total || 0).toFixed(2)}</p>
+      <p><strong>Order Total:</strong> ${formatPrice(Number(params.total || 0))}</p>
       <p><strong>Shipping Address:</strong><br/>${address}</p>
       <p style="margin-top:20px;"><strong>Track your order:</strong></p>
       <p><a href="${params.trackingUrl}">${params.trackingUrl}</a></p>

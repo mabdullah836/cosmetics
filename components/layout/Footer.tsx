@@ -46,7 +46,7 @@ export default function Footer() {
               </h2>
             </Link>
             <p className="text-sm text-muted-foreground">
-              Clean, cruelty-free beauty products.
+              Premium beauty products you can trust.
             </p>
           </div>
 

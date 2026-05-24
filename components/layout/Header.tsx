@@ -28,12 +28,14 @@ import {
   HelpCircle,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { CONFIG } from "@/lib/constants";
+import { formatPrice } from "@/lib/utils/format";
 import { useCart } from "@/components/providers/CartProvider";
 import { toast } from "sonner";
 import { CART_EVENTS } from "@/lib/utils/cartEvents";
 import { getLocalCartItemCount } from "@/lib/utils/localCart";
 import { CartItem } from "@/types/supabase";
-import { NAV_CATEGORIES, SUPPORT_MENU_ITEMS } from "@/lib/constants/nav";
+import { NAV_CATEGORIES, SUPPORT_MENU_ITEMS, type NavCategory } from "@/lib/constants/nav";
 import LoginForm from "@/components/auth/LoginForm";
 import { ThemeToggle } from "@/components/layout/ThemeToggle";
 
@@ -172,6 +174,213 @@ export default function Header({ cartItems: serverCartItems = [], subtotal: serv
     }
   };
 
+  const navTriggerClass =
+    "h-9 shrink-0 gap-1 px-3 text-sm font-medium whitespace-nowrap border-none";
+
+  const renderCategoryDropdown = (category: NavCategory) => (
+    <div
+      key={category.id}
+      className="shrink-0"
+      onMouseEnter={() => handleNavMenuOpen(category.id)}
+      onMouseLeave={handleNavMenuClose}
+    >
+      <DropdownMenu
+        open={openNavMenu === category.id}
+        onOpenChange={(open) => {
+          if (!open) {
+            if (navMenuCloseTimeoutRef.current) {
+              clearTimeout(navMenuCloseTimeoutRef.current);
+            }
+            setOpenNavMenu(null);
+          }
+        }}
+        modal={false}
+      >
+        <DropdownMenuTrigger asChild>
+          <Button
+            variant="ghost"
+            className={cn(
+              navTriggerClass,
+              isCategoryActive(category.href) && "text-primary bg-primary/10"
+            )}
+            aria-expanded={openNavMenu === category.id}
+            aria-haspopup="menu"
+            aria-label={`${category.name} menu`}
+            onPointerDown={(e) => e.preventDefault()}
+          >
+            {category.name}
+            <ChevronDown
+              className={cn(
+                "h-3 w-3 shrink-0 transition-transform",
+                openNavMenu === category.id && "rotate-180"
+              )}
+            />
+          </Button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent
+          align="start"
+          className="w-[280px] min-w-[280px] rounded-lg bg-popover text-popover-foreground p-0 shadow-lg md:w-[320px] md:min-w-[320px]"
+          onCloseAutoFocus={(e) => e.preventDefault()}
+        >
+          <div className="p-2">
+            <DropdownMenuItem asChild className="outline-none focus:outline-none focus:bg-accent">
+              <Link
+                href={category.href}
+                className={cn(
+                  "block cursor-pointer rounded-md p-3 text-sm font-semibold outline-none focus:outline-none transition-colors hover:bg-accent hover:text-accent-foreground",
+                  isCategoryActive(category.href) && "bg-primary/10 text-primary"
+                )}
+              >
+                Shop all {category.name}
+              </Link>
+            </DropdownMenuItem>
+            {category.subCategories.map((sub) => (
+              <DropdownMenuItem
+                key={sub.name}
+                asChild
+                className="outline-none focus:outline-none focus:bg-accent"
+              >
+                <Link
+                  href={sub.href}
+                  className="block cursor-pointer rounded-md p-3 text-sm outline-none focus:outline-none transition-colors hover:bg-accent hover:text-accent-foreground"
+                >
+                  {sub.name}
+                </Link>
+              </DropdownMenuItem>
+            ))}
+          </div>
+        </DropdownMenuContent>
+      </DropdownMenu>
+    </div>
+  );
+
+  const renderSupportDropdown = () => (
+    <div
+      className="shrink-0"
+      onMouseEnter={() => handleNavMenuOpen("support")}
+      onMouseLeave={handleNavMenuClose}
+    >
+      <DropdownMenu
+        open={openNavMenu === "support"}
+        onOpenChange={(open) => {
+          if (!open) {
+            if (navMenuCloseTimeoutRef.current) {
+              clearTimeout(navMenuCloseTimeoutRef.current);
+            }
+            setOpenNavMenu(null);
+          }
+        }}
+        modal={false}
+      >
+        <DropdownMenuTrigger asChild>
+          <Button
+            variant="ghost"
+            className={cn(
+              navTriggerClass,
+              "outline-none focus:outline-none focus-visible:outline-none focus-visible:ring-0",
+              SUPPORT_MENU_ITEMS.some((item) => isActive(item.href))
+                ? "text-primary bg-primary/10"
+                : "text-foreground hover:text-primary hover:bg-primary/5"
+            )}
+            aria-expanded={openNavMenu === "support"}
+            aria-haspopup="menu"
+            aria-label="Support menu"
+            onPointerDown={(e) => e.preventDefault()}
+          >
+            <HelpCircle className="h-4 w-4" />
+            Support
+            <ChevronDown
+              className={cn(
+                "h-3 w-3 shrink-0 transition-transform",
+                openNavMenu === "support" && "rotate-180"
+              )}
+            />
+          </Button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent
+          align="end"
+          className="w-52 rounded-lg bg-popover text-popover-foreground shadow-lg"
+          onCloseAutoFocus={(e) => e.preventDefault()}
+        >
+          {SUPPORT_MENU_ITEMS.map((item) => (
+            <DropdownMenuItem
+              key={item.id}
+              asChild
+              className="outline-none focus:outline-none focus:bg-accent"
+            >
+              <Link
+                href={item.href}
+                className={cn(
+                  "cursor-pointer outline-none focus:outline-none",
+                  isActive(item.href) && "bg-primary/10 text-primary font-medium"
+                )}
+              >
+                {item.name}
+              </Link>
+            </DropdownMenuItem>
+          ))}
+        </DropdownMenuContent>
+      </DropdownMenu>
+    </div>
+  );
+
+  const logoLink = (
+    <Link href="/" className="flex items-center gap-2 shrink-0">
+      <div className="relative">
+        <div className="absolute -inset-1 bg-primary/10 rounded-full blur-sm" />
+        <Sparkles className="relative h-6 w-6 text-primary" />
+      </div>
+      <h1 className="text-2xl md:text-3xl font-display font-bold bg-gradient-to-r from-primary to-fuchsia-500 bg-clip-text text-transparent dark:to-fuchsia-400">
+        Bloom
+      </h1>
+      <span className="hidden sm:inline-block text-xs font-medium bg-primary/10 text-primary px-2 py-0.5 rounded-full">
+        Premium
+      </span>
+    </Link>
+  );
+
+  const headerActions = (
+    <>
+      <ThemeToggle />
+      <Button
+        variant="ghost"
+        size="icon"
+        asChild
+        className="hidden md:inline-flex relative border border-border/50 hover:border-primary/50"
+        aria-label="Wishlist"
+      >
+        <Link href="/wishlist">
+          <Heart className="h-5 w-5" />
+        </Link>
+      </Button>
+      <Button
+        variant="ghost"
+        size="icon"
+        onClick={handleAccountClick}
+        className="hidden md:inline-flex border border-border/50 hover:border-primary/50"
+        aria-label="Account"
+      >
+        <User className="h-5 w-5" />
+      </Button>
+      <Button
+        variant="ghost"
+        size="icon"
+        className="relative group border border-border/50 hover:border-primary/50"
+        asChild
+        aria-label={`Cart ${cartItemCount > 0 ? `with ${cartItemCount} items` : ""}`}
+      >
+        <Link href="/cart">
+          <ShoppingBag className="h-5 w-5" />
+          {cartItemCount > 0 && (
+            <span className="absolute -top-1 -right-1 min-w-5 h-5 px-1 rounded-full bg-primary text-primary-foreground text-xs font-medium flex items-center justify-center animate-bounce-subtle">
+              {cartItemCount > 9 ? "9+" : cartItemCount}
+            </span>
+          )}
+        </Link>
+      </Button>
+    </>
+  );
+
   return (
     <header
       className={cn(
@@ -186,16 +395,16 @@ export default function Header({ cartItems: serverCartItems = [], subtotal: serv
         <div className="container mx-auto px-4">
           <div className="flex items-center justify-center h-8 text-xs">
             <span className="text-muted-foreground">
-              Free shipping on orders over $50 • 100% Vegan & Cruelty-Free
+              Free shipping on orders over {formatPrice(CONFIG.FREE_SHIPPING_THRESHOLD)}
             </span>
           </div>
         </div>
       </div>
 
       {/* Main Header */}
-      <div className="container mx-auto px-4">
-        <div className="flex items-center justify-between h-16 md:h-20">
-          {/* Mobile Menu */}
+      <div className="container mx-auto px-4 relative">
+        <div className="flex lg:hidden items-center justify-between h-16 md:h-20 w-full gap-2">
+          <div className="flex items-center gap-2 min-w-0">
           <Sheet open={mobileMenuOpen} onOpenChange={setMobileMenuOpen}>
             <SheetTrigger asChild className="lg:hidden">
               <Button variant="ghost" size="icon" className="border border-border/50 hover:border-primary/50" aria-label="Open menu">
@@ -285,7 +494,7 @@ export default function Header({ cartItems: serverCartItems = [], subtotal: serv
                         href="/track-order"
                         onClick={() => setMobileMenuOpen(false)}
                         className={cn(
-                          "flex items-center gap-2 py-3 text-base font-medium transition-colors",
+                          "flex items-center gap-2 py-3 text-base font-medium transition-colors ",
                           isActive("/track-order")
                             ? "text-primary"
                             : "text-foreground hover:text-primary"
@@ -351,171 +560,45 @@ export default function Header({ cartItems: serverCartItems = [], subtotal: serv
             </SheetContent>
           </Sheet>
 
-          {/* Logo */}
-          <Link href="/" className="flex items-center gap-2">
-            <div className="relative">
-              <div className="absolute -inset-1 bg-primary/10 rounded-full blur-sm" />
-              <Sparkles className="relative h-6 w-6 text-primary" />
-            </div>
-            <h1 className="text-2xl md:text-3xl font-display font-bold bg-gradient-to-r from-primary to-fuchsia-500 bg-clip-text text-transparent dark:to-fuchsia-400">
-              Bloom
-            </h1>
-            <span className="hidden sm:inline-block text-xs font-medium bg-primary/10 text-primary px-2 py-0.5 rounded-full">
-              Premium
-            </span>
-          </Link>
+            {logoLink}
+          </div>
 
-          {/* Desktop Navigation: hover to open (position under each trigger), no outline on items */}
-          <nav className="hidden lg:flex items-center gap-1">
-            {NAV_CATEGORIES.map((category) => (
-              <div
-                key={category.id}
-                onMouseEnter={() => handleNavMenuOpen(category.id)}
-                onMouseLeave={handleNavMenuClose}
-              >
-                <DropdownMenu
-                  open={openNavMenu === category.id}
-                  onOpenChange={(open) => {
-                    if (!open) {
-                      if (navMenuCloseTimeoutRef.current) {
-                        clearTimeout(navMenuCloseTimeoutRef.current);
-                      }
-                      setOpenNavMenu(null);
-                    }
-                  }}
-                  modal={false}
-                >
-                  <DropdownMenuTrigger asChild>
-                    <Button
-                      variant="ghost"
-                      className={cn(
-                        "gap-1 text-sm font-medium border-none",
-                        isCategoryActive(category.href) && "text-primary bg-primary/10"
-                      )}
-                      aria-expanded={openNavMenu === category.id}
-                      aria-haspopup="menu"
-                      aria-label={`${category.name} menu`}
-                      onPointerDown={(e) => e.preventDefault()}
-                    >
-                      {category.name}
-                      <ChevronDown
-                        className={cn(
-                          "h-3 w-3 shrink-0 transition-transform",
-                          openNavMenu === category.id && "rotate-180"
-                        )}
-                      />
-                    </Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent
-                    align="start"
-                    className="w-[280px] min-w-[280px] rounded-lg bg-popover text-popover-foreground p-0 shadow-lg md:w-[320px] md:min-w-[320px]"
-                    onCloseAutoFocus={(e) => e.preventDefault()}
-                  >
-                    <div className="p-2">
-                      <DropdownMenuItem asChild className="outline-none focus:outline-none focus:bg-accent">
-                        <Link
-                          href={category.href}
-                          className={cn(
-                            "block cursor-pointer rounded-md p-3 text-sm font-semibold outline-none focus:outline-none transition-colors hover:bg-accent hover:text-accent-foreground",
-                            isCategoryActive(category.href) && "bg-primary/10 text-primary"
-                          )}
-                        >
-                          Shop all {category.name}
-                        </Link>
-                      </DropdownMenuItem>
-                      {category.subCategories.map((sub) => (
-                        <DropdownMenuItem key={sub.name} asChild className="outline-none focus:outline-none focus:bg-accent">
-                          <Link
-                            href={sub.href}
-                            className="block cursor-pointer rounded-md p-3 text-sm outline-none focus:outline-none transition-colors hover:bg-accent hover:text-accent-foreground"
-                          >
-                            {sub.name}
-                          </Link>
-                        </DropdownMenuItem>
-                      ))}
-                    </div>
-                  </DropdownMenuContent>
-                </DropdownMenu>
-              </div>
-            ))}
-            {/* Support dropdown (hover to open) */}
-            <div
-              onMouseEnter={() => handleNavMenuOpen("support")}
-              onMouseLeave={handleNavMenuClose}
-            >
-              <DropdownMenu
-                open={openNavMenu === "support"}
-                onOpenChange={(open) => {
-                  if (!open) {
-                    if (navMenuCloseTimeoutRef.current) {
-                      clearTimeout(navMenuCloseTimeoutRef.current);
-                    }
-                    setOpenNavMenu(null);
-                  }
-                }}
-                modal={false}
-              >
-                <DropdownMenuTrigger asChild>
-                  <Button
-                    variant="ghost"
-                    className={cn(
-                      "group gap-1 text-sm font-medium outline-none focus:outline-none focus-visible:outline-none focus-visible:ring-0",
-                      SUPPORT_MENU_ITEMS.some((item) => isActive(item.href))
-                        ? "text-primary bg-primary/10"
-                        : "text-foreground hover:text-primary hover:bg-primary/5"
-                    )}
-                    aria-expanded={openNavMenu === "support"}
-                    aria-haspopup="menu"
-                    aria-label="Support menu"
-                    onPointerDown={(e) => e.preventDefault()}
-                  >
-                    <HelpCircle className="h-4 w-4" />
-                    Support
-                    <ChevronDown
-                      className={cn(
-                        "h-3 w-3 shrink-0 transition-transform",
-                        openNavMenu === "support" && "rotate-180"
-                      )}
-                    />
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent
-                  align="end"
-                  className="w-52 rounded-lg bg-popover text-popover-foreground shadow-lg"
-                  onCloseAutoFocus={(e) => e.preventDefault()}
-                >
-                  {SUPPORT_MENU_ITEMS.map((item) => (
-                    <DropdownMenuItem key={item.id} asChild className="outline-none focus:outline-none focus:bg-accent">
-                      <Link
-                        href={item.href}
-                        className={cn(
-                          "cursor-pointer outline-none focus:outline-none",
-                          isActive(item.href) && "bg-primary/10 text-primary font-medium"
-                        )}
-                      >
-                        {item.name}
-                      </Link>
-                    </DropdownMenuItem>
-                  ))}
-                </DropdownMenuContent>
-              </DropdownMenu>
-            </div>
+          <div className="flex items-center gap-1 shrink-0 search-container">
             <Button
               variant="ghost"
-              asChild
-              className={cn(
-                "text-sm font-medium",
-                isActive("/track-order") && "text-primary bg-primary/10"
-              )}
+              size="icon"
+              onClick={() => setIsSearchOpen(!isSearchOpen)}
+              className="border border-border/50 hover:border-primary/50"
+              aria-label={isSearchOpen ? "Close search" : "Open search"}
             >
-              <Link href="/track-order">Track Order</Link>
+              {isSearchOpen ? <X className="h-5 w-5" /> : <Search className="h-5 w-5" />}
             </Button>
-          </nav>
+            {headerActions}
+          </div>
+        </div>
 
-          {/* Right Actions */}
-          <div className="flex items-center gap-1 md:gap-2 search-container">
-            {/* Search */}
-            <div className="relative hidden lg:block">
+        {isSearchOpen && (
+          <div className="absolute top-full left-0 right-0 z-50 bg-background border-b border-border shadow-lg lg:hidden animate-slide-down">
+            <div className="px-4 py-4">
+              <form onSubmit={handleSearch} className="relative">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
+                <Input
+                  type="search"
+                  placeholder="What are you looking for?"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="pl-10 h-12 text-base"
+                  autoFocus
+                />
+              </form>
+            </div>
+          </div>
+        )}
+
+        <div className="hidden lg:block">
+          <div className="flex items-center justify-between h-16 gap-6">
+            {logoLink}
+            <div className="flex items-center gap-3 shrink-0 search-container">
               <form onSubmit={handleSearch} className="relative">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
                 <Input
@@ -523,87 +606,31 @@ export default function Header({ cartItems: serverCartItems = [], subtotal: serv
                   placeholder="Search products..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className={cn(
-                    "w-56 xl:w-72 pl-9 border-border/50 focus:border-primary",
-                    isSearchOpen ? "opacity-100" : "opacity-0 lg:opacity-100"
-                  )}
+                  className="w-[min(100%,280px)] xl:w-80 pl-9 border-border/50 focus:border-primary"
                 />
               </form>
+              {headerActions}
             </div>
+          </div>
 
-            {/* Mobile Search Toggle */}
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={() => setIsSearchOpen(!isSearchOpen)}
-              className="lg:hidden border border-border/50 hover:border-primary/50"
-              aria-label={isSearchOpen ? "Close search" : "Open search"}
+          <div className="border-t border-border/40">
+            <nav
+              className="flex items-center justify-center flex-wrap gap-x-1 gap-y-0.5 min-h-11 py-1"
+              aria-label="Main"
             >
-              {isSearchOpen ? <X className="h-5 w-5" /> : <Search className="h-5 w-5" />}
-            </Button>
-
-            {/* Mobile Search Overlay */}
-            {isSearchOpen && (
-              <div className="absolute top-full left-0 right-0 bg-background border-b border-border shadow-lg lg:hidden animate-slide-down">
-                <div className="container mx-auto px-4 py-4">
-                  <form onSubmit={handleSearch} className="relative">
-                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
-                    <Input
-                      type="search"
-                      placeholder="What are you looking for?"
-                      value={searchQuery}
-                      onChange={(e) => setSearchQuery(e.target.value)}
-                      className="pl-10 h-12 text-base"
-                      autoFocus
-                    />
-                  </form>
-                </div>
-              </div>
-            )}
-
-            <ThemeToggle />
-
-            {/* Wishlist */}
-            <Button
-              variant="ghost"
-              size="icon"
-              asChild
-              className="hidden md:inline-flex relative border border-border/50 hover:border-primary/50"
-              aria-label="Wishlist"
-            >
-              <Link href="/wishlist">
-                <Heart className="h-5 w-5" />
-              </Link>
-            </Button>
-
-            {/* Account */}
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={handleAccountClick}
-              className="hidden md:inline-flex border border-border/50 hover:border-primary/50"
-              aria-label="Account"
-            >
-              <User className="h-5 w-5" />
-            </Button>
-
-            {/* Cart */}
-            <Button
-              variant="ghost"
-              size="icon"
-              className="relative group border border-border/50 hover:border-primary/50"
-              asChild
-              aria-label={`Cart ${cartItemCount > 0 ? `with ${cartItemCount} items` : ''}`}
-            >
-              <Link href="/cart">
-                <ShoppingBag className="h-5 w-5" />
-                {cartItemCount > 0 && (
-                  <span className="absolute -top-1 -right-1 min-w-5 h-5 px-1 rounded-full bg-primary text-primary-foreground text-xs font-medium flex items-center justify-center animate-bounce-subtle">
-                    {cartItemCount > 9 ? "9+" : cartItemCount}
-                  </span>
+              {NAV_CATEGORIES.map((category) => renderCategoryDropdown(category))}
+              {renderSupportDropdown()}
+              <Button
+                variant="ghost"
+                asChild
+                className={cn(
+                  navTriggerClass,
+                  isActive("/track-order") && "text-primary bg-primary/10"
                 )}
-              </Link>
-            </Button>
+              >
+                <Link href="/track-order">Track Order</Link>
+              </Button>
+            </nav>
           </div>
         </div>
       </div>
@@ -618,3 +645,4 @@ export default function Header({ cartItems: serverCartItems = [], subtotal: serv
     </header>
   );
 }
+

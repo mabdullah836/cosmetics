@@ -12,6 +12,7 @@ import {
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { getAdminStats, isAdmin } from "@/lib/actions/admin";
+import { formatPrice } from "@/lib/utils/format";
 import { 
   Package, 
   ShoppingCart, 
@@ -56,7 +57,7 @@ const AdminDashboardPage = async () => {
     },
     {
       title: "Total Revenue",
-      value: `$${stats.totalRevenue.toLocaleString()}`,
+      value: formatPrice(stats.totalRevenue),
       description: "All time",
       icon: DollarSign,
       href: "/admin/payments",

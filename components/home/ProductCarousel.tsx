@@ -18,6 +18,7 @@ import { ArrowRight, Star, Truck, Zap, ShoppingBag, Eye, Heart } from "lucide-re
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 import { useCartActions } from "@/lib/hooks/useCartActions";
+import { formatPrice } from "@/lib/utils/format";
 
 interface Product {
   id: string;
@@ -329,14 +330,14 @@ export default function ProductCarousel({
                                   "font-bold",
                                   isFeatured ? "text-2xl" : "text-xl"
                                 )}>
-                                  ${product.price.toFixed(2)}
+                                  {formatPrice(product.price)}
                                 </span>
                                 {product.originalPrice && product.originalPrice > product.price && (
                                   <span className={cn(
                                     "text-muted-foreground line-through",
                                     isFeatured ? "text-lg" : "text-base"
                                   )}>
-                                    ${product.originalPrice.toFixed(2)}
+                                    {formatPrice(product.originalPrice)}
                                   </span>
                                 )}
                               </div>

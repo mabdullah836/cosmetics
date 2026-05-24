@@ -6,6 +6,7 @@ import { ShoppingCart } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { CartItem } from "@/types/supabase";
+import { formatPrice } from "@/lib/utils/format";
 
 interface CartSheetProps {
   cartItems: CartItem[];
@@ -52,14 +53,14 @@ const CartSheet = ({ cartItems, subtotal }: CartSheetProps) => {
                       <Link href={`/product/${item.product?.slug || item.product?.id || ''}`} className="font-semibold hover:underline">{item.product?.name || 'Product'}</Link>
                       <p className="text-sm text-muted-foreground">Quantity: {item.quantity}</p>
                     </div>
-                    <p className="font-bold">${((item.product?.price || 0) * item.quantity).toFixed(2)}</p>
+                    <p className="font-bold">{formatPrice((item.product?.price || 0) * item.quantity)}</p>
                   </div>
                 ))}
               </div>
               <div className="border-t p-6">
                 <div className="flex justify-between font-bold text-lg mb-4">
                   <span>Subtotal</span>
-                  <span>${subtotal.toFixed(2)}</span>
+                  <span>{formatPrice(subtotal)}</span>
                 </div>
                 <Button asChild className="w-full">
                   <Link href="/checkout/address">Proceed to Checkout</Link>

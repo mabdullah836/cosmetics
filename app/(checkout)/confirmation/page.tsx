@@ -15,6 +15,7 @@ import {
   BreadcrumbPage,
   BreadcrumbSeparator,
 } from "@/components/ui/breadcrumb";
+import { formatPrice } from "@/lib/utils/format";
 
 interface ConfirmationPageProps {
   searchParams: Promise<{ orderId?: string; token?: string }>;
@@ -141,7 +142,7 @@ const ConfirmationPage = async ({ searchParams }: ConfirmationPageProps) => {
           </div>
           <div className="flex justify-between">
             <span className="text-muted-foreground">Total</span>
-            <span className="font-bold text-lg">${total.toFixed(2)}</span>
+            <span className="font-bold text-lg">{formatPrice(total)}</span>
           </div>
           <div className="flex justify-between">
             <span className="text-muted-foreground">Payment Method</span>

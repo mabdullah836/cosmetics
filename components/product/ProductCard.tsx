@@ -12,6 +12,7 @@ import { Heart, ShoppingBag, Eye, Star, Truck, Zap } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 import { useCartActions } from "@/lib/hooks/useCartActions";
+import { formatPrice } from "@/lib/utils/format";
 
 interface ProductCardProps {
   id: string;
@@ -301,10 +302,10 @@ const ProductCard = memo(function ProductCard({
           {/* Price */}
           <div className="mt-auto">
             <div className="flex items-center gap-3">
-              <span className="text-2xl font-bold text-foreground">${price.toFixed(2)}</span>
+              <span className="text-2xl font-bold text-foreground">{formatPrice(price)}</span>
               {originalPrice && originalPrice > price && (
                 <span className="text-lg text-muted-foreground line-through">
-                  ${originalPrice.toFixed(2)}
+                  {formatPrice(originalPrice)}
                 </span>
               )}
             </div>
