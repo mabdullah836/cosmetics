@@ -94,7 +94,7 @@ export default function Newsletter() {
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                 </svg>
               </div>
-              <h2 className="text-2xl md:text-3xl font-display font-bold text-foreground mb-2">
+              <h2 className="text-2xl md:text-3xl font-display font-bold text-primary mb-2">
                 Thank you
               </h2>
               <p className="text-muted-foreground mb-6">
@@ -112,7 +112,7 @@ export default function Newsletter() {
             <>
               <h2 
                 id="newsletter-heading"
-                className="text-2xl md:text-3xl font-display font-bold text-foreground mb-3"
+                className="text-2xl md:text-3xl font-display font-bold text-primary mb-3"
               >
                 Stay Updated
               </h2>

@@ -8,6 +8,7 @@ import { Slider } from "@/components/ui/slider";
 import { Button } from "@/components/ui/button";
 import { Category } from "@/types/supabase";
 import { useState, useEffect, useCallback, useRef, useTransition } from "react";
+import { formatPrice } from "@/lib/utils/format";
 
 interface ProductFiltersProps {
   categories?: Category[];
@@ -213,8 +214,8 @@ const ProductFilters = ({ categories = [], brands = [], maxPrice = 1000 }: Produ
               disabled={isPending}
             />
             <div className="flex justify-between text-sm text-muted-foreground">
-              <span>${priceRange?.[0] || 0}</span>
-              <span>${priceRange?.[1] || maxPrice}</span>
+              <span>{formatPrice(priceRange?.[0] || 0)}</span>
+              <span>{formatPrice(priceRange?.[1] || maxPrice)}</span>
             </div>
           </AccordionContent>
         </AccordionItem>

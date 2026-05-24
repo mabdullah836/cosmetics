@@ -11,6 +11,8 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Heart, ShoppingBag, Eye, Star, Truck, Zap } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
+import { useCartActions } from "@/lib/hooks/useCartActions";
+import { formatPrice } from "@/lib/utils/format";
 
 interface ProductCardProps {
   id: string;
@@ -42,8 +44,8 @@ const ProductCard = memo(function ProductCard({
   isNew = false,
 }: ProductCardProps) {
   const router = useRouter();
+  const { addToCart, adding } = useCartActions();
   const [wishlisted, setWishlisted] = useState(false);
-  const [adding, setAdding] = useState(false);
   const [imgLoaded, setImgLoaded] = useState(false);
   const [wishlisting, setWishlisting] = useState(false);
   const [showActions, setShowActions] = useState(false);
@@ -115,30 +117,27 @@ const ProductCard = memo(function ProductCard({
       e.stopPropagation();
       if (outOfStock) return;
 
-      try {
-        setAdding(true);
-        const { addToCart } = await import("@/lib/actions/cart");
-        const result = await addToCart(id, 1);
+      const result = await addToCart(
+        { id, name, price, slug, imageUrl },
+        1
+      );
 
-        if (result?.success) {
-          router.refresh();
-          toast.success("Added to cart", {
-            description: name,
-            action: {
-              label: "View Cart",
-              onClick: () => router.push("/cart"),
-            },
-          });
-        } else {
-          toast.error("Failed to add to cart");
-        }
-      } catch {
-        toast.error("Something went wrong");
-      } finally {
-        setAdding(false);
+      if (result && "success" in result && result.success) {
+        router.refresh();
+        toast.success("Added to cart", {
+          description: name,
+          action: {
+            label: "View Cart",
+            onClick: () => router.push("/cart"),
+          },
+        });
+      } else if (result && "error" in result && result.error) {
+        toast.error(result.error);
+      } else {
+        toast.error("Failed to add to cart");
       }
     },
-    [id, name, router, outOfStock]
+    [id, name, price, slug, imageUrl, addToCart, router, outOfStock]
   );
 
   return (
@@ -148,9 +147,9 @@ const ProductCard = memo(function ProductCard({
       onMouseEnter={() => setShowActions(true)}
       onMouseLeave={() => setShowActions(false)}
     >
-      <div className="h-full flex flex-col bg-white rounded-2xl overflow-hidden transition-all duration-300 hover:shadow-2xl hover:-translate-y-1.5">
+      <div className="h-full flex flex-col bg-card rounded-2xl overflow-hidden border border-border transition-all duration-300 hover:shadow-2xl hover:-translate-y-1.5">
         {/* Image container */}
-        <div className="relative aspect-[4/5] bg-gradient-to-b from-gray-50 to-gray-100 overflow-hidden">
+        <div className="relative aspect-[4/5] bg-gradient-to-b from-muted/80 to-muted overflow-hidden">
           {!imgLoaded && (
             <div className="absolute inset-0">
               <Skeleton className="h-full w-full" />
@@ -199,10 +198,10 @@ const ProductCard = memo(function ProductCard({
               variant="secondary"
               onClick={handleWishlist}
               disabled={wishlisting}
-              className="h-11 w-11 rounded-full bg-white/90 backdrop-blur-sm shadow-lg hover:shadow-xl border-0 hover:scale-105 transition-transform"
+              className="h-11 w-11 rounded-full bg-background/90 text-foreground backdrop-blur-sm shadow-lg hover:shadow-xl border border-border hover:scale-105 transition-transform"
             >
               {wishlisting ? (
-                <div className="h-4 w-4 border-2 border-gray-700 border-t-transparent rounded-full animate-spin" />
+                <div className="h-4 w-4 border-2 border-foreground border-t-transparent rounded-full animate-spin" />
               ) : (
                 <Heart
                   className={cn(
@@ -221,7 +220,7 @@ const ProductCard = memo(function ProductCard({
                 e.stopPropagation();
                 router.push(`/product/${slug}?quickview=true`);
               }}
-              className="h-11 w-11 rounded-full bg-white/90 backdrop-blur-sm shadow-lg hover:shadow-xl border-0 hover:scale-105 transition-transform"
+              className="h-11 w-11 rounded-full bg-background/90 text-foreground backdrop-blur-sm shadow-lg hover:shadow-xl border border-border hover:scale-105 transition-transform"
             >
               <Eye className="h-5 w-5" />
             </Button>
@@ -246,9 +245,9 @@ const ProductCard = memo(function ProductCard({
               disabled={adding || outOfStock}
               size="lg"
               className={cn(
-                "w-full bg-white text-gray-900 hover:bg-gray-50 font-semibold h-12 rounded-xl shadow-lg",
+                "w-full bg-background text-foreground hover:bg-muted font-semibold h-12 rounded-xl shadow-lg border border-border",
                 "transition-all duration-300 hover:scale-[1.02] active:scale-[0.98]",
-                outOfStock && "bg-gray-100 text-gray-500 cursor-not-allowed"
+                outOfStock && "bg-muted text-muted-foreground cursor-not-allowed"
               )}
             >
               {outOfStock ? (
@@ -271,12 +270,12 @@ const ProductCard = memo(function ProductCard({
         {/* Content */}
         <div className="flex-1 p-5 flex flex-col">
           {category && (
-            <p className="text-xs font-medium text-gray-500 uppercase tracking-wider mb-2">
+            <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-2">
               {category}
             </p>
           )}
 
-          <h3 className="text-lg font-semibold text-gray-900 mb-3 line-clamp-2 leading-tight group-hover:text-gray-700 transition-colors">
+          <h3 className="text-lg font-semibold text-foreground mb-3 line-clamp-2 leading-tight group-hover:text-primary transition-colors">
             {name}
           </h3>
 
@@ -290,30 +289,30 @@ const ProductCard = memo(function ProductCard({
                     "h-4 w-4",
                     i < Math.floor(rating)
                       ? "fill-amber-400 text-amber-400"
-                      : "text-gray-300"
+                      : "text-muted-foreground/45"
                   )}
                 />
               ))}
             </div>
             {reviewCount > 0 && (
-              <span className="text-sm text-gray-500">({reviewCount})</span>
+              <span className="text-sm text-muted-foreground">({reviewCount})</span>
             )}
           </div>
 
           {/* Price */}
           <div className="mt-auto">
             <div className="flex items-center gap-3">
-              <span className="text-2xl font-bold text-gray-900">${price.toFixed(2)}</span>
+              <span className="text-2xl font-bold text-foreground">{formatPrice(price)}</span>
               {originalPrice && originalPrice > price && (
-                <span className="text-lg text-gray-400 line-through">
-                  ${originalPrice.toFixed(2)}
+                <span className="text-lg text-muted-foreground line-through">
+                  {formatPrice(originalPrice)}
                 </span>
               )}
             </div>
             
             {/* Shipping info */}
             {shippingDays <= 3 && (
-              <div className="flex items-center gap-1.5 mt-3 text-sm text-gray-600">
+              <div className="flex items-center gap-1.5 mt-3 text-sm text-muted-foreground">
                 <Truck className="h-4 w-4" />
                 <span>Free shipping • {shippingDays} days</span>
               </div>

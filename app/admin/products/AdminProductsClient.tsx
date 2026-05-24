@@ -1,14 +1,26 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useTransition } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from "@/components/ui/dialog";
 import SearchInput from "@/components/common/SearchInput";
 import { Package, Plus, Edit, Eye } from "lucide-react";
 import { formatPrice } from "@/lib/utils/format";
+import { toast } from "sonner";
+import { useRouter } from "next/navigation";
 import {
   Select,
   SelectContent,
@@ -16,15 +28,47 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { replaceProductImages, upsertProduct } from "@/lib/actions/admin";
+import { Checkbox } from "@/components/ui/checkbox";
 
 interface AdminProductsClientProps {
   products: any[];
+  categories: Array<{ id: string; name: string }>;
 }
 
-export default function AdminProductsClient({ products }: AdminProductsClientProps) {
+type ProductFormState = {
+  id?: string;
+  name: string;
+  price: string;
+  compareAtPrice: string;
+  categoryId: string;
+  brand: string;
+  description: string;
+  stockLevel: "IN_STOCK" | "LOW_STOCK" | "OUT_OF_STOCK" | "DISCONTINUED";
+  isActive: boolean;
+  pendingFiles: File[];
+};
+
+const defaultProductForm: ProductFormState = {
+  name: "",
+  price: "",
+  compareAtPrice: "",
+  categoryId: "none",
+  brand: "",
+  description: "",
+  stockLevel: "IN_STOCK",
+  isActive: true,
+  pendingFiles: [],
+};
+
+export default function AdminProductsClient({ products, categories }: AdminProductsClientProps) {
+  const router = useRouter();
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [stockFilter, setStockFilter] = useState<string>("all");
+  const [showProductDialog, setShowProductDialog] = useState(false);
+  const [formState, setFormState] = useState<ProductFormState>(defaultProductForm);
+  const [isPending, startTransition] = useTransition();
 
   const filteredProducts = useMemo(() => {
     return products.filter((product) => {
@@ -77,6 +121,105 @@ export default function AdminProductsClient({ products }: AdminProductsClientPro
     );
   };
 
+  const openCreateDialog = () => {
+    setFormState(defaultProductForm);
+    setShowProductDialog(true);
+  };
+
+  const openEditDialog = (product: any) => {
+    setFormState({
+      id: product.id,
+      name: product.name || "",
+      price: String(product.price ?? ""),
+      compareAtPrice:
+        product.original_price != null && product.original_price > product.price
+          ? String(product.original_price)
+          : "",
+      categoryId: product.category_id || "none",
+      brand: product.brand || "",
+      description: product.description || "",
+      stockLevel: product.stock_level || "IN_STOCK",
+      isActive: !!product.is_active,
+      pendingFiles: [],
+    });
+    setShowProductDialog(true);
+  };
+
+  const handleSaveProduct = () => {
+    startTransition(() => {
+      void (async () => {
+        const price = Number(formState.price);
+        const compareRaw = formState.compareAtPrice.trim();
+        let compareAtPrice: number | null = null;
+        if (compareRaw !== "") {
+          const n = Number(compareRaw);
+          if (!Number.isFinite(n) || n < 0) {
+            toast.error("Compare-at price must be a valid number");
+            return;
+          }
+          compareAtPrice = n;
+        }
+
+        const result = await upsertProduct({
+          id: formState.id,
+          name: formState.name,
+          price,
+          compareAtPrice,
+          categoryId: formState.categoryId === "none" ? null : formState.categoryId,
+          brand: formState.brand,
+          description: formState.description,
+          stockLevel: formState.stockLevel,
+          isActive: formState.isActive,
+        });
+
+        if (result.error) {
+          toast.error(result.error);
+          return;
+        }
+
+        const productId = result.productId;
+        if (!productId) {
+          toast.error("Could not determine product id");
+          return;
+        }
+
+        if (formState.pendingFiles.length > 0) {
+          const uploaded: { url: string; publicId?: string | null }[] = [];
+          for (const file of formState.pendingFiles) {
+            const fd = new FormData();
+            fd.append("file", file);
+            fd.append("productId", productId);
+            const res = await fetch("/api/admin/product-images", {
+              method: "POST",
+              body: fd,
+            });
+            const data = (await res.json()) as {
+              url?: string;
+              publicId?: string;
+              error?: string;
+            };
+            if (!res.ok) {
+              toast.error(data.error || "Image upload failed");
+              return;
+            }
+            if (data.url) {
+              uploaded.push({ url: data.url, publicId: data.publicId ?? null });
+            }
+          }
+          const imgRes = await replaceProductImages(productId, uploaded);
+          if (imgRes.error) {
+            toast.error(imgRes.error);
+            return;
+          }
+        }
+
+        toast.success(formState.id ? "Product updated" : "Product created");
+        setShowProductDialog(false);
+        router.refresh();
+      })();
+    });
+  };
+
   return (
     <>
       <div className="mb-8 flex items-center justify-between">
@@ -84,7 +227,7 @@ export default function AdminProductsClient({ products }: AdminProductsClientPro
           <h1 className="text-4xl font-bold text-gray-900 mb-2">Manage Products</h1>
           <p className="text-gray-600">View and manage all products in your store</p>
         </div>
-        <Button className="gap-2">
+        <Button className="gap-2" onClick={openCreateDialog}>
           <Plus className="h-4 w-4" />
           Add Product
         </Button>
@@ -219,7 +362,11 @@ export default function AdminProductsClient({ products }: AdminProductsClientPro
                                 <Eye className="h-4 w-4" />
                               </Link>
                             </Button>
-                            <Button variant="ghost" size="sm">
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => openEditDialog(product)}
+                            >
                               <Edit className="h-4 w-4" />
                             </Button>
                           </div>
@@ -233,6 +380,181 @@ export default function AdminProductsClient({ products }: AdminProductsClientPro
           </div>
         </CardContent>
       </Card>
+
+      <Dialog open={showProductDialog} onOpenChange={setShowProductDialog}>
+        <DialogContent className="sm:max-w-2xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>{formState.id ? "Edit Product" : "Add Product"}</DialogTitle>
+          </DialogHeader>
+          <div className="grid gap-4 py-2">
+            <div className="grid gap-2">
+              <Label htmlFor="product-name">Name</Label>
+              <Input
+                id="product-name"
+                value={formState.name}
+                onChange={(e) => setFormState((prev) => ({ ...prev, name: e.target.value }))}
+              />
+            </div>
+            <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
+              <div className="grid gap-2">
+                <Label htmlFor="product-price">Sale price (current)</Label>
+                <Input
+                  id="product-price"
+                  type="number"
+                  min="0"
+                  step="0.01"
+                  value={formState.price}
+                  onChange={(e) => setFormState((prev) => ({ ...prev, price: e.target.value }))}
+                />
+              </div>
+              <div className="grid gap-2">
+                <Label htmlFor="product-compare">Compare-at price (optional)</Label>
+                <Input
+                  id="product-compare"
+                  type="number"
+                  min="0"
+                  step="0.01"
+                  placeholder="Higher list price"
+                  value={formState.compareAtPrice}
+                  onChange={(e) =>
+                    setFormState((prev) => ({ ...prev, compareAtPrice: e.target.value }))
+                  }
+                />
+                <p className="text-xs text-muted-foreground">
+                  When compare-at is higher than sale price, storefront shows a discount.
+                </p>
+              </div>
+              <div className="grid gap-2">
+                <Label>Stock level</Label>
+                <Select
+                  value={formState.stockLevel}
+                  onValueChange={(value) =>
+                    setFormState((prev) => ({
+                      ...prev,
+                      stockLevel: value as ProductFormState["stockLevel"],
+                    }))
+                  }
+                >
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="IN_STOCK">In Stock</SelectItem>
+                    <SelectItem value="LOW_STOCK">Low Stock</SelectItem>
+                    <SelectItem value="OUT_OF_STOCK">Out of Stock</SelectItem>
+                    <SelectItem value="DISCONTINUED">Discontinued</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="grid gap-2">
+                <Label>Category</Label>
+                <Select
+                  value={formState.categoryId}
+                  onValueChange={(value) => setFormState((prev) => ({ ...prev, categoryId: value }))}
+                >
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="none">No category</SelectItem>
+                    {categories.map((category) => (
+                      <SelectItem key={category.id} value={category.id}>
+                        {category.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="grid gap-2">
+                <Label htmlFor="product-brand">Brand</Label>
+                <Input
+                  id="product-brand"
+                  value={formState.brand}
+                  onChange={(e) => setFormState((prev) => ({ ...prev, brand: e.target.value }))}
+                />
+              </div>
+            </div>
+            <div className="grid gap-2">
+              <Label htmlFor="product-description">Description</Label>
+              <Textarea
+                id="product-description"
+                value={formState.description}
+                onChange={(e) =>
+                  setFormState((prev) => ({ ...prev, description: e.target.value }))
+                }
+                rows={4}
+              />
+            </div>
+            <div className="grid gap-2 rounded-md border p-3">
+              <Label>Images (Cloudinary)</Label>
+              <p className="text-xs text-muted-foreground">
+                New uploads are sent to Cloudinary and saved on this product. Leave empty to keep
+                existing images when editing. Adding files replaces the product&apos;s image gallery
+                with the new set.
+              </p>
+              <Input
+                type="file"
+                accept="image/*"
+                multiple
+                className="cursor-pointer"
+                onChange={(e) => {
+                  const files = Array.from(e.target.files || []);
+                  setFormState((prev) => ({
+                    ...prev,
+                    pendingFiles: [...prev.pendingFiles, ...files].slice(0, 12),
+                  }));
+                  e.target.value = "";
+                }}
+              />
+              {formState.pendingFiles.length > 0 && (
+                <ul className="text-xs text-muted-foreground space-y-1">
+                  {formState.pendingFiles.map((f, i) => (
+                    <li key={`${f.name}-${i}`} className="flex justify-between gap-2">
+                      <span className="truncate">{f.name}</span>
+                      <button
+                        type="button"
+                        className="text-primary shrink-0"
+                        onClick={() =>
+                          setFormState((prev) => ({
+                            ...prev,
+                            pendingFiles: prev.pendingFiles.filter((_, j) => j !== i),
+                          }))
+                        }
+                      >
+                        Remove
+                      </button>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </div>
+            <div className="flex items-center gap-2">
+              <Checkbox
+                id="product-active"
+                checked={formState.isActive}
+                onCheckedChange={(checked) =>
+                  setFormState((prev) => ({ ...prev, isActive: checked === true }))
+                }
+              />
+              <Label htmlFor="product-active">Active product</Label>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => setShowProductDialog(false)}
+              disabled={isPending}
+            >
+              Cancel
+            </Button>
+            <Button onClick={handleSaveProduct} disabled={isPending}>
+              {isPending ? "Saving..." : "Save Product"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </>
   );
 }

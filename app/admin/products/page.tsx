@@ -9,7 +9,7 @@ import {
   BreadcrumbPage,
   BreadcrumbSeparator,
 } from "@/components/ui/breadcrumb";
-import { getAllProducts } from "@/lib/actions/admin";
+import { getAdminCategories, getAllProducts, isAdmin } from "@/lib/actions/admin";
 import AdminProductsClient from "./AdminProductsClient";
 
 const AdminProductsPage = async () => {
@@ -19,7 +19,13 @@ const AdminProductsPage = async () => {
     redirect("/login?redirect=/admin/products");
   }
 
+  const admin = await isAdmin();
+  if (!admin) {
+    redirect("/");
+  }
+
   const products = await getAllProducts();
+  const categories = await getAdminCategories();
 
   return (
     <div className="container mx-auto px-4 py-8 max-w-7xl">
@@ -43,7 +49,7 @@ const AdminProductsPage = async () => {
         </BreadcrumbList>
       </Breadcrumb>
 
-      <AdminProductsClient products={products} />
+      <AdminProductsClient products={products} categories={categories} />
     </div>
   );
 };

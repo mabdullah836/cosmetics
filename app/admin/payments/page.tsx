@@ -9,7 +9,7 @@ import {
   BreadcrumbPage,
   BreadcrumbSeparator,
 } from "@/components/ui/breadcrumb";
-import { getPaymentsData } from "@/lib/actions/admin";
+import { getPaymentsData, isAdmin } from "@/lib/actions/admin";
 import AdminPaymentsClient from "./AdminPaymentsClient";
 
 const AdminPaymentsPage = async () => {
@@ -17,6 +17,11 @@ const AdminPaymentsPage = async () => {
   
   if (!session?.user) {
     redirect("/login?redirect=/admin/payments");
+  }
+
+  const admin = await isAdmin();
+  if (!admin) {
+    redirect("/");
   }
 
   const payments = await getPaymentsData();

@@ -10,6 +10,7 @@ export const ROUTES = {
   ADDRESS: "/checkout/address",
   PAYMENT: "/checkout/payment",
   CONFIRMATION: "/checkout/confirmation",
+  TRACK_ORDER: "/track-order",
   LOGIN: "/login",
   REGISTER: "/register",
   ACCOUNT: "/account",

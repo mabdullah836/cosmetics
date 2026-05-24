@@ -1,8 +1,55 @@
 "use server";
 
-import { createServiceClient, createClient } from "@/lib/supabase/server";
+import nodemailer from "nodemailer";
+import { createServiceClient } from "@/lib/supabase/server";
 import { logger } from "@/lib/utils/logger";
 import { MESSAGES, CONFIG } from "@/lib/constants";
+import { buildOTPEmailHtml } from "@/lib/email/otp-template";
+
+const SMTP_HOST = process.env.SMTP_HOST;
+const SMTP_PORT = Number(process.env.SMTP_PORT) || 587;
+const SMTP_SECURE = process.env.SMTP_SECURE === "true";
+const SMTP_USER = process.env.SMTP_USER;
+const SMTP_PASS = process.env.SMTP_PASS;
+const OTP_EMAIL_FROM =
+  process.env.OTP_EMAIL_FROM || "Bloom <noreply@example.com>";
+/**
+ * Send the OTP code to the user's email via Nodemailer SMTP (COD verification only).
+ * If SMTP_HOST is not set, logs the OTP and returns success (for local dev).
+ */
+async function sendOTPEmail(email: string, otp: string): Promise<{ ok: boolean; error?: string }> {
+  if (!SMTP_HOST) {
+    logger.log(
+      `[OTP] Code for ${email}: ${otp} (valid ${CONFIG.OTP_EXPIRY_MINUTES} min). Set SMTP_HOST to send real emails.`
+    );
+    return { ok: true };
+  }
+
+  try {
+    const transporter = nodemailer.createTransport({
+      host: SMTP_HOST,
+      port: SMTP_PORT,
+      secure: SMTP_SECURE,
+      auth:
+        SMTP_USER && SMTP_PASS
+          ? { user: SMTP_USER, pass: SMTP_PASS }
+          : undefined,
+    });
+    const info = await transporter.sendMail({
+      from: OTP_EMAIL_FROM,
+      to: email,
+      subject: `Your verification code is ${otp}`,
+      html: buildOTPEmailHtml(otp, CONFIG.OTP_EXPIRY_MINUTES),
+    });
+
+    logger.log(`OTP email sent to ${email} (messageId: ${info.messageId ?? "n/a"})`);
+    return { ok: true };
+  } catch (err) {
+    const message = err instanceof Error ? err.message : "Failed to send OTP email";
+    logger.error("OTP email send exception:", err);
+    return { ok: false, error: message };
+  }
+}
 
 interface OTPRecord {
   email: string;
@@ -23,7 +70,6 @@ function generateOTP(): string {
 // Send OTP via email using Supabase Auth
 export async function sendOTP(email: string): Promise<{ success: boolean; error?: string }> {
   try {
-    const supabase = await createClient();
     const serviceSupabase = createServiceClient();
     
     // Validate email
@@ -87,27 +133,14 @@ export async function sendOTP(email: string): Promise<{ success: boolean; error?
       return { success: false, error: MESSAGES.OTP.SEND_ERROR };
     }
 
-    // Send OTP via Supabase Auth email (uses your SMTP config)
-    const { error: emailError } = await supabase.auth.signInWithOtp({
-      email: cleanEmail,
-      options: {
-        emailRedirectTo: `${process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'}/checkout`,
-        data: {
-          otp_code: otp,
-          purpose: 'cod_verification'
-        },
-        shouldCreateUser: false, // Don't create user, just send email
-      },
-    });
-
-    if (emailError) {
-      logger.error("Email send error:", emailError);
-      // Still return success if OTP is stored, as we can verify it later
-      logger.log(`[DEV] OTP for ${cleanEmail}: ${otp}`);
-    } else {
-      logger.log(`OTP sent successfully to ${cleanEmail}`);
+    // Send OTP email for COD verification (not magic link — we only need to deliver the 6-digit code)
+    const sendResult = await sendOTPEmail(cleanEmail, otp);
+    if (!sendResult.ok) {
+      logger.error("OTP email failed:", sendResult.error);
+      return { success: false, error: MESSAGES.OTP.SEND_ERROR };
     }
 
+    logger.log(`OTP sent successfully to ${cleanEmail}`);
     return { success: true };
   } catch (error) {
     logger.error(MESSAGES.OTP.SEND_ERROR, error);

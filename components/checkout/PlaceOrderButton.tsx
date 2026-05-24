@@ -23,7 +23,10 @@ const PlaceOrderButton = ({ shippingAddress, billingAddress, paymentMethod }: Pl
     setIsLoading(false);
 
     if (res.success) {
-      router.push(`/checkout/confirmation?orderId=${res.orderId}`);
+      const tokenQuery = res.accessToken
+        ? `&token=${encodeURIComponent(res.accessToken)}`
+        : "";
+      router.push(`/checkout/confirmation?orderId=${res.orderId}${tokenQuery}`);
     } else {
       setResult(res);
     }

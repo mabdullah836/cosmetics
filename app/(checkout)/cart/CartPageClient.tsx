@@ -12,6 +12,7 @@ import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { CartItem } from "@/types/supabase";
 import CheckoutEntryModal from "@/components/checkout/CheckoutEntryModal";
+import { formatPrice } from "@/lib/utils/format";
 
 interface CartPageClientProps {
   initialCartItems?: CartItem[];
@@ -19,77 +20,56 @@ interface CartPageClientProps {
   isAuthenticated?: boolean;
 }
 
-export default function CartPageClient({ 
-  initialCartItems = [], 
+export default function CartPageClient({
+  initialCartItems = [],
   initialSubtotal = 0,
-  isAuthenticated = false 
+  isAuthenticated = false,
 }: CartPageClientProps) {
-  const { removeFromCart, updateQuantity } = useCart();
-  const [cartItems, setCartItems] = useState<CartItem[]>(initialCartItems);
-  const [subtotal, setSubtotal] = useState<number>(initialSubtotal);
+  const { cartItems: contextCartItems, subtotal: contextSubtotal, removeFromCart, updateQuantity } = useCart();
+  const [serverCartItems, setServerCartItems] = useState<CartItem[]>(initialCartItems);
+  const [serverSubtotal, setServerSubtotal] = useState<number>(initialSubtotal);
   const [showCheckoutModal, setShowCheckoutModal] = useState(false);
   const router = useRouter();
 
-  // Load local cart for guest users
-  useEffect(() => {
-    if (!isAuthenticated) {
-      const loadLocalCart = async () => {
-        const { getLocalCart } = await import("@/lib/utils/localCart");
-        const localCart = getLocalCart();
-        
-        // Convert local cart to CartItem format
-        const convertedItems: CartItem[] = localCart.map((item, index) => ({
-          id: `local-${index}`,
-          quantity: item.quantity,
-          product: item.product,
-          product_id: item.productId,
-          cart_id: "local",
-        }));
-        
-        setCartItems(convertedItems);
-        const localSubtotal = convertedItems.reduce(
-          (acc, item) => acc + (item.product?.price || 0) * item.quantity,
-          0
-        );
-        setSubtotal(localSubtotal);
-      };
-      
-      loadLocalCart();
-    }
-  }, [isAuthenticated]);
+  // Guest: use context (synced from localStorage). Auth: use server state.
+  const cartItems = isAuthenticated ? serverCartItems : contextCartItems;
+  const subtotal = isAuthenticated ? serverSubtotal : contextSubtotal;
 
-  // Sync with initial props when they change (for authenticated users)
+  // Sync server cart when authenticated and props change
   useEffect(() => {
     if (isAuthenticated) {
-      setCartItems(initialCartItems);
-      setSubtotal(initialSubtotal);
+      setServerCartItems(initialCartItems);
+      setServerSubtotal(initialSubtotal);
     }
-  }, [initialCartItems, initialSubtotal, isAuthenticated]);
+  }, [isAuthenticated, initialCartItems, initialSubtotal]);
 
   const handleRemoveFromCart = async (cartItemId: string) => {
     await removeFromCart(cartItemId);
-    setCartItems(prev => prev.filter(item => item.id !== cartItemId));
-    setSubtotal(prev => {
-      const item = cartItems.find(i => i.id === cartItemId);
-      return item ? prev - ((item.product?.price || 0) * item.quantity) : prev;
-    });
+    if (isAuthenticated) {
+      const item = cartItems.find((i) => i.id === cartItemId);
+      setServerCartItems((prev) => prev.filter((item) => item.id !== cartItemId));
+      setServerSubtotal((prev) =>
+        item ? prev - (item.product?.price ?? 0) * item.quantity : prev
+      );
+    }
     toast.success("Item removed from cart");
   };
 
   const handleUpdateQuantity = async (cartItemId: string, quantity: number) => {
     await updateQuantity(cartItemId, quantity);
-    setCartItems(prev => {
-      const updated = prev.map(item => {
-        if (item.id === cartItemId) {
-          const oldTotal = (item.product?.price || 0) * item.quantity;
-          const newTotal = (item.product?.price || 0) * quantity;
-          setSubtotal(prevSubtotal => prevSubtotal - oldTotal + newTotal);
-          return { ...item, quantity };
-        }
-        return item;
+    if (isAuthenticated) {
+      setServerCartItems((prev) => {
+        const updated = prev.map((item) =>
+          item.id === cartItemId ? { ...item, quantity } : item
+        );
+        const newSubtotal = updated.reduce(
+          (acc, item) => acc + (item.product?.price ?? 0) * item.quantity,
+          0
+        );
+        setServerSubtotal(newSubtotal);
+        return updated;
       });
-      return updated;
-    });
+    }
   };
 
   const handleCheckout = () => {
@@ -97,8 +77,6 @@ export default function CartPageClient({
       toast.error("Your cart is empty");
       return;
     }
-    
-    // Show modal for guests, direct navigation for authenticated users
     if (!isAuthenticated) {
       setShowCheckoutModal(true);
     } else {
@@ -130,65 +108,74 @@ export default function CartPageClient({
   return (
     <div className="container mx-auto px-4 py-12 max-w-7xl">
       <h1 className="text-4xl font-bold mb-8">Shopping Cart</h1>
-      
+
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        {/* Cart Items */}
         <div className="lg:col-span-2 space-y-4">
           {cartItems.map((item) => (
             <Card key={item.id} className="hover:shadow-md transition-shadow">
               <CardContent className="p-6">
                 <div className="flex gap-4">
-                  <Link 
-                    href={`/product/${item.product?.slug || item.product?.id || ''}`}
+                  <Link
+                    href={`/product/${item.product?.slug || item.product?.id || ""}`}
                     className="relative w-24 h-24 flex-shrink-0 rounded-md overflow-hidden border"
                   >
                     <Image
-                      src={item.product?.images?.[0]?.image_url || '/placeholder-product.jpg'}
-                      alt={item.product?.name || 'Product'}
+                      src={
+                        item.product?.images?.[0]?.image_url ??
+                        (item.product as { imageUrl?: string })?.imageUrl ??
+                        "/placeholder-product.jpg"
+                      }
+                      alt={item.product?.name ?? "Product"}
                       fill
                       className="object-cover"
                       sizes="96px"
                     />
                   </Link>
-                  
+
                   <div className="flex-1 min-w-0">
-                    <Link 
-                      href={`/product/${item.product?.slug || item.product?.id || ''}`}
+                    <Link
+                      href={`/product/${item.product?.slug || item.product?.id || ""}`}
                       className="block"
                     >
                       <h3 className="font-semibold text-lg hover:text-primary transition-colors mb-2">
-                        {item.product?.name || 'Product'}
+                        {item.product?.name ?? "Product"}
                       </h3>
                     </Link>
                     <p className="text-muted-foreground mb-4">
-                      ${(item.product?.price || 0).toFixed(2)}
+                      {formatPrice(item.product?.price ?? 0)}
                     </p>
-                    
+
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-2">
                         <Button
                           variant="outline"
                           size="icon"
                           className="h-8 w-8"
-                          onClick={() => handleUpdateQuantity(item.id, item.quantity - 1)}
+                          onClick={() =>
+                            handleUpdateQuantity(item.id, item.quantity - 1)
+                          }
                           disabled={item.quantity <= 1}
                         >
                           <Minus className="h-4 w-4" />
                         </Button>
-                        <span className="w-12 text-center font-medium">{item.quantity}</span>
+                        <span className="w-12 text-center font-medium">
+                          {item.quantity}
+                        </span>
                         <Button
                           variant="outline"
                           size="icon"
                           className="h-8 w-8"
-                          onClick={() => handleUpdateQuantity(item.id, item.quantity + 1)}
+                          onClick={() =>
+                            handleUpdateQuantity(item.id, item.quantity + 1)
+                          }
                         >
                           <Plus className="h-4 w-4" />
                         </Button>
                       </div>
-                      
+
                       <div className="flex items-center gap-4">
                         <p className="font-bold text-lg">
-                          ${((item.product?.price || 0) * item.quantity).toFixed(2)}
+                          {formatPrice((item.product?.price ?? 0) * item.quantity)}
                         </p>
                         <Button
                           variant="ghost"
@@ -207,7 +194,6 @@ export default function CartPageClient({
           ))}
         </div>
 
-        {/* Order Summary */}
         <div className="lg:col-span-1">
           <Card className="sticky top-4">
             <CardHeader>
@@ -217,7 +203,7 @@ export default function CartPageClient({
               <div className="space-y-2">
                 <div className="flex justify-between text-sm">
                   <span className="text-muted-foreground">Subtotal</span>
-                  <span>${subtotal.toFixed(2)}</span>
+                  <span>{formatPrice(subtotal)}</span>
                 </div>
                 <div className="flex justify-between text-sm">
                   <span className="text-muted-foreground">Shipping</span>
@@ -226,20 +212,20 @@ export default function CartPageClient({
                 <Separator />
                 <div className="flex justify-between text-lg font-bold">
                   <span>Total</span>
-                  <span>${subtotal.toFixed(2)}</span>
+                  <span>{formatPrice(subtotal)}</span>
                 </div>
               </div>
-              
-              <Button 
+
+              <Button
                 onClick={handleCheckout}
                 className="w-full h-12 text-base hover:shadow-md transition-shadow"
                 size="lg"
               >
                 Proceed to Checkout
               </Button>
-              
-              <Button 
-                variant="outline" 
+
+              <Button
+                variant="outline"
                 asChild
                 className="w-full hover:bg-accent transition-colors"
               >

@@ -15,6 +15,7 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { ArrowLeft, Package, Truck, CreditCard, MapPin } from "lucide-react";
 import { getOrderStatusColor } from "@/lib/constants/status";
+import { formatPrice } from "@/lib/utils/format";
 
 type OrderDetailPageProps = {
   params: Promise<{ id: string }>;
@@ -60,14 +61,14 @@ export default async function OrderDetailPage({ params }: OrderDetailPageProps) 
 
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white">
+    <div className="min-h-screen bg-gradient-to-b from-muted/40 to-background">
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Breadcrumb */}
         <Breadcrumb className="mb-8">
           <BreadcrumbList>
             <BreadcrumbItem>
               <BreadcrumbLink asChild>
-                <Link href="/" className="text-gray-600 hover:text-gray-900">
+                <Link href="/" className="text-muted-foreground hover:text-foreground">
                   Home
                 </Link>
               </BreadcrumbLink>
@@ -75,7 +76,7 @@ export default async function OrderDetailPage({ params }: OrderDetailPageProps) 
             <BreadcrumbSeparator />
             <BreadcrumbItem>
               <BreadcrumbLink asChild>
-                <Link href="/account" className="text-gray-600 hover:text-gray-900">
+                <Link href="/account" className="text-muted-foreground hover:text-foreground">
                   Account
                 </Link>
               </BreadcrumbLink>
@@ -83,14 +84,14 @@ export default async function OrderDetailPage({ params }: OrderDetailPageProps) 
             <BreadcrumbSeparator />
             <BreadcrumbItem>
               <BreadcrumbLink asChild>
-                <Link href="/account/orders" className="text-gray-600 hover:text-gray-900">
+                <Link href="/account/orders" className="text-muted-foreground hover:text-foreground">
                   Orders
                 </Link>
               </BreadcrumbLink>
             </BreadcrumbItem>
             <BreadcrumbSeparator />
             <BreadcrumbItem>
-              <BreadcrumbPage className="text-gray-900">
+              <BreadcrumbPage className="text-foreground">
                 Order #{order.id.slice(0, 8).toUpperCase()}
               </BreadcrumbPage>
             </BreadcrumbItem>
@@ -100,10 +101,10 @@ export default async function OrderDetailPage({ params }: OrderDetailPageProps) 
         {/* Header */}
         <div className="mb-8 flex items-center justify-between">
           <div>
-            <h1 className="text-3xl font-bold text-gray-900 mb-2">
+            <h1 className="text-3xl font-bold text-foreground mb-2">
               Order #{order.id.slice(0, 8).toUpperCase()}
             </h1>
-            <p className="text-gray-600">
+            <p className="text-muted-foreground">
               Placed on {new Date(order.created_at).toLocaleDateString("en-US", {
                 year: "numeric",
                 month: "long",
@@ -159,7 +160,7 @@ export default async function OrderDetailPage({ params }: OrderDetailPageProps) 
                   return (
                     <div key={item.id} className="flex items-center gap-4 p-4 border rounded-lg">
                       {primaryImage && (
-                        <div className="w-20 h-20 rounded-md overflow-hidden bg-gray-200 flex-shrink-0">
+                        <div className="w-20 h-20 rounded-md overflow-hidden bg-muted flex-shrink-0">
                           <img
                             src={primaryImage?.image_url || '/placeholder.svg'}
                             alt={item?.product_name || 'Product'}
@@ -170,20 +171,20 @@ export default async function OrderDetailPage({ params }: OrderDetailPageProps) 
                       <div className="flex-1">
                         <Link
                           href={`/product/${item.product?.slug || item.product?.id}`}
-                          className="font-semibold text-gray-900 hover:text-primary text-lg"
+                          className="font-semibold text-foreground hover:text-primary text-lg"
                         >
                           {item.product_name}
                         </Link>
-                        <p className="text-sm text-gray-600 mt-1">
+                        <p className="text-sm text-muted-foreground mt-1">
                           Quantity: {item.quantity}
                         </p>
-                        <p className="text-sm text-gray-600">
-                          Price: ${item.price.toFixed(2)} each
+                        <p className="text-sm text-muted-foreground">
+                          Price: {formatPrice(item.price)} each
                         </p>
                       </div>
                       <div className="text-right">
-                        <p className="font-bold text-lg text-gray-900">
-                          ${(item.price * item.quantity).toFixed(2)}
+                        <p className="font-bold text-lg text-foreground">
+                          {formatPrice(item.price * item.quantity)}
                         </p>
                       </div>
                     </div>
@@ -204,7 +205,7 @@ export default async function OrderDetailPage({ params }: OrderDetailPageProps) 
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <div className="space-y-1 text-gray-700">
+                  <div className="space-y-1 text-muted-foreground">
                     <p className="font-semibold">{order.shipping_address.full_name}</p>
                     <p>{order.shipping_address.address_line_1}</p>
                     {order.shipping_address.address_line_2 && (
@@ -215,7 +216,7 @@ export default async function OrderDetailPage({ params }: OrderDetailPageProps) 
                       {order.shipping_address.postal_code}
                     </p>
                     <p>{order.shipping_address.country}</p>
-                    <p className="mt-2 text-sm text-gray-600">
+                    <p className="mt-2 text-sm text-muted-foreground">
                       Phone: {order.shipping_address.phone}
                     </p>
                   </div>
@@ -232,7 +233,7 @@ export default async function OrderDetailPage({ params }: OrderDetailPageProps) 
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <div className="space-y-1 text-gray-700">
+                  <div className="space-y-1 text-muted-foreground">
                     <p className="font-semibold">{order.billing_address.full_name}</p>
                     <p>{order.billing_address.address_line_1}</p>
                     {order.billing_address.address_line_2 && (
@@ -243,7 +244,7 @@ export default async function OrderDetailPage({ params }: OrderDetailPageProps) 
                       {order.billing_address.postal_code}
                     </p>
                     <p>{order.billing_address.country}</p>
-                    <p className="mt-2 text-sm text-gray-600">
+                    <p className="mt-2 text-sm text-muted-foreground">
                       Phone: {order.billing_address.phone}
                     </p>
                   </div>
@@ -260,24 +261,24 @@ export default async function OrderDetailPage({ params }: OrderDetailPageProps) 
             <CardContent>
               <div className="space-y-3">
                 <div className="flex justify-between">
-                  <span className="text-gray-600">Subtotal</span>
-                  <span className="font-medium">${order.subtotal.toFixed(2)}</span>
+                  <span className="text-muted-foreground">Subtotal</span>
+                  <span className="font-medium">{formatPrice(order.subtotal)}</span>
                 </div>
                 {order.shipping > 0 && (
                   <div className="flex justify-between">
-                    <span className="text-gray-600">Shipping</span>
-                    <span className="font-medium">${order.shipping.toFixed(2)}</span>
+                    <span className="text-muted-foreground">Shipping</span>
+                    <span className="font-medium">{formatPrice(order.shipping)}</span>
                   </div>
                 )}
                 {order.tax > 0 && (
                   <div className="flex justify-between">
-                    <span className="text-gray-600">Tax</span>
-                    <span className="font-medium">${order.tax.toFixed(2)}</span>
+                    <span className="text-muted-foreground">Tax</span>
+                    <span className="font-medium">{formatPrice(order.tax)}</span>
                   </div>
                 )}
                 <div className="flex justify-between pt-3 border-t text-lg font-bold">
                   <span>Total</span>
-                  <span>${order.total.toFixed(2)}</span>
+                  <span>{formatPrice(order.total)}</span>
                 </div>
               </div>
             </CardContent>

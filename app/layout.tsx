@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Inter } from "next/font/google";
+import { Poppins } from "next/font/google";
 import "./globals.css";
 import ShippingBanner from "@/components/layout/ShippingBanner";
 import ServerHeader from "@/components/layout/ServerHeader";
@@ -7,15 +7,22 @@ import Footer from "@/components/layout/Footer";
 import { CartProvider } from "@/components/providers/CartProvider";
 import { ThemeProvider } from "@/components/providers/ThemeProvider";
 import { Toaster } from "@/components/ui/sonner"
+import { CONFIG } from "@/lib/constants";
+import { formatPrice } from "@/lib/utils/format";
 
-const inter = Inter({ subsets: ["latin"] });
+const poppins = Poppins({
+  subsets: ["latin"],
+  weight: ["400", "500", "600", "700"],
+  variable: "--font-sans",
+  display: "swap",
+});
 
 export const metadata: Metadata = {
   title: {
     default: "Premium Cosmetics | Natural Beauty Products",
     template: "%s | Premium Cosmetics",
   },
-  description: "Discover our curated collection of premium cosmetics and natural beauty products. Free shipping on orders over $50.",
+  description: `Discover our curated collection of premium cosmetics and natural beauty products. Free shipping on orders over ${formatPrice(CONFIG.FREE_SHIPPING_THRESHOLD)}.`,
   keywords: ["cosmetics", "beauty", "makeup", "skincare", "natural"],
   openGraph: {
     type: "website",
@@ -31,8 +38,12 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" suppressHydrationWarning>
-      <body className={`${inter.className} antialiased`}>
+    <html
+      lang="en"
+      suppressHydrationWarning
+      className={poppins.variable}
+    >
+      <body className={`${poppins.className} antialiased`} suppressHydrationWarning>
         <ThemeProvider
           attribute="class"
           defaultTheme="light"

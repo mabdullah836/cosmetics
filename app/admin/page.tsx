@@ -11,14 +11,14 @@ import {
 } from "@/components/ui/breadcrumb";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { getAdminStats } from "@/lib/actions/admin";
+import { getAdminStats, isAdmin } from "@/lib/actions/admin";
+import { formatPrice } from "@/lib/utils/format";
 import { 
   Package, 
   ShoppingCart, 
   DollarSign, 
   AlertTriangle,
   TrendingUp,
-  Users,
   ArrowRight
 } from "lucide-react";
 
@@ -27,6 +27,11 @@ const AdminDashboardPage = async () => {
   
   if (!session?.user) {
     redirect("/login?redirect=/admin");
+  }
+
+  const admin = await isAdmin();
+  if (!admin) {
+    redirect("/");
   }
 
   const stats = await getAdminStats();
@@ -52,7 +57,7 @@ const AdminDashboardPage = async () => {
     },
     {
       title: "Total Revenue",
-      value: `$${stats.totalRevenue.toLocaleString()}`,
+      value: formatPrice(stats.totalRevenue),
       description: "All time",
       icon: DollarSign,
       href: "/admin/payments",

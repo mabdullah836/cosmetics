@@ -4,10 +4,11 @@ import { useState } from "react";
 import PlaceOrderButton from "@/components/checkout/PlaceOrderButton";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import type { Address } from "@/types/supabase";
 
 type PaymentMethod = "COD" | "BANK_TRANSFER";
 
-interface Address {
+interface SimpleAddress {
   street: string;
   city: string;
   state: string;
@@ -15,9 +16,26 @@ interface Address {
   country: string;
 }
 
+function toPlaceOrderAddress(
+  a: SimpleAddress,
+  type: "SHIPPING" | "BILLING"
+): Omit<Address, "id"> {
+  return {
+    type,
+    full_name: "Customer",
+    phone: "",
+    address_line_1: a.street,
+    city: a.city,
+    state: a.state,
+    postal_code: a.postalCode,
+    country: a.country,
+    is_default: false,
+  };
+}
+
 interface PaymentPageClientProps {
-  shippingAddress: Address;
-  billingAddress: Address;
+  shippingAddress: SimpleAddress;
+  billingAddress: SimpleAddress;
 }
 
 export default function PaymentPageClient({ 
@@ -82,10 +100,10 @@ export default function PaymentPageClient({
               <CardTitle>Order Summary</CardTitle>
             </CardHeader>
             <CardContent>
-              <PlaceOrderButton 
-                shippingAddress={shippingAddress} 
-                billingAddress={billingAddress} 
-                paymentMethod={paymentMethod} 
+              <PlaceOrderButton
+                shippingAddress={toPlaceOrderAddress(shippingAddress, "SHIPPING")}
+                billingAddress={toPlaceOrderAddress(billingAddress, "BILLING")}
+                paymentMethod={paymentMethod}
               />
             </CardContent>
           </Card>

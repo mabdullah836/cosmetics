@@ -26,11 +26,8 @@ import { Suspense } from "react";
 import Link from "next/link";
 import ProductsToolbar from "@/components/product/ProductsToolbar";
 
-// Enable revalidation every 5 minutes for static content
-export const revalidate = 300;
-
-// Enable dynamic rendering for search params
-export const dynamic = 'force-dynamic';
+/** Safety-net ISR; primary freshness via unstable_cache + revalidateTag (admin). */
+export const revalidate = 86400;
 
 const ProductsPage = async ({
   searchParams,
@@ -85,7 +82,7 @@ const ProductsPage = async ({
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-background">
       <div className="max-w-[1600px] mx-auto px-4 md:px-8 py-6">
 
         {/* Breadcrumb */}
@@ -105,8 +102,8 @@ const ProductsPage = async ({
 
         {/* Header */}
         <div className="mb-6">
-          <h1 className="text-3xl font-semibold text-gray-900">Products</h1>
-          <p className="text-sm text-gray-600">
+          <h1 className="text-3xl font-semibold text-foreground">Products</h1>
+          <p className="text-sm text-muted-foreground">
             {total} items available
           </p>
         </div>
@@ -114,7 +111,7 @@ const ProductsPage = async ({
         <div className="flex gap-8">
           {/* Filters */}
           <aside className="hidden lg:block w-64 shrink-0">
-            <div className="sticky top-24 bg-white rounded-xl border p-4">
+            <div className="sticky top-24 bg-card rounded-xl border border-border p-4">
               <ProductFilters
                 categories={categories}
                 brands={brands}
@@ -152,9 +149,9 @@ const ProductsPage = async ({
                   ))}
                 </div>
               ) : (
-                <div className="bg-white border rounded-xl p-12 text-center">
+                <div className="bg-card border border-border rounded-xl p-12 text-center">
                   <h3 className="text-lg font-semibold mb-2">No products found</h3>
-                  <p className="text-gray-600 text-sm">
+                  <p className="text-muted-foreground text-sm">
                     Try adjusting your filters or search.
                   </p>
                 </div>

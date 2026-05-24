@@ -16,6 +16,7 @@ import { Package, User, MapPin, ShoppingBag, Heart, Settings } from "lucide-reac
 import { Badge } from "@/components/ui/badge";
 import SignOutButton from "@/components/account/SignOutButton";
 import { getOrderStatusColor } from "@/lib/constants/status";
+import { formatPrice } from "@/lib/utils/format";
 
 export default async function AccountPage() {
   const session = await auth();
@@ -62,29 +63,29 @@ export default async function AccountPage() {
 
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white">
+    <div className="min-h-screen bg-gradient-to-b from-muted/40 to-background">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Breadcrumb */}
         <Breadcrumb className="mb-8">
           <BreadcrumbList>
             <BreadcrumbItem>
               <BreadcrumbLink asChild>
-                <Link href="/" className="text-gray-600 hover:text-gray-900">
+                <Link href="/" className="text-muted-foreground hover:text-foreground">
                   Home
                 </Link>
               </BreadcrumbLink>
             </BreadcrumbItem>
             <BreadcrumbSeparator />
             <BreadcrumbItem>
-              <BreadcrumbPage className="text-gray-900">My Account</BreadcrumbPage>
+              <BreadcrumbPage className="text-foreground">My Account</BreadcrumbPage>
             </BreadcrumbItem>
           </BreadcrumbList>
         </Breadcrumb>
 
         {/* Header */}
         <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">My Account</h1>
-          <p className="text-gray-600">
+          <h1 className="text-3xl font-bold text-foreground mb-2">My Account</h1>
+          <p className="text-muted-foreground">
             Welcome back, {profile?.full_name || (session.user.email ? session.user.email.split("@")?.[0] : null) || "User"}!
           </p>
         </div>
@@ -93,8 +94,8 @@ export default async function AccountPage() {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
           <Card className="hover:shadow-lg transition-shadow">
             <CardHeader className="flex flex-row items-center justify-between pb-2">
-              <CardTitle className="text-sm font-medium text-gray-600">Total Orders</CardTitle>
-              <Package className="h-4 w-4 text-gray-400" />
+              <CardTitle className="text-sm font-medium text-muted-foreground">Total Orders</CardTitle>
+              <Package className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">{ordersCount || 0}</div>
@@ -103,8 +104,8 @@ export default async function AccountPage() {
 
           <Card className="hover:shadow-lg transition-shadow">
             <CardHeader className="flex flex-row items-center justify-between pb-2">
-              <CardTitle className="text-sm font-medium text-gray-600">Saved Addresses</CardTitle>
-              <MapPin className="h-4 w-4 text-gray-400" />
+              <CardTitle className="text-sm font-medium text-muted-foreground">Saved Addresses</CardTitle>
+              <MapPin className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">{addressesCount || 0}</div>
@@ -113,8 +114,8 @@ export default async function AccountPage() {
 
           <Card className="hover:shadow-lg transition-shadow">
             <CardHeader className="flex flex-row items-center justify-between pb-2">
-              <CardTitle className="text-sm font-medium text-gray-600">Wishlist Items</CardTitle>
-              <Heart className="h-4 w-4 text-gray-400" />
+              <CardTitle className="text-sm font-medium text-muted-foreground">Wishlist Items</CardTitle>
+              <Heart className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">{wishlistCount || 0}</div>
@@ -123,8 +124,8 @@ export default async function AccountPage() {
 
           <Card className="hover:shadow-lg transition-shadow">
             <CardHeader className="flex flex-row items-center justify-between pb-2">
-              <CardTitle className="text-sm font-medium text-gray-600">Account Status</CardTitle>
-              <User className="h-4 w-4 text-gray-400" />
+              <CardTitle className="text-sm font-medium text-muted-foreground">Account Status</CardTitle>
+              <User className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
               <Badge className="bg-emerald-500">Active</Badge>
@@ -155,17 +156,17 @@ export default async function AccountPage() {
                       <Link
                         key={order.id}
                         href={`/account/orders/${order.id}`}
-                        className="block p-4 border rounded-lg hover:bg-gray-50 transition-colors"
+                        className="block p-4 border rounded-lg hover:bg-muted/50 transition-colors"
                       >
                         <div className="flex items-center justify-between">
                           <div>
                             <div className="flex items-center gap-3 mb-2">
-                              <p className="font-semibold text-gray-900">Order #{order.id.slice(0, 8)}</p>
+                              <p className="font-semibold text-foreground">Order #{order.id.slice(0, 8)}</p>
                               <Badge className={getOrderStatusColor(order.status)}>
                                 {order.status}
                               </Badge>
                             </div>
-                            <p className="text-sm text-gray-600">
+                            <p className="text-sm text-muted-foreground">
                               {new Date(order.created_at).toLocaleDateString("en-US", {
                                 year: "numeric",
                                 month: "long",
@@ -174,8 +175,8 @@ export default async function AccountPage() {
                             </p>
                           </div>
                           <div className="text-right">
-                            <p className="font-bold text-gray-900">${order.total.toFixed(2)}</p>
-                            <p className="text-xs text-gray-500 capitalize">{order.payment_status}</p>
+                            <p className="font-bold text-foreground">{formatPrice(order.total)}</p>
+                            <p className="text-xs text-muted-foreground capitalize">{order.payment_status}</p>
                           </div>
                         </div>
                       </Link>
@@ -183,8 +184,8 @@ export default async function AccountPage() {
                   </div>
                 ) : (
                   <div className="text-center py-8">
-                    <Package className="h-12 w-12 text-gray-300 mx-auto mb-4" />
-                    <p className="text-gray-600 mb-4">No orders yet</p>
+                    <Package className="h-12 w-12 text-muted-foreground/45 mx-auto mb-4" />
+                    <p className="text-muted-foreground mb-4">No orders yet</p>
                     <Button asChild>
                       <Link href="/products">Start Shopping</Link>
                     </Button>

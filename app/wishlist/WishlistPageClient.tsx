@@ -15,6 +15,7 @@ import { addToWishlist, removeFromWishlist } from "@/lib/actions/wishlist";
 import { addToCart } from "@/lib/actions/cart";
 import { logger } from "@/lib/utils/logger";
 import { ROUTES } from "@/lib/constants";
+import { formatPrice } from "@/lib/utils/format";
 import {
   getLocalWishlist,
   addToLocalWishlist,
@@ -316,12 +317,12 @@ export default function WishlistPageClient({
                     {/* Price */}
                     <div className="flex items-center gap-2">
                       <span className="text-lg font-bold text-foreground">
-                        ${product.price.toFixed(2)}
+                        {formatPrice(product.price)}
                       </span>
                       {product.original_price && product.original_price > product.price && (
                         <>
                           <span className="text-sm line-through text-muted-foreground">
-                            ${product.original_price.toFixed(2)}
+                            {formatPrice(product.original_price)}
                           </span>
                           <span className="text-sm font-medium text-red-600">
                             {Math.round((1 - product.price / product.original_price) * 100)}% off

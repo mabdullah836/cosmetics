@@ -7,12 +7,12 @@ import {
   BreadcrumbSeparator,
 } from "@/components/ui/breadcrumb";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Rabbit, Leaf, Recycle, Heart } from "lucide-react";
+import { Leaf, Recycle, Heart } from "lucide-react";
 import Link from "next/link";
 
 export const metadata = {
   title: "About Us",
-  description: "Learn about Bloom Beauty — our mission, values, and commitment to clean, cruelty-free cosmetics.",
+  description: "Learn about Bloom Beauty — our mission, values, and commitment to clean, premium cosmetics.",
 };
 
 export default function AboutPage() {
@@ -34,16 +34,16 @@ export default function AboutPage() {
         </Breadcrumb>
 
         <div className="max-w-3xl mx-auto">
-          <h1 className="text-3xl md:text-4xl font-display font-bold text-foreground mb-2">
+          <h1 className="text-3xl md:text-4xl font-display font-bold text-primary mb-2">
             About Bloom Beauty
           </h1>
           <p className="text-muted-foreground mb-10">
-            Clean, cruelty-free beauty you can feel good about.
+            Premium beauty you can feel good about.
           </p>
 
           <div className="prose prose-neutral dark:prose-invert max-w-none mb-12">
             <p className="text-muted-foreground leading-relaxed mb-6">
-              Bloom Beauty was founded on a simple idea: beauty should be kind — to your skin, to animals, and to the planet. We create premium cosmetics and skincare that are 100% vegan, cruelty-free, and made with clean ingredients you can trust.
+              Bloom Beauty was founded on a simple idea: beauty should be kind — to your skin and to the planet. We create premium cosmetics and skincare made with clean ingredients you can trust.
             </p>
             <p className="text-muted-foreground leading-relaxed">
               Every product is formulated without parabens, sulfates, or harmful chemicals. We believe in transparency, quality, and sustainability at every step.
@@ -51,19 +51,7 @@ export default function AboutPage() {
           </div>
 
           <h2 className="text-xl font-semibold text-foreground mb-6">Our Values</h2>
-          <div className="grid gap-6 md:grid-cols-3 mb-12">
-            <Card>
-              <CardHeader>
-                <Rabbit className="h-8 w-8 text-primary mb-2" />
-                <CardTitle className="text-base">Cruelty-Free & Vegan</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <p className="text-sm text-muted-foreground">
-                  100% vegan formulas. Never tested on animals. Certified cruelty-free.
-                </p>
-              </CardContent>
-            </Card>
-
+          <div className="grid gap-6 md:grid-cols-2 mb-12">
             <Card>
               <CardHeader>
                 <Leaf className="h-8 w-8 text-primary mb-2" />

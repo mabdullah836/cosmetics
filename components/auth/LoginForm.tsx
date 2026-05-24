@@ -98,13 +98,17 @@ const LoginForm = ({
           }
         }
 
+        const isAdmin = user.app_metadata?.role === "admin";
+        const shouldRedirectAdminToDashboard = isAdmin && redirectTo.startsWith("/account");
+        const destination = shouldRedirectAdminToDashboard ? "/admin" : redirectTo;
+
         toast.success("Logged in successfully");
         onOpenChange(false);
         onSuccess?.();
         
         // Navigate to trigger new request with cookies
         // Use window.location for full page reload to ensure cookies are sent
-        window.location.href = redirectTo;
+        window.location.href = destination;
       }
     } catch (error) {
       toast.error("An error occurred. Please try again.");
@@ -199,12 +203,12 @@ const LoginForm = ({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-md bg-white">
+      <DialogContent className="sm:max-w-md">
         <DialogHeader>
-          <DialogTitle className="text-gray-900 font-bold text-xl">
+          <DialogTitle className="text-foreground font-bold text-xl">
             {isLoginMode ? "Sign in to continue" : "Create an Account"}
           </DialogTitle>
-          <DialogDescription className="text-gray-600 mt-2">
+          <DialogDescription className="text-muted-foreground mt-2">
             {isLoginMode 
               ? "Sign in to complete your order. Your cart will be saved to your account."
               : "Sign up to save your details and track your orders."
@@ -226,7 +230,7 @@ const LoginForm = ({
             {isMagicLink ? (
               <form onSubmit={handleMagicLinkLogin} className="space-y-4">
                 <div className="space-y-2">
-                  <Label htmlFor="magic-email" className="text-gray-900 font-medium">Email</Label>
+                  <Label htmlFor="magic-email" className="text-foreground font-medium">Email</Label>
                   <Input
                     id="magic-email"
                     type="email"
@@ -256,7 +260,7 @@ const LoginForm = ({
             ) : (
               <form onSubmit={handleLogin} className="space-y-4">
                 <div className="space-y-2">
-                  <Label htmlFor="login-email" className="text-gray-900 font-medium">Email</Label>
+                  <Label htmlFor="login-email" className="text-foreground font-medium">Email</Label>
                   <Input
                     id="login-email"
                     type="email"
@@ -269,7 +273,7 @@ const LoginForm = ({
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="login-password" className="text-gray-900 font-medium">Password</Label>
+                  <Label htmlFor="login-password" className="text-foreground font-medium">Password</Label>
                   <Input
                     id="login-password"
                     type="password"
@@ -304,7 +308,7 @@ const LoginForm = ({
           <TabsContent value="register" className="space-y-4 mt-6">
             <form onSubmit={handleRegister} className="space-y-4">
               <div className="space-y-2">
-                <Label htmlFor="register-name" className="text-gray-900 font-medium">Name</Label>
+                <Label htmlFor="register-name" className="text-foreground font-medium">Name</Label>
                 <Input
                   id="register-name"
                   type="text"
@@ -317,7 +321,7 @@ const LoginForm = ({
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="register-email" className="text-gray-900 font-medium">Email</Label>
+                <Label htmlFor="register-email" className="text-foreground font-medium">Email</Label>
                 <Input
                   id="register-email"
                   type="email"
@@ -330,7 +334,7 @@ const LoginForm = ({
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="register-password" className="text-gray-900 font-medium">Password</Label>
+                <Label htmlFor="register-password" className="text-foreground font-medium">Password</Label>
                 <Input
                   id="register-password"
                   type="password"

@@ -36,12 +36,12 @@ export default function CheckoutEntryModal({
   return (
     <>
       <Dialog open={open} onOpenChange={onOpenChange}>
-        <DialogContent className="sm:max-w-md bg-white">
+        <DialogContent className="sm:max-w-md">
           <DialogHeader>
-            <DialogTitle className="text-gray-900 font-bold text-xl">
+            <DialogTitle className="text-foreground font-bold text-xl">
               Continue to Checkout
             </DialogTitle>
-            <DialogDescription className="text-gray-600 mt-2">
+            <DialogDescription className="text-muted-foreground mt-2">
               Choose how you'd like to proceed with your order
             </DialogDescription>
           </DialogHeader>
@@ -66,7 +66,7 @@ export default function CheckoutEntryModal({
                 <span className="w-full border-t" />
               </div>
               <div className="relative flex justify-center text-xs uppercase">
-                <span className="bg-white px-2 text-muted-foreground">Or</span>
+                <span className="bg-background px-2 text-muted-foreground">Or</span>
               </div>
             </div>
 

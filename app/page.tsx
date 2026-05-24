@@ -2,7 +2,7 @@ import HeroSection from "@/components/home/HeroSection";
 import CategoryGrid from "@/components/home/CategoryCard";
 import ProductCarousel from "@/components/home/ProductCarousel";
 import NewArrivalsSection from "@/components/home/NewArrivalsSection";
-import BrandValues from "@/components/home/BrandValues";
+import WhyShopSection from "@/components/home/WhyShopSection";
 import Testimonials from "@/components/home/Testimonials";
 import Newsletter from "@/components/common/Newsletter";
 import { 
@@ -12,7 +12,7 @@ import {
   getNewArrivals,
   getBestSellers 
 } from "@/lib/actions/product";
-import type { HeroProduct, CategoryData, ProductCarouselItem } from "@/types/homepage";
+import type { CategoryData, ProductCarouselItem } from "@/types/homepage";
 import type { Product, Category } from "@/types/supabase";
 import { logger } from "@/lib/utils/logger";
 
@@ -159,8 +159,7 @@ export default async function HomePage() {
         showViewAll={true}
       />
 
-      {/* Brand Values */}
-      <BrandValues />
+      <WhyShopSection />
 
       {/* Testimonials */}
       <Testimonials />
@@ -171,4 +170,5 @@ export default async function HomePage() {
   );
 }
 
-export const revalidate = 3600; // Revalidate every hour for ISR
+/** Safety-net ISR; catalog data uses Data Cache with on-demand revalidation. */
+export const revalidate = 86400;

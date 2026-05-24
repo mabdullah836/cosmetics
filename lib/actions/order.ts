@@ -1,11 +1,11 @@
 "use server";
 
-import { createClient } from "@/lib/supabase/server";
+import { createClient, createServiceClient } from "@/lib/supabase/server";
 import { auth } from "@/auth";
-import { cookies } from "next/headers";
 import { Address, PaymentMethod, Cart, Product } from "@/types/supabase";
 import { logger } from "@/lib/utils/logger";
 import { MESSAGES } from "@/lib/constants/messages";
+import { createOrderAccessToken } from "@/lib/utils/tracking-token";
 
 interface GuestCartItem {
   productId: string;
@@ -24,6 +24,7 @@ export const createOrder = async (
   const session = await auth();
   const userId = session?.user?.id;
   const supabase = await createClient();
+  const serviceSupabase = createServiceClient();
 
   // Get cart items - from Supabase for authenticated users, from guestCartItems for guests
   let cartItems: Array<{ product_id: string; product: Product; quantity: number }> = [];
@@ -97,6 +98,11 @@ export const createOrder = async (
     return { error: MESSAGES.ORDER.OTP_REQUIRED };
   }
 
+  const normalizedCustomerEmail = (session?.user?.email || customerEmail || '').trim().toLowerCase();
+  if (!userId && !normalizedCustomerEmail) {
+    return { error: MESSAGES.ORDER.ERROR };
+  }
+
   const subtotal = cartItems.reduce((acc, item) => acc + Number(item.product.price) * item.quantity, 0);
   const shipping = 0; // Free shipping for now
   const tax = 0; // No tax for now
@@ -104,11 +110,15 @@ export const createOrder = async (
 
   try {
     // Create addresses (can be null user_id for guests)
-    const { data: createdShippingAddress } = await supabase
+    const { data: createdShippingAddress, error: shippingAddressError } = await serviceSupabase
       .from('addresses')
       .insert({ ...shippingAddress, user_id: userId || null })
       .select()
       .single();
+    if (shippingAddressError) {
+      logger.error("Shipping address insert error:", shippingAddressError);
+      throw new Error(MESSAGES.ORDER.SHIPPING_ADDRESS_ERROR);
+    }
     if (!createdShippingAddress) throw new Error(MESSAGES.ORDER.SHIPPING_ADDRESS_ERROR);
 
     // Check if billing address is the same as shipping address
@@ -121,45 +131,38 @@ export const createOrder = async (
     if (isSameAddress) {
       createdBillingAddress = createdShippingAddress;
     } else {
-      const { data } = await supabase
+      const { data, error: billingAddressError } = await serviceSupabase
         .from('addresses')
         .insert({ ...billingAddress, user_id: userId || null })
         .select()
         .single();
+      if (billingAddressError) {
+        logger.error("Billing address insert error:", billingAddressError);
+        throw new Error(MESSAGES.ORDER.BILLING_ADDRESS_ERROR);
+      }
       createdBillingAddress = data;
     }
     
     if (!createdBillingAddress) throw new Error(MESSAGES.ORDER.BILLING_ADDRESS_ERROR);
 
-    // Determine order status based on payment method and verification
-    let orderStatus = 'PENDING';
-    let verificationStatus = 'PENDING';
-    
-    if (paymentMethod === 'COD') {
-      if (isOTPVerified) {
-        orderStatus = 'PENDING_CONFIRMATION'; // Admin needs to confirm
-        verificationStatus = 'VERIFIED';
-      } else {
-        orderStatus = 'PENDING_CONFIRMATION';
-        verificationStatus = 'PENDING';
-      }
-    } else {
-      // Online payment - can be processed immediately
-      orderStatus = 'PROCESSING';
-      verificationStatus = 'NOT_REQUIRED';
+    // Keep all new orders pending admin confirmation.
+    let orderStatus = 'PENDING_CONFIRMATION';
+    let verificationStatus = paymentMethod === 'COD' ? 'PENDING' : 'NOT_REQUIRED';
+    if (paymentMethod === 'COD' && isOTPVerified) {
+      verificationStatus = 'VERIFIED';
     }
 
     // Create order with guest support
-    const { data: newOrder } = await supabase
+    const { data: newOrder, error: newOrderError } = await serviceSupabase
       .from('orders')
       .insert({
         user_id: userId || null,
-        customer_email: session?.user?.email || customerEmail || '',
+        customer_email: normalizedCustomerEmail,
         customer_phone: shippingAddress.phone || '',
-        guest_email: userId ? null : (customerEmail || ''),
+        guest_email: userId ? null : normalizedCustomerEmail,
         guest_phone: userId ? null : (shippingAddress.phone || ''),
         status: orderStatus,
-        payment_status: paymentMethod === 'COD' ? 'PENDING' : 'PAID',
+        payment_status: 'PENDING',
         payment_method: paymentMethod,
         verification_status: verificationStatus,
         subtotal,
@@ -171,6 +174,10 @@ export const createOrder = async (
       })
       .select()
       .single();
+    if (newOrderError) {
+      logger.error("Order insert error:", newOrderError);
+      throw new Error(MESSAGES.ORDER.CREATE_ERROR);
+    }
 
     if (!newOrder) throw new Error(MESSAGES.ORDER.CREATE_ERROR);
 
@@ -182,7 +189,7 @@ export const createOrder = async (
       price: item.product.price,
       quantity: item.quantity,
     }));
-    const { error: orderItemsError } = await supabase.from('order_items').insert(orderItems);
+    const { error: orderItemsError } = await serviceSupabase.from('order_items').insert(orderItems);
     if (orderItemsError) throw new Error(MESSAGES.ORDER.ITEMS_ERROR);
 
     // Clear the cart (only for authenticated users)
@@ -199,7 +206,11 @@ export const createOrder = async (
     }
     // Guest cart will be cleared client-side after successful order
 
-    return { success: MESSAGES.ORDER.SUCCESS, orderId: newOrder.id };
+    const tokenEmail = userId ? (session?.user?.email || normalizedCustomerEmail) : normalizedCustomerEmail;
+    const tokenPhone = shippingAddress.phone || "";
+    const accessToken = createOrderAccessToken(newOrder.id, tokenEmail, tokenPhone);
+
+    return { success: MESSAGES.ORDER.SUCCESS, orderId: newOrder.id, accessToken };
   } catch (error) {
     logger.error("Order creation error:", error);
     return { error: MESSAGES.ORDER.ERROR };
@@ -209,7 +220,7 @@ export const createOrder = async (
 // Link a guest order to a user account after account creation
 export const linkGuestOrder = async (orderId: string, userId: string) => {
   try {
-    const supabase = await createClient();
+    const serviceSupabase = createServiceClient();
     const session = await auth();
 
     // Only allow linking if the user is authenticated and matches
@@ -217,7 +228,7 @@ export const linkGuestOrder = async (orderId: string, userId: string) => {
       return { error: MESSAGES.ORDER.UNAUTHORIZED };
     }
 
-    const { data: order, error: fetchError } = await supabase
+    const { data: order, error: fetchError } = await serviceSupabase
       .from("orders")
       .select("user_id, guest_email")
       .eq("id", orderId)
@@ -232,8 +243,13 @@ export const linkGuestOrder = async (orderId: string, userId: string) => {
       return { success: true, message: MESSAGES.ORDER.LINK_SUCCESS };
     }
 
+    // Ensure only the owner of the guest email can claim this order.
+    if (!session.user.email || order.guest_email !== session.user.email) {
+      return { error: MESSAGES.ORDER.UNAUTHORIZED };
+    }
+
     // Update order with user_id
-    const { error: updateError } = await supabase
+    const { error: updateError } = await serviceSupabase
       .from("orders")
       .update({ user_id: userId })
       .eq("id", orderId);

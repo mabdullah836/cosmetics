@@ -25,8 +25,9 @@ import { toast } from "sonner";
 import Image from "next/image";
 import LoginForm from "@/components/auth/LoginForm";
 import OTPVerificationModal from "@/components/checkout/OTPVerificationModal";
-import { getLocalCart } from "@/lib/utils/localCart";
-import { LocalCartItem } from "@/lib/utils/localCart";
+import { getLocalCart, getLocalCartAsCartItems, getLocalCartSubtotal } from "@/lib/utils/localCart";
+import type { Product } from "@/types/supabase";
+import { formatPrice } from "@/lib/utils/format";
 
 interface CheckoutPageClientProps {
   cartItems: CartItem[];
@@ -55,31 +56,11 @@ export default function CheckoutPageClient({
   const [localCartItems, setLocalCartItems] = useState<CartItem[]>([]);
   const [localSubtotal, setLocalSubtotal] = useState(0);
 
-  // Load local cart for guest users
+  // Load local cart for guest users (CartItem format for display)
   useEffect(() => {
     if (!isAuthenticated) {
-      const loadLocalCart = async () => {
-        const { getLocalCart } = await import("@/lib/utils/localCart");
-        const localCart = getLocalCart();
-        
-        // Convert local cart to CartItem format
-        const convertedItems: CartItem[] = localCart.map((item, index) => ({
-          id: `local-${index}`,
-          quantity: item.quantity,
-          product: item.product,
-          product_id: item.productId,
-          cart_id: "local",
-        }));
-        
-        setLocalCartItems(convertedItems);
-        const localSubtotal = convertedItems.reduce(
-          (acc, item) => acc + (item.product?.price || 0) * item.quantity,
-          0
-        );
-        setLocalSubtotal(localSubtotal);
-      };
-      
-      loadLocalCart();
+      setLocalCartItems(getLocalCartAsCartItems());
+      setLocalSubtotal(getLocalCartSubtotal());
     }
   }, [isAuthenticated]);
 
@@ -110,7 +91,7 @@ export default function CheckoutPageClient({
   const [billingPostalCode, setBillingPostalCode] = useState("");
 
   // Payment method
-  const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>("COD");
+  const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>("BANK_TRANSFER");
 
   const isFormValid = () => {
     if (!email || !phone) return false;
@@ -194,11 +175,24 @@ export default function CheckoutPageClient({
           is_default: false,
         };
 
-    // Convert local cart items for guest users
-    let guestCartItems: LocalCartItem[] | undefined = undefined;
+    // Convert minimal local cart to GuestCartItem shape for createOrder
+    let guestCartItems: Array<{ productId: string; product: Product; quantity: number }> | undefined = undefined;
     if (!isAuthenticated) {
       const localCart = getLocalCart();
-      guestCartItems = localCart;
+      guestCartItems = localCart.map((item) => ({
+        productId: item.productId,
+        product: {
+          id: item.productId,
+          name: item.name,
+          price: item.price,
+          description: null,
+          is_featured: false,
+          is_active: true,
+          created_at: "",
+          stock_level: "IN_STOCK",
+        } as Product,
+        quantity: item.quantity,
+      }));
     }
 
     const result = await createOrder(
@@ -213,12 +207,16 @@ export default function CheckoutPageClient({
     setIsSubmitting(false);
 
     if (result.success && result.orderId) {
-      // Clear local cart for guests
       if (!isAuthenticated) {
         const { clearLocalCart } = await import("@/lib/utils/localCart");
+        const { emitCartUpdated } = await import("@/lib/utils/cartEvents");
         clearLocalCart();
+        emitCartUpdated();
       }
-      router.push(`/checkout/confirmation?orderId=${result.orderId}`);
+      const tokenQuery = result.accessToken
+        ? `&token=${encodeURIComponent(result.accessToken)}`
+        : "";
+      router.push(`/checkout/confirmation?orderId=${result.orderId}${tokenQuery}`);
     } else {
       toast.error(result.error || "Failed to place order. Please try again.");
     }
@@ -515,25 +513,6 @@ export default function CheckoutPageClient({
                   >
                     <div className="border rounded-lg p-4 hover:border-primary/50 hover:bg-primary/5 transition-all cursor-pointer">
                       <label className="flex items-start gap-3 cursor-pointer">
-                        <RadioGroupItem value="COD" id="cod" className="mt-1" />
-                        <div className="flex-1">
-                          <div className="flex items-center gap-2">
-                            <span className="font-medium">
-                              Cash on Delivery (COD)
-                            </span>
-                            <span className="text-xs bg-yellow-100 text-yellow-800 px-2 py-1 rounded">
-                              Email verification required
-                            </span>
-                          </div>
-                          <p className="text-sm text-muted-foreground mt-1">
-                            Pay when your order is delivered. Email verification required.
-                          </p>
-                        </div>
-                      </label>
-                    </div>
-
-                    <div className="border rounded-lg p-4 hover:border-primary/50 hover:bg-primary/5 transition-all cursor-pointer">
-                      <label className="flex items-start gap-3 cursor-pointer">
                         <RadioGroupItem
                           value="BANK_TRANSFER"
                           id="bank"
@@ -559,6 +538,25 @@ export default function CheckoutPageClient({
                               </p>
                             </div>
                           )}
+                        </div>
+                      </label>
+                    </div>
+
+                    <div className="border rounded-lg p-4 hover:border-primary/50 hover:bg-primary/5 transition-all cursor-pointer">
+                      <label className="flex items-start gap-3 cursor-pointer">
+                        <RadioGroupItem value="COD" id="cod" className="mt-1" />
+                        <div className="flex-1">
+                          <div className="flex items-center gap-2">
+                            <span className="font-medium">
+                              Cash on Delivery (COD)
+                            </span>
+                            <span className="text-xs bg-yellow-100 text-yellow-800 px-2 py-1 rounded">
+                              Email verification required
+                            </span>
+                          </div>
+                          <p className="text-sm text-muted-foreground mt-1">
+                            Pay when your order is delivered. Email verification required.
+                          </p>
                         </div>
                       </label>
                     </div>
@@ -597,7 +595,7 @@ export default function CheckoutPageClient({
                             Qty: {item.quantity}
                           </p>
                           <p className="text-sm font-semibold mt-1">
-                            ${((item.product?.price || 0) * item.quantity).toFixed(2)}
+                            {formatPrice((item.product?.price || 0) * item.quantity)}
                           </p>
                         </div>
                       </div>
@@ -609,26 +607,26 @@ export default function CheckoutPageClient({
                   <div className="space-y-2">
                     <div className="flex justify-between text-sm">
                       <span className="text-muted-foreground">Items total</span>
-                      <span>${displaySubtotal.toFixed(2)}</span>
+                      <span>{formatPrice(displaySubtotal)}</span>
                     </div>
                     <div className="flex justify-between text-sm">
                       <span className="text-muted-foreground">
                         Delivery charges
                       </span>
                       <span className={shipping === 0 ? "text-green-600" : ""}>
-                        {shipping === 0 ? "FREE" : `$${shipping.toFixed(2)}`}
+                        {shipping === 0 ? "FREE" : formatPrice(shipping)}
                       </span>
                     </div>
                     {discount > 0 && (
                       <div className="flex justify-between text-sm text-green-600">
                         <span>Discount</span>
-                        <span>-${discount.toFixed(2)}</span>
+                        <span>-{formatPrice(discount)}</span>
                       </div>
                     )}
                     <Separator />
                     <div className="flex justify-between text-lg font-bold">
                       <span>Total amount</span>
-                      <span>${displayTotal.toFixed(2)}</span>
+                      <span>{formatPrice(displayTotal)}</span>
                     </div>
                   </div>
 

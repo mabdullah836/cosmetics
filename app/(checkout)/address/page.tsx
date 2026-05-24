@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import Link from "next/link";
+import { formatPrice } from "@/lib/utils/format";
 import {
   Breadcrumb,
   BreadcrumbList,
@@ -119,7 +120,7 @@ const AddressPage = async () => {
               <div className="space-y-4">
                 <div className="flex justify-between">
                   <span>Subtotal</span>
-                  <span>$123.45</span>
+                  <span>{formatPrice(0)}</span>
                 </div>
                 <div className="flex justify-between">
                   <span>Shipping</span>
@@ -127,7 +128,7 @@ const AddressPage = async () => {
                 </div>
                 <div className="flex justify-between font-bold text-lg border-t pt-4">
                   <span>Total</span>
-                  <span>$123.45</span>
+                  <span>{formatPrice(0)}</span>
                 </div>
               </div>
             </CardContent>

@@ -3,8 +3,19 @@
 import * as React from "react";
 import { createContext, useContext, ReactNode } from "react";
 import { CartItem } from "@/types/supabase";
-import { removeFromCart as removeFromCartAction, updateCartQuantity as updateCartQuantityAction } from "@/lib/actions/cart";
+import {
+  removeFromCart as removeFromCartAction,
+  updateCartQuantity as updateCartQuantityAction,
+} from "@/lib/actions/cart";
 import { useRouter } from "next/navigation";
+import { CART_EVENTS, emitCartUpdated } from "@/lib/utils/cartEvents";
+import {
+  getLocalCartAsCartItems,
+  getLocalCartSubtotal,
+  parseGuestCartId,
+  removeFromLocalCart,
+  updateLocalCartQuantity,
+} from "@/lib/utils/localCart";
 
 interface CartContextType {
   cartItems: CartItem[];
@@ -23,14 +34,27 @@ interface CartProviderProps {
   initialSubtotal?: number;
 }
 
-export function CartProvider({ 
-  children, 
-  initialCartItems = [], 
-  initialSubtotal = 0 
+export function CartProvider({
+  children,
+  initialCartItems = [],
+  initialSubtotal = 0,
 }: CartProviderProps) {
   const [cartItems, setCartItems] = React.useState<CartItem[]>(initialCartItems);
   const [subtotal, setSubtotal] = React.useState<number>(initialSubtotal);
   const router = useRouter();
+
+  // Sync guest cart from localStorage on mount and when cart-updated fires
+  React.useEffect(() => {
+    const syncGuestCart = () => {
+      const localItems = getLocalCartAsCartItems();
+      const localSubtotal = getLocalCartSubtotal();
+      setCartItems(localItems);
+      setSubtotal(localSubtotal);
+    };
+    syncGuestCart();
+    window.addEventListener(CART_EVENTS.UPDATED, syncGuestCart);
+    return () => window.removeEventListener(CART_EVENTS.UPDATED, syncGuestCart);
+  }, []);
 
   const itemCount = React.useMemo(
     () => cartItems.reduce((sum, item) => sum + item.quantity, 0),
@@ -38,11 +62,22 @@ export function CartProvider({
   );
 
   const removeFromCart = React.useCallback(async (cartItemId: string) => {
+    const productId = parseGuestCartId(cartItemId);
+    if (productId !== null) {
+      removeFromLocalCart(productId);
+      emitCartUpdated();
+      setCartItems(getLocalCartAsCartItems());
+      setSubtotal(getLocalCartSubtotal());
+      return;
+    }
     const result = await removeFromCartAction(cartItemId);
     if (result.success) {
-      setCartItems(prev => {
-        const updated = prev.filter(item => item.id !== cartItemId);
-        const newSubtotal = updated.reduce((acc, item) => acc + item.product.price * item.quantity, 0);
+      setCartItems((prev) => {
+        const updated = prev.filter((item) => item.id !== cartItemId);
+        const newSubtotal = updated.reduce(
+          (acc, item) => acc + (item.product?.price ?? 0) * item.quantity,
+          0
+        );
         setSubtotal(newSubtotal);
         return updated;
       });
@@ -50,13 +85,24 @@ export function CartProvider({
   }, []);
 
   const updateQuantity = React.useCallback(async (cartItemId: string, quantity: number) => {
+    const productId = parseGuestCartId(cartItemId);
+    if (productId !== null) {
+      updateLocalCartQuantity(productId, quantity);
+      emitCartUpdated();
+      setCartItems(getLocalCartAsCartItems());
+      setSubtotal(getLocalCartSubtotal());
+      return;
+    }
     const result = await updateCartQuantityAction(cartItemId, quantity);
     if (result.success) {
-      setCartItems(prev => {
-        const updated = prev.map(item => 
+      setCartItems((prev) => {
+        const updated = prev.map((item) =>
           item.id === cartItemId ? { ...item, quantity } : item
         );
-        const newSubtotal = updated.reduce((acc, item) => acc + item.product.price * item.quantity, 0);
+        const newSubtotal = updated.reduce(
+          (acc, item) => acc + (item.product?.price ?? 0) * item.quantity,
+          0
+        );
         setSubtotal(newSubtotal);
         return updated;
       });

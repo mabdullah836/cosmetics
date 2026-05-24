@@ -2,12 +2,13 @@
  * Static content and text constants
  */
 import { Truck, Gift, Tag, Clock } from "lucide-react";
-import { Rabbit, Leaf, Recycle } from "lucide-react";
+import { CONFIG } from "./config";
+import { formatPrice } from "@/lib/utils/format";
 
 export const SHIPPING_BANNER_MESSAGES = [
   {
     icon: Truck,
-    text: "Free shipping on orders over $50",
+    text: `Free shipping on orders over ${formatPrice(CONFIG.FREE_SHIPPING_THRESHOLD)}`,
     highlight: "Free shipping",
     action: "Shop Now",
     code: null,
@@ -28,34 +29,10 @@ export const SHIPPING_BANNER_MESSAGES = [
   },
   {
     icon: Clock,
-    text: "Limited time: Free gift with $75+ orders",
+    text: `Limited time: Free gift with ${formatPrice(CONFIG.FREE_GIFT_THRESHOLD)}+ orders`,
     highlight: "Free gift",
     action: "Shop Now",
     code: null,
-  },
-] as const;
-
-export const BRAND_VALUES = [
-  {
-    icon: Rabbit,
-    title: "Cruelty-Free & Vegan",
-    description: "100% vegan, never tested on animals.",
-    gradient: "from-green-500/10 to-emerald-500/10",
-    iconColor: "text-green-600",
-  },
-  {
-    icon: Leaf,
-    title: "Clean Ingredients",
-    description: "No parabens, sulfates, or harmful chemicals.",
-    gradient: "from-emerald-500/10 to-teal-500/10",
-    iconColor: "text-emerald-600",
-  },
-  {
-    icon: Recycle,
-    title: "Sustainable Packaging",
-    description: "Eco-friendly and recyclable materials.",
-    gradient: "from-teal-500/10 to-cyan-500/10",
-    iconColor: "text-teal-600",
   },
 ] as const;
 
@@ -64,7 +41,7 @@ export const FAQ_DATA = [
     id: "shipping",
     question: "What are your shipping options?",
     answer:
-      "Free shipping on orders over $50. Most orders are processed within 24-48 hours and delivered within 3-7 business days. International shipping available.",
+      `Free shipping on orders over ${formatPrice(CONFIG.FREE_SHIPPING_THRESHOLD)}. Most orders are processed within 24-48 hours and delivered within 3-7 business days. International shipping available.`,
   },
   {
     id: "returns",
@@ -76,7 +53,7 @@ export const FAQ_DATA = [
     id: "ingredients",
     question: "What ingredients do you use?",
     answer:
-      "We use only clean, safe ingredients. No parabens, sulfates, or harmful chemicals. All products are cruelty-free and vegan.",
+      "We use only clean, safe ingredients. No parabens, sulfates, or harmful chemicals.",
   },
   {
     id: "payment",
@@ -90,7 +67,7 @@ export const TRUST_BADGES = [
   {
     icon: "Truck",
     title: "Free Shipping",
-    description: "On orders over $50",
+    description: `On orders over ${formatPrice(CONFIG.FREE_SHIPPING_THRESHOLD)}`,
     color: "text-emerald-500",
   },
   {

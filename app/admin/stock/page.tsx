@@ -9,7 +9,7 @@ import {
   BreadcrumbPage,
   BreadcrumbSeparator,
 } from "@/components/ui/breadcrumb";
-import { getProductsWithStock } from "@/lib/actions/admin";
+import { getProductsWithStock, isAdmin } from "@/lib/actions/admin";
 import AdminStockClient from "./AdminStockClient";
 
 const AdminStockPage = async () => {
@@ -17,6 +17,11 @@ const AdminStockPage = async () => {
   
   if (!session?.user) {
     redirect("/login?redirect=/admin/stock");
+  }
+
+  const admin = await isAdmin();
+  if (!admin) {
+    redirect("/");
   }
 
   const products = await getProductsWithStock();

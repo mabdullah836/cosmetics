@@ -10,6 +10,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Truck, RotateCcw, Package, Clock } from "lucide-react";
 import Link from "next/link";
 import { CONFIG } from "@/lib/constants";
+import { formatPrice } from "@/lib/utils/format";
 
 export const metadata = {
   title: "Shipping & Returns",
@@ -35,7 +36,7 @@ export default function ShippingReturnsPage() {
         </Breadcrumb>
 
         <div className="max-w-3xl mx-auto">
-          <h1 className="text-3xl md:text-4xl font-display font-bold text-foreground mb-2">
+          <h1 className="text-3xl md:text-4xl font-display font-bold text-primary mb-2">
             Shipping & Returns
           </h1>
           <p className="text-muted-foreground mb-10">
@@ -50,8 +51,8 @@ export default function ShippingReturnsPage() {
             </CardHeader>
             <CardContent className="space-y-4 text-muted-foreground">
               <p className="leading-relaxed">
-                <strong className="text-foreground">Free shipping</strong> on orders over ${CONFIG.FREE_SHIPPING_THRESHOLD}. 
-                Orders below that threshold ship for ${CONFIG.SHIPPING_COST}.
+                <strong className="text-foreground">Free shipping</strong> on orders over {formatPrice(CONFIG.FREE_SHIPPING_THRESHOLD)}. 
+                Orders below that threshold ship for {formatPrice(CONFIG.SHIPPING_COST)}.
               </p>
               <p className="leading-relaxed">
                 Most orders are processed within 24–48 hours. Domestic delivery typically takes 3–7 business days. 
