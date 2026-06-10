@@ -15,9 +15,15 @@ const ProductCardSkeleton = () => (
   </div>
 );
 
-const ProductGridSkeleton = ({ count = 12 }: { count?: number }) => {
+const ProductGridSkeleton = ({
+  count = 12,
+  className = "grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-8",
+}: {
+  count?: number;
+  className?: string;
+}) => {
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-8">
+    <div className={className}>
       {[...Array(count)].map((_, i) => (
         <ProductCardSkeleton key={i} />
       ))}

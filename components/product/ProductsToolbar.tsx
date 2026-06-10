@@ -10,22 +10,17 @@ import SearchInput from "@/components/common/SearchInput";
 import { useCallback } from "react";
 
 interface ProductsToolbarProps {
-  currentCount: number;
-  totalCount: number;
-  currentSort: string;
   categories?: any[];
   brands?: string[];
 }
 
 export default function ProductsToolbar({
-  currentCount,
-  totalCount,
-  currentSort,
   categories = [],
   brands = [],
 }: ProductsToolbarProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const currentSort = searchParams?.get("sortBy") || "latest";
 
   const handleSortChange = (value: string) => {
     const params = new URLSearchParams(searchParams?.toString() || "");
@@ -67,11 +62,7 @@ export default function ProductsToolbar({
       </div>
 
       {/* Toolbar */}
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6 bg-card p-4 rounded-xl border">
-        <p className="text-sm text-muted-foreground">
-          Showing {currentCount} of {totalCount}
-        </p>
-
+      <div className="flex flex-col sm:flex-row justify-end items-start sm:items-center gap-4 mb-2 bg-card p-4 rounded-xl border">
         <div className="flex items-center gap-2 w-full sm:w-auto">
           {/* Mobile Filters */}
           <Sheet>
