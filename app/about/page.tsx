@@ -84,7 +84,7 @@ export default function AboutPage() {
             </CardHeader>
             <CardContent className="text-muted-foreground">
               <p className="leading-relaxed">
-                We stand behind every product with a 30-day satisfaction guarantee. If you're not happy, we're not happy — return unused items in original packaging for a full refund. Thank you for choosing Bloom Beauty.
+                We offer a 14-day return window on unused items in original packaging. Changed your mind? Return delivery is on you. Wrong or damaged product from us? We cover return delivery and refund or replace at no extra cost. Contact support with your order number to start a return. Thank you for choosing Bloom Beauty.
               </p>
             </CardContent>
           </Card>

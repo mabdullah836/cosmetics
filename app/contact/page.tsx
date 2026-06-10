@@ -62,7 +62,7 @@ export default function ContactPage() {
               <CardHeader>
                 <MessageSquare className="h-8 w-8 text-primary mb-2" />
                 <CardTitle>Live Chat</CardTitle>
-                <CardDescription>Mon–Fri, 9am–6pm EST</CardDescription>
+                <CardDescription>Mon–Fri, 9am–6pm PKT</CardDescription>
               </CardHeader>
               <CardContent>
                 <p className="text-muted-foreground text-sm">
@@ -79,9 +79,9 @@ export default function ContactPage() {
               </CardHeader>
               <CardContent>
                 <address className="text-sm text-muted-foreground not-italic">
-                  123 Beauty Lane
+                  Bloom Beauty
                   <br />
-                  New York, NY 10001
+                  Lahore, Pakistan
                 </address>
               </CardContent>
             </Card>
@@ -94,9 +94,9 @@ export default function ContactPage() {
               </CardHeader>
               <CardContent>
                 <p className="text-sm text-muted-foreground">
-                  Monday – Friday: 9:00 AM – 6:00 PM EST
+                  Monday – Friday: 9:00 AM – 6:00 PM PKT
                   <br />
-                  Saturday: 10:00 AM – 4:00 PM EST
+                  Saturday: 10:00 AM – 4:00 PM PKT
                 </p>
               </CardContent>
             </Card>
