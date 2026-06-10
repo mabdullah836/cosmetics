@@ -20,6 +20,9 @@ export interface ProductFilters {
   limit?: number;
 }
 
+const UUID_REGEX =
+  /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
 function stableListKey(filters: ProductFilters) {
   return JSON.stringify({
     s: filters.search ?? "",
@@ -32,6 +35,40 @@ function stableListKey(filters: ProductFilters) {
     p: filters.page ?? 1,
     l: filters.limit ?? 12,
   });
+}
+
+/** Resolve `category` slug or `categories` CSV into category UUIDs. null = no filter; [] = unknown/invalid slug. */
+async function resolveCategoryIds(
+  supabase: ReturnType<typeof getPublicSupabase>,
+  category?: string,
+  categoriesParam?: string
+): Promise<string[] | null> {
+  if (categoriesParam?.trim()) {
+    const ids = categoriesParam
+      .split(",")
+      .map((c) => c.trim())
+      .filter(Boolean);
+    return ids.length > 0 ? ids : [];
+  }
+
+  if (!category?.trim()) {
+    return null;
+  }
+
+  const val = category.trim();
+  if (UUID_REGEX.test(val)) {
+    return [val];
+  }
+
+  const { data, error } = await supabase
+    .from("categories")
+    .select("id")
+    .eq("slug", val)
+    .eq("is_active", true)
+    .maybeSingle();
+
+  if (error) throw error;
+  return data?.id ? [data.id] : [];
 }
 
 async function fetchFeaturedCategories(): Promise<Category[]> {
@@ -320,23 +357,18 @@ async function fetchFilteredProducts(filters: ProductFilters) {
       );
     }
 
-    const uuidRegex =
-      /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
-    if (categoriesParam?.trim()) {
-      const ids = categoriesParam
-        ?.split(",")
-        ?.map((c) => c?.trim())
-        ?.filter(Boolean);
-      if (ids?.length > 0) {
-        query = query.in("category_id", ids);
+    const categoryIds = await resolveCategoryIds(supabase, category, categoriesParam);
+    if (categoryIds !== null) {
+      if (categoryIds.length === 0) {
+        return {
+          products: [],
+          total: 0,
+          page,
+          limit,
+          totalPages: 0,
+        };
       }
-    } else if (category?.trim()) {
-      const val = category?.trim();
-      if (uuidRegex.test(val)) {
-        query = query.eq("category_id", val);
-      } else {
-        query = query.eq("categories.slug", val);
-      }
+      query = query.in("category_id", categoryIds);
     }
 
     if (brandsParam && brandsParam?.trim()) {
@@ -412,4 +444,33 @@ export async function getFilteredProducts(filters: ProductFilters = {}) {
       tags: [CACHE_TAG.productList],
     }
   )();
+}
+
+async function fetchActiveProductSlugs(): Promise<{ slug: string }[]> {
+  try {
+    const supabase = getPublicSupabase();
+    const { data, error } = await supabase
+      .from("products")
+      .select("slug")
+      .eq("is_active", true)
+      .not("slug", "is", null);
+
+    if (error) throw error;
+
+    return (data || [])
+      .map((row) => row.slug?.trim())
+      .filter((slug): slug is string => Boolean(slug))
+      .map((slug) => ({ slug }));
+  } catch (error) {
+    logger.error("Error fetching product slugs for static generation:", error);
+    return [];
+  }
+}
+
+/** Slugs for `generateStaticParams` on /product/[slug] (ISR at build + on-demand). */
+export async function getStaticProductSlugs(): Promise<{ slug: string }[]> {
+  return unstable_cache(fetchActiveProductSlugs, ["static-product-slugs"], {
+    revalidate: CATALOG_CACHE_REVALIDATE,
+    tags: [CACHE_TAG.productList],
+  })();
 }

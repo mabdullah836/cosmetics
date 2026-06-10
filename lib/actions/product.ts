@@ -13,4 +13,5 @@ export {
   getAllCategories,
   getAllBrands,
   getFilteredProducts,
+  getStaticProductSlugs,
 } from "@/lib/data/catalog";

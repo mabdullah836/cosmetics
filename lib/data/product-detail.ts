@@ -41,6 +41,7 @@ export type ProductWithPageData = Omit<Product, "images"> & {
   reviewCount?: number;
   reviews: ProductReviewRow[];
   category?: string;
+  categorySlug?: string;
 };
 
 export type ProductPagePayload = {
@@ -80,7 +81,7 @@ async function loadProductPage(pathSegment: string): Promise<ProductPagePayload 
 
     const { data: bySlug } = await supabase
       .from("products")
-      .select("*, images:product_images(*), categories(name)")
+      .select("*, images:product_images(*), categories(name, slug)")
       .eq("slug", segment)
       .eq("is_active", true)
       .maybeSingle();
@@ -89,7 +90,7 @@ async function loadProductPage(pathSegment: string): Promise<ProductPagePayload 
     else if (uuidRegex.test(segment)) {
       const { data: byId } = await supabase
         .from("products")
-        .select("*, images:product_images(*), categories(name)")
+        .select("*, images:product_images(*), categories(name, slug)")
         .eq("id", segment)
         .eq("is_active", true)
         .maybeSingle();
@@ -99,7 +100,7 @@ async function loadProductPage(pathSegment: string): Promise<ProductPagePayload 
     if (!row) {
       const { data: bySlugIlike } = await supabase
         .from("products")
-        .select("*, images:product_images(*), categories(name)")
+        .select("*, images:product_images(*), categories(name, slug)")
         .ilike("slug", segment)
         .eq("is_active", true)
         .maybeSingle();
@@ -109,8 +110,9 @@ async function loadProductPage(pathSegment: string): Promise<ProductPagePayload 
     if (!row) return null;
 
     const productId = row.id as string;
-    const cats = row.categories as { name?: string } | null | undefined;
+    const cats = row.categories as { name?: string; slug?: string } | null | undefined;
     const categoryName = cats && typeof cats === "object" && "name" in cats ? cats.name : undefined;
+    const categorySlug = cats && typeof cats === "object" && "slug" in cats ? cats.slug : undefined;
 
     const rawImages = (row.images as ProductImage[]) || [];
     const optimizedImages = rawImages.map((img) => ({
@@ -167,10 +169,11 @@ async function loadProductPage(pathSegment: string): Promise<ProductPagePayload 
     const productBase = {
       ...productRest,
       category: categoryName ?? (row.category as string | undefined),
-    } as Product;
+      categorySlug,
+    };
 
     const productWithData: ProductWithPageData = {
-      ...productBase,
+      ...(productBase as ProductWithPageData),
       images: optimizedImages,
       variants: variants || [],
       averageRating,
