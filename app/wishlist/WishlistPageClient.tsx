@@ -175,7 +175,8 @@ export default function WishlistPageClient({
           description: productName,
         });
       } else if (result?.success) {
-        router.refresh();
+        const { emitCartUpdated } = await import("@/lib/utils/cartEvents");
+        emitCartUpdated();
         toast.success("Added to cart", {
           description: productName,
           action: {

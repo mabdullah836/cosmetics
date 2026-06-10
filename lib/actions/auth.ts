@@ -18,8 +18,8 @@ export const login = async (formData: FormData) => {
     return { error: error.message };
   }
 
-  // Revalidate to ensure server components get fresh session
-  revalidatePath("/", "layout");
+  revalidatePath("/account");
+  revalidatePath("/cart");
 
   return { success: "Logged in successfully.", userId: data.user?.id };
 };
@@ -46,8 +46,8 @@ export const register = async (formData: FormData) => {
     return { error: error.message };
   }
 
-  // Revalidate to ensure server components get fresh session
-  revalidatePath("/", "layout");
+  revalidatePath("/account");
+  revalidatePath("/cart");
 
   return {
     success:
@@ -64,8 +64,9 @@ export const signOut = async () => {
     return { error: error.message };
   }
 
-  // Revalidate to clear session from server components
-  revalidatePath("/", "layout");
+  revalidatePath("/account");
+  revalidatePath("/cart");
+  revalidatePath("/wishlist");
 
   return { success: "Signed out successfully." };
 };

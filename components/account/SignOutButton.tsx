@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { LogOut } from "lucide-react";
 import { signOut } from "@/lib/actions/auth";
+import { createClient } from "@/lib/supabase/client";
 import { toast } from "sonner";
 import { useState } from "react";
 
@@ -13,6 +14,8 @@ export default function SignOutButton() {
 
   const handleSignOut = async () => {
     setIsLoading(true);
+    const supabase = createClient();
+    await supabase.auth.signOut();
     const result = await signOut();
     
     if (result.error) {

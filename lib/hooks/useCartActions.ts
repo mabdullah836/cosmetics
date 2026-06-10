@@ -46,6 +46,7 @@ export function useCartActions() {
         }
 
         if (result?.error) return { error: result.error };
+        emitCartUpdated();
         return result;
       } finally {
         setAdding(false);

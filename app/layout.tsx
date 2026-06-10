@@ -1,8 +1,10 @@
 import type { Metadata } from "next";
 import { Poppins } from "next/font/google";
+import { Suspense } from "react";
 import "./globals.css";
 import ShippingBanner from "@/components/layout/ShippingBanner";
-import ServerHeader from "@/components/layout/ServerHeader";
+import Header from "@/components/layout/Header";
+import HeaderFallback from "@/components/layout/HeaderFallback";
 import Footer from "@/components/layout/Footer";
 import { CartProvider } from "@/components/providers/CartProvider";
 import { ThemeProvider } from "@/components/providers/ThemeProvider";
@@ -52,7 +54,9 @@ export default function RootLayout({
         >
           <CartProvider>
             <ShippingBanner />
-            <ServerHeader />
+            <Suspense fallback={<HeaderFallback />}>
+              <Header />
+            </Suspense>
             <main className="flex-1">
               {children}
             </main>

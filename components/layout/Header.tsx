@@ -32,20 +32,11 @@ import { CONFIG } from "@/lib/constants";
 import { formatPrice } from "@/lib/utils/format";
 import { useCart } from "@/components/providers/CartProvider";
 import { toast } from "sonner";
-import { CART_EVENTS } from "@/lib/utils/cartEvents";
-import { getLocalCartItemCount } from "@/lib/utils/localCart";
-import { CartItem } from "@/types/supabase";
 import { NAV_CATEGORIES, SUPPORT_MENU_ITEMS, type NavCategory } from "@/lib/constants/nav";
 import LoginForm from "@/components/auth/LoginForm";
 import { ThemeToggle } from "@/components/layout/ThemeToggle";
 
-interface HeaderProps {
-  cartItems?: CartItem[];
-  subtotal?: number;
-  isAuthenticated?: boolean;
-}
-
-export default function Header({ cartItems: serverCartItems = [], subtotal: serverSubtotal = 0, isAuthenticated = false }: HeaderProps = {}) {
+export default function Header() {
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [isScrolled, setIsScrolled] = useState(false);
@@ -56,26 +47,14 @@ export default function Header({ cartItems: serverCartItems = [], subtotal: serv
   const pathname = usePathname();
   const router = useRouter();
   const searchParams = useSearchParams();
-  const { cartItems: contextCartItems } = useCart();
-  const [localCartCount, setLocalCartCount] = useState(0);
-  
-  // Use server cart items if available, otherwise use context cart items
-  const cartItems = serverCartItems.length > 0 ? serverCartItems : contextCartItems;
-  
-  // Event-driven guest cart count (no polling)
+  const { itemCount: cartItemCount, isAuthenticated, isSessionReady } = useCart();
+  const [isClient, setIsClient] = useState(false);
+
   useEffect(() => {
-    const handleCartUpdate = () => {
-      setLocalCartCount(getLocalCartItemCount());
-    };
-    handleCartUpdate();
-    window.addEventListener(CART_EVENTS.UPDATED, handleCartUpdate);
-    return () => window.removeEventListener(CART_EVENTS.UPDATED, handleCartUpdate);
+    setIsClient(true);
   }, []);
-  
-  // Use Supabase cart count if available, otherwise use local cart count
-  const cartItemCount = cartItems.length > 0 
-    ? cartItems.reduce((total: number, item: CartItem) => total + item.quantity, 0)
-    : localCartCount;
+
+  const showCartBadge = isClient && isSessionReady && cartItemCount > 0;
 
   // Handle scroll effect
   useEffect(() => {
@@ -367,11 +346,11 @@ export default function Header({ cartItems: serverCartItems = [], subtotal: serv
         size="icon"
         className="relative group border border-border/50 hover:border-primary/50"
         asChild
-        aria-label={`Cart ${cartItemCount > 0 ? `with ${cartItemCount} items` : ""}`}
+        aria-label={showCartBadge ? `Cart with ${cartItemCount} items` : "Cart"}
       >
         <Link href="/cart">
           <ShoppingBag className="h-5 w-5" />
-          {cartItemCount > 0 && (
+          {showCartBadge && (
             <span className="absolute -top-1 -right-1 min-w-5 h-5 px-1 rounded-full bg-primary text-primary-foreground text-xs font-medium flex items-center justify-center animate-bounce-subtle">
               {cartItemCount > 9 ? "9+" : cartItemCount}
             </span>
@@ -532,7 +511,7 @@ export default function Header({ cartItems: serverCartItems = [], subtotal: serv
                     <Button variant="ghost" size="icon" className="relative border border-border/50 hover:border-primary/50" asChild>
                       <Link href="/cart" onClick={() => setMobileMenuOpen(false)}>
                         <ShoppingBag className="h-5 w-5" />
-                        {cartItemCount > 0 && (
+                        {showCartBadge && (
                           <span className="absolute -top-1 -right-1 w-5 h-5 rounded-full bg-primary text-primary-foreground text-xs font-medium flex items-center justify-center">
                             {cartItemCount > 9 ? "9+" : cartItemCount}
                           </span>
