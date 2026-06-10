@@ -115,13 +115,25 @@ export default function HeroSection({
       return;
     }
 
-    setCount(api.scrollSnapList().length);
-    setCurrent(api.selectedScrollSnap());
+    let cancelled = false;
+    queueMicrotask(() => {
+      if (!cancelled) {
+        setCount(api.scrollSnapList().length);
+        setCurrent(api.selectedScrollSnap());
+      }
+    });
 
-    api.on("select", () => {
+    const onSelect = () => {
       setCurrent(api.selectedScrollSnap());
       setProgress(0);
-    });
+    };
+
+    api.on("select", onSelect);
+
+    return () => {
+      cancelled = true;
+      api.off("select", onSelect);
+    };
   }, [api]);
 
   useEffect(() => {

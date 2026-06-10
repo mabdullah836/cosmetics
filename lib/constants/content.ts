@@ -41,13 +41,13 @@ export const FAQ_DATA = [
     id: "shipping",
     question: "What are your shipping options?",
     answer:
-      `Free shipping on orders over ${formatPrice(CONFIG.FREE_SHIPPING_THRESHOLD)}. Most orders are processed within 24-48 hours and delivered within 3-7 business days. International shipping available.`,
+      `Free shipping on orders over ${formatPrice(CONFIG.FREE_SHIPPING_THRESHOLD)}. Most orders are processed within 24–48 hours and delivered across Pakistan within 3–7 business days.`,
   },
   {
     id: "returns",
     question: "What is your return policy?",
     answer:
-      "30-day satisfaction guarantee. Return unused products in original packaging for a full refund. Free returns for US customers.",
+      "14-day return window for unused products in original packaging. Changed your mind? You pay return delivery charges. Wrong or damaged item on our end? We cover return delivery and issue a full refund or replacement. Contact support with your order number to start a return.",
   },
   {
     id: "ingredients",
@@ -57,9 +57,9 @@ export const FAQ_DATA = [
   },
   {
     id: "payment",
-    question: "Is my payment information secure?",
+    question: "What payment methods do you accept?",
     answer:
-      "Yes. All payments are processed securely with SSL encryption. We accept major credit cards and PayPal.",
+      "We accept Cash on Delivery (COD) and bank transfer. Pay on delivery or transfer to our bank account and share your payment confirmation with our support team.",
   },
 ] as const;
 
@@ -72,14 +72,14 @@ export const TRUST_BADGES = [
   },
   {
     icon: "RotateCcw",
-    title: "30-Day Returns",
-    description: "Hassle-free returns",
+    title: "14-Day Returns",
+    description: "Fair & transparent policy",
     color: "text-blue-500",
   },
   {
     icon: "Shield",
-    title: "Secure Payment",
-    description: "100% secure checkout",
+    title: "Flexible Payment",
+    description: "COD & bank transfer",
     color: "text-amber-500",
   },
   {

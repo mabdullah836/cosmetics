@@ -11,69 +11,69 @@ import { useMemo } from "react";
 const testimonials = [
   {
     id: 1,
-    name: "Sarah Mitchell",
-    location: "New York, NY",
-    avatar: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=100&h=100&fit=crop&crop=face",
+    name: "Ayesha Khan",
+    location: "Lahore, Pakistan",
+    avatar: "https://images.unsplash.com/photo-1598257006458-087169a1f254?w=100&h=100&fit=crop&crop=face",
     rating: 5,
     quote:
-      "These products have completely transformed my skincare routine. My skin has never looked better!",
+      "The moisturizer works beautifully in Lahore's heat — lightweight, no greasy feel, and my skin stays hydrated all day.",
     product: "Daily Moisturizer",
-    verified: true,
+    earlyAccess: true,
   },
   {
     id: 2,
-    name: "Emily Chen",
-    location: "Los Angeles, CA",
-    avatar: "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=100&h=100&fit=crop&crop=face",
+    name: "Fatima Ahmed",
+    location: "Karachi, Pakistan",
+    avatar: "https://images.unsplash.com/photo-1583391733981-85f40555785b?w=100&h=100&fit=crop&crop=face",
     rating: 5,
     quote:
-      "The quality is incredible. The lipsticks last all day, and the packaging is so elegant. Worth every penny!",
+      "Matte lipstick that actually lasts through a full wedding event. Rich colour and the packaging feels so premium.",
     product: "Matte Lipstick Collection",
-    verified: true,
+    earlyAccess: true,
   },
   {
     id: 3,
-    name: "Jessica Williams",
-    location: "Chicago, IL",
-    avatar: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=100&h=100&fit=crop&crop=face",
+    name: "Zainab Malik",
+    location: "Islamabad, Pakistan",
+    avatar: "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=100&h=100&fit=crop&crop=face",
     rating: 5,
     quote:
-      "Finally found a brand that aligns with my values. Clean ingredients, sustainable packaging, and products that actually work!",
+      "Clean ingredients without the luxury price tag. My routine is simpler now and my skin has never looked clearer.",
     product: "Complete Skincare Set",
-    verified: true,
+    earlyAccess: true,
   },
   {
     id: 4,
-    name: "Alexandra Rodriguez",
-    location: "Miami, FL",
-    avatar: "https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=100&h=100&fit=crop&crop=face",
+    name: "Hira Sheikh",
+    location: "Faisalabad, Pakistan",
+    avatar: "https://images.unsplash.com/photo-1531746020798-e6953b6e72e2?w=100&h=100&fit=crop&crop=face",
     rating: 5,
     quote:
-      "The foundation gives such natural coverage. It feels light but covers perfectly. My go-to for everyday wear!",
+      "Foundation that matches my skin tone perfectly — natural coverage that doesn't cake in humid weather.",
     product: "Natural Finish Foundation",
-    verified: true,
+    earlyAccess: true,
   },
   {
     id: 5,
-    name: "Maya Patel",
-    location: "Seattle, WA",
-    avatar: "https://images.unsplash.com/photo-1487412720507-e7ab37603c6f?w=100&h=100&fit=crop&crop=face",
+    name: "Sana Tariq",
+    location: "Multan, Pakistan",
+    avatar: "https://images.unsplash.com/photo-1596812860895-44135211b5b8?w=100&h=100&fit=crop&crop=face",
     rating: 5,
     quote:
-      "As someone with sensitive skin, finding clean products that actually work is challenging. This brand delivers!",
+      "I have sensitive skin and was nervous to try new products. These are gentle, fragrance-light, and genuinely soothing.",
     product: "Sensitive Skin Collection",
-    verified: true,
+    earlyAccess: true,
   },
   {
     id: 6,
-    name: "Taylor Morgan",
-    location: "Austin, TX",
-    avatar: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100&h=100&fit=crop&crop=face",
+    name: "Amna Butt",
+    location: "Rawalpindi, Pakistan",
+    avatar: "https://images.unsplash.com/photo-1601419394571-03905d046b39?w=100&h=100&fit=crop&crop=face",
     rating: 4,
     quote:
-      "Great products overall. The eyeshadow palette has amazing pigment payoff. Would love more matte options!",
+      "Eyeshadow palette with strong pigment — one swipe and you're done. Would love a few more everyday matte shades.",
     product: "Eyeshadow Palette Pro",
-    verified: true,
+    earlyAccess: true,
   },
 ];
 
@@ -97,31 +97,31 @@ export default function Testimonials() {
         {/* Header */}
         <div className="text-center mb-12 lg:mb-16">
           <div className="inline-flex items-center rounded-full bg-primary/10 px-3 py-1 text-xs font-medium text-primary mb-4">
-            Customer Stories
+            Early Access Feedback
           </div>
           <h2 
             id="testimonials-heading"
             className="text-3xl md:text-4xl lg:text-5xl font-display font-bold text-primary mb-4"
           >
-            Loved by Thousands
+            What Our Community Says
           </h2>
           <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-            See what our community has to say about their experience
+            Honest feedback from early access members who tried our products before launch
           </p>
           
-          {/* Stats */}
+          {/* Trust pillars — no inflated review counts */}
           <div className="mt-8 flex flex-wrap justify-center gap-6 md:gap-10">
             <div className="text-center">
-              <div className="text-2xl md:text-3xl font-bold text-foreground">4.9/5</div>
-              <div className="text-sm text-muted-foreground">Average Rating</div>
+              <div className="text-2xl md:text-3xl font-bold text-foreground">100%</div>
+              <div className="text-sm text-muted-foreground">Cruelty-Free</div>
             </div>
             <div className="text-center">
-              <div className="text-2xl md:text-3xl font-bold text-foreground">10K+</div>
-              <div className="text-sm text-muted-foreground">Reviews</div>
+              <div className="text-2xl md:text-3xl font-bold text-foreground">COD</div>
+              <div className="text-sm text-muted-foreground">Cash on Delivery</div>
             </div>
             <div className="text-center">
-              <div className="text-2xl md:text-3xl font-bold text-foreground">98%</div>
-              <div className="text-sm text-muted-foreground">Would Recommend</div>
+              <div className="text-2xl md:text-3xl font-bold text-foreground">PK</div>
+              <div className="text-sm text-muted-foreground">Nationwide Delivery</div>
             </div>
           </div>
         </div>
@@ -170,12 +170,12 @@ export default function Testimonials() {
         <div className="mt-16 lg:mt-20 pt-8 border-t border-border/50">
           <div className="text-center">
             <p className="text-sm text-muted-foreground mb-6">
-              Trusted by beauty enthusiasts worldwide
+              Built for beauty lovers across Pakistan
             </p>
             <div className="flex flex-wrap justify-center items-center gap-8 md:gap-12 opacity-60">
-              <span className="text-sm font-medium">⭐ 100% Satisfaction</span>
+              <span className="text-sm font-medium">⭐ Quality Guaranteed</span>
               <span className="text-sm font-medium">♻️ Eco Packaging</span>
-              <span className="text-sm font-medium">🔒 Secure Checkout</span>
+              <span className="text-sm font-medium">💳 COD & Bank Transfer</span>
             </div>
           </div>
         </div>
@@ -224,13 +224,13 @@ function TestimonialCard({ testimonial, index, className }: TestimonialCardProps
           </span>
         </div>
 
-        {/* Verified Badge */}
-        {testimonial.verified && (
-          <div className="inline-flex items-center gap-1 mb-4 px-2 py-1 bg-green-50 text-green-700 rounded-full text-xs font-medium">
+        {/* Early Access Badge */}
+        {testimonial.earlyAccess && (
+          <div className="inline-flex items-center gap-1 mb-4 px-2 py-1 bg-primary/10 text-primary rounded-full text-xs font-medium">
             <svg className="h-3 w-3" fill="currentColor" viewBox="0 0 20 20">
               <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
             </svg>
-            Verified Purchase
+            Early Access Member
           </div>
         )}
 
@@ -270,11 +270,6 @@ function TestimonialCard({ testimonial, index, className }: TestimonialCardProps
               <p className="font-semibold text-foreground truncate">
                 {testimonial.name}
               </p>
-              {testimonial.verified && (
-                <svg className="h-4 w-4 text-green-500 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
-                  <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-                </svg>
-              )}
             </div>
             <p className="text-sm text-muted-foreground truncate">
               {testimonial.location}

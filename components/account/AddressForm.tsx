@@ -36,7 +36,7 @@ export default function AddressForm({ initialData }: AddressFormProps) {
     city: initialData?.city || "",
     state: initialData?.state || "",
     postal_code: initialData?.postal_code || "",
-    country: initialData?.country || "United States",
+    country: initialData?.country || "Pakistan",
     type: (initialData?.type || ADDRESS_TYPE.SHIPPING) as typeof ADDRESS_TYPE[keyof typeof ADDRESS_TYPE],
     is_default: initialData?.is_default || false,
   });

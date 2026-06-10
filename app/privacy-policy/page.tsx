@@ -47,7 +47,7 @@ export default function PrivacyPolicyPage() {
               </CardHeader>
               <CardContent className="text-muted-foreground space-y-3">
                 <p className="leading-relaxed">
-                  We collect information you provide when you create an account, place an order, subscribe to our newsletter, or contact us. This may include your name, email address, shipping and billing address, phone number, and payment information.
+                  We collect information you provide when you create an account, place an order, subscribe to our newsletter, or contact us. This may include your name, email address, shipping and billing address, and phone number.
                 </p>
                 <p className="leading-relaxed">
                   We also automatically collect certain technical data when you visit our site, such as your IP address, browser type, and device information, to improve our services and security.
@@ -64,7 +64,7 @@ export default function PrivacyPolicyPage() {
                   We use your information to process orders, send order confirmations and shipping updates, respond to your inquiries, and improve our website and products. With your consent, we may send you promotional emails about new products and offers.
                 </p>
                 <p className="leading-relaxed">
-                  We do not sell your personal information to third parties. We may share data with service providers who help us operate our business (e.g., payment processors, shipping carriers) under strict confidentiality agreements.
+                  We do not sell your personal information to third parties. We may share data with service providers who help us operate our business (e.g., delivery partners, email providers) under strict confidentiality agreements.
                 </p>
               </CardContent>
             </Card>
@@ -75,7 +75,7 @@ export default function PrivacyPolicyPage() {
               </CardHeader>
               <CardContent className="text-muted-foreground">
                 <p className="leading-relaxed">
-                  We use industry-standard encryption (SSL) to protect your data during transmission. Payment information is processed by secure, PCI-compliant providers. We take reasonable measures to safeguard your personal information from unauthorized access, use, or disclosure.
+                  We use industry-standard encryption (SSL) to protect your data during transmission. Orders are paid via Cash on Delivery or bank transfer — we do not store card details on our servers. We take reasonable measures to safeguard your personal information from unauthorized access, use, or disclosure.
                 </p>
               </CardContent>
             </Card>

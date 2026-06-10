@@ -5,11 +5,49 @@ import { auth } from "@/auth";
 import { cookies } from "next/headers";
 import { logger } from "@/lib/utils/logger";
 import { MESSAGES } from "@/lib/constants/messages";
+import type { CartItem } from "@/types/supabase";
+
+const CART_SLOW_QUERY_MS = 500;
 
 /**
  * For authenticated users: Adds item to Supabase cart
  * For guest users: Returns instruction to use local storage (handled client-side)
  */
+/** Loaded client-side for the header/cart badge — keeps the root layout static. */
+export async function getHeaderCart(): Promise<{
+  isAuthenticated: boolean;
+  cartItems: CartItem[];
+  subtotal: number;
+}> {
+  const session = await auth();
+  const userId = session?.user?.id;
+
+  if (!userId) {
+    return { isAuthenticated: false, cartItems: [], subtotal: 0 };
+  }
+
+  const start = Date.now();
+  const supabase = await createClient();
+  const { data: cart } = await supabase
+    .from("carts")
+    .select("*, items:cart_items(*, product:products(*, images:product_images(*)))")
+    .eq("user_id", userId)
+    .maybeSingle();
+
+  const duration = Date.now() - start;
+  if (duration > CART_SLOW_QUERY_MS) {
+    logger.warn(`Slow cart query: ${duration}ms for user ${userId}`);
+  }
+
+  const cartItems = (cart?.items || []) as CartItem[];
+  const subtotal = cartItems.reduce(
+    (acc, item) => acc + (item.product?.price ?? 0) * item.quantity,
+    0
+  );
+
+  return { isAuthenticated: true, cartItems, subtotal };
+}
+
 export const addToCart = async (productId: string, quantity: number) => {
   const session = await auth();
   const userId = session?.user?.id;

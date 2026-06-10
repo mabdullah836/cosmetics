@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { useRouter } from "next/navigation";
 import LoginForm from "@/components/auth/LoginForm";
 
@@ -11,10 +11,6 @@ interface RegisterPageClientProps {
 export default function RegisterPageClient({ redirectTo }: RegisterPageClientProps) {
   const [isOpen, setIsOpen] = useState(true);
   const router = useRouter();
-
-  useEffect(() => {
-    setIsOpen(true);
-  }, []);
 
   const handleOpenChange = (open: boolean) => {
     setIsOpen(open);

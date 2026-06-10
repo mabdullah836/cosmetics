@@ -2,12 +2,14 @@
 
 import * as React from "react";
 import { createContext, useContext, ReactNode } from "react";
+import type { Session } from "@supabase/supabase-js";
 import { CartItem } from "@/types/supabase";
 import {
   removeFromCart as removeFromCartAction,
   updateCartQuantity as updateCartQuantityAction,
+  getHeaderCart,
 } from "@/lib/actions/cart";
-import { useRouter } from "next/navigation";
+import { createClient } from "@/lib/supabase/client";
 import { CART_EVENTS, emitCartUpdated } from "@/lib/utils/cartEvents";
 import {
   getLocalCartAsCartItems,
@@ -21,6 +23,8 @@ interface CartContextType {
   cartItems: CartItem[];
   subtotal: number;
   itemCount: number;
+  isAuthenticated: boolean;
+  isSessionReady: boolean;
   removeFromCart: (cartItemId: string) => Promise<void>;
   updateQuantity: (cartItemId: string, quantity: number) => Promise<void>;
   refreshCart: () => Promise<void>;
@@ -30,31 +34,88 @@ const CartContext = createContext<CartContextType | undefined>(undefined);
 
 interface CartProviderProps {
   children: ReactNode;
-  initialCartItems?: CartItem[];
-  initialSubtotal?: number;
 }
 
-export function CartProvider({
-  children,
-  initialCartItems = [],
-  initialSubtotal = 0,
-}: CartProviderProps) {
-  const [cartItems, setCartItems] = React.useState<CartItem[]>(initialCartItems);
-  const [subtotal, setSubtotal] = React.useState<number>(initialSubtotal);
-  const router = useRouter();
+export function CartProvider({ children }: CartProviderProps) {
+  const [cartItems, setCartItems] = React.useState<CartItem[]>([]);
+  const [subtotal, setSubtotal] = React.useState<number>(0);
+  const [isAuthenticated, setIsAuthenticated] = React.useState(false);
+  const [isSessionReady, setIsSessionReady] = React.useState(false);
+  const isAuthenticatedRef = React.useRef(false);
+  const isMountedRef = React.useRef(false);
 
-  // Sync guest cart from localStorage on mount and when cart-updated fires
-  React.useEffect(() => {
-    const syncGuestCart = () => {
-      const localItems = getLocalCartAsCartItems();
-      const localSubtotal = getLocalCartSubtotal();
-      setCartItems(localItems);
-      setSubtotal(localSubtotal);
-    };
-    syncGuestCart();
-    window.addEventListener(CART_EVENTS.UPDATED, syncGuestCart);
-    return () => window.removeEventListener(CART_EVENTS.UPDATED, syncGuestCart);
+  const applyGuestCart = React.useCallback(() => {
+    if (!isMountedRef.current) return;
+    setCartItems(getLocalCartAsCartItems());
+    setSubtotal(getLocalCartSubtotal());
   }, []);
+
+  const loadServerCart = React.useCallback(async () => {
+    const result = await getHeaderCart();
+    if (!isMountedRef.current) return;
+    if (result.isAuthenticated) {
+      setCartItems(result.cartItems);
+      setSubtotal(result.subtotal);
+    }
+  }, []);
+
+  const refreshCart = React.useCallback(async () => {
+    if (!isMountedRef.current) return;
+    if (isAuthenticatedRef.current) {
+      await loadServerCart();
+    } else {
+      applyGuestCart();
+    }
+  }, [loadServerCart, applyGuestCart]);
+
+  React.useEffect(() => {
+    isMountedRef.current = true;
+    const supabase = createClient();
+
+    const handleSession = (session: Session | null) => {
+      if (!isMountedRef.current) return;
+
+      // Defer cart updates until after hydration to avoid SSR/client mismatches.
+      queueMicrotask(() => {
+        if (!isMountedRef.current) return;
+
+        if (session?.user) {
+          isAuthenticatedRef.current = true;
+          setIsAuthenticated(true);
+          void loadServerCart().finally(() => {
+            if (isMountedRef.current) {
+              setIsSessionReady(true);
+            }
+          });
+          return;
+        }
+
+        isAuthenticatedRef.current = false;
+        setIsAuthenticated(false);
+        applyGuestCart();
+        setIsSessionReady(true);
+      });
+    };
+
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((_event, session) => {
+      handleSession(session);
+    });
+
+    return () => {
+      isMountedRef.current = false;
+      subscription.unsubscribe();
+    };
+  }, [loadServerCart, applyGuestCart]);
+
+  React.useEffect(() => {
+    const handleCartUpdate = () => {
+      void refreshCart();
+    };
+    window.addEventListener(CART_EVENTS.UPDATED, handleCartUpdate);
+    return () => window.removeEventListener(CART_EVENTS.UPDATED, handleCartUpdate);
+  }, [refreshCart]);
 
   const itemCount = React.useMemo(
     () => cartItems.reduce((sum, item) => sum + item.quantity, 0),
@@ -66,22 +127,22 @@ export function CartProvider({
     if (productId !== null) {
       removeFromLocalCart(productId);
       emitCartUpdated();
-      setCartItems(getLocalCartAsCartItems());
-      setSubtotal(getLocalCartSubtotal());
       return;
     }
     const result = await removeFromCartAction(cartItemId);
-    if (result.success) {
-      setCartItems((prev) => {
-        const updated = prev.filter((item) => item.id !== cartItemId);
-        const newSubtotal = updated.reduce(
-          (acc, item) => acc + (item.product?.price ?? 0) * item.quantity,
-          0
-        );
+    if (!isMountedRef.current || !result.success) return;
+
+    setCartItems((prev) => {
+      const updated = prev.filter((item) => item.id !== cartItemId);
+      const newSubtotal = updated.reduce(
+        (acc, item) => acc + (item.product?.price ?? 0) * item.quantity,
+        0
+      );
+      if (isMountedRef.current) {
         setSubtotal(newSubtotal);
-        return updated;
-      });
-    }
+      }
+      return updated;
+    });
   }, []);
 
   const updateQuantity = React.useCallback(async (cartItemId: string, quantity: number) => {
@@ -89,40 +150,47 @@ export function CartProvider({
     if (productId !== null) {
       updateLocalCartQuantity(productId, quantity);
       emitCartUpdated();
-      setCartItems(getLocalCartAsCartItems());
-      setSubtotal(getLocalCartSubtotal());
       return;
     }
     const result = await updateCartQuantityAction(cartItemId, quantity);
-    if (result.success) {
-      setCartItems((prev) => {
-        const updated = prev.map((item) =>
-          item.id === cartItemId ? { ...item, quantity } : item
-        );
-        const newSubtotal = updated.reduce(
-          (acc, item) => acc + (item.product?.price ?? 0) * item.quantity,
-          0
-        );
-        setSubtotal(newSubtotal);
-        return updated;
-      });
-    }
-  }, []);
+    if (!isMountedRef.current || !result.success) return;
 
-  const refreshCart = React.useCallback(async () => {
-    router.refresh();
-  }, [router]);
+    setCartItems((prev) => {
+      const updated = prev.map((item) =>
+        item.id === cartItemId ? { ...item, quantity } : item
+      );
+      const newSubtotal = updated.reduce(
+        (acc, item) => acc + (item.product?.price ?? 0) * item.quantity,
+        0
+      );
+      if (isMountedRef.current) {
+        setSubtotal(newSubtotal);
+      }
+      return updated;
+    });
+  }, []);
 
   const value = React.useMemo(
     () => ({
       cartItems,
       subtotal,
       itemCount,
+      isAuthenticated,
+      isSessionReady,
       removeFromCart,
       updateQuantity,
       refreshCart,
     }),
-    [cartItems, subtotal, itemCount, removeFromCart, updateQuantity, refreshCart]
+    [
+      cartItems,
+      subtotal,
+      itemCount,
+      isAuthenticated,
+      isSessionReady,
+      removeFromCart,
+      updateQuantity,
+      refreshCart,
+    ]
   );
 
   return <CartContext.Provider value={value}>{children}</CartContext.Provider>;

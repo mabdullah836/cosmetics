@@ -59,7 +59,7 @@ export default function CategoryGrid({
           {categories.map((category, index) => (
             <Link
               key={category.id}
-              href={`/categories/${category.slug}`}
+              href={`/products?category=${category.slug}`}
               className={cn(
                 "group block",
                 category.isFeatured && columns === 4 ? "md:col-span-2 md:row-span-2" : ""
@@ -123,7 +123,7 @@ export default function CategoryGrid({
         {/* View All Button */}
         <div className="text-center mt-10">
           <Button asChild size="lg" variant="outline">
-            <Link href="/categories">
+            <Link href="/products">
               View All Categories
               <ArrowRight className="ml-2 h-4 w-4" />
             </Link>

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useRef } from "react";
+import { useState, useRef } from "react";
 import { useRouter } from "next/navigation";
 import LoginForm from "@/components/auth/LoginForm";
 
@@ -26,11 +26,6 @@ export default function LoginPageClient({ redirectTo }: LoginPageClientProps) {
   const [isOpen, setIsOpen] = useState(true);
   const router = useRouter();
   const isNavigatingRef = useRef(false);
-
-  useEffect(() => {
-    // Open modal when component mounts
-    setIsOpen(true);
-  }, []);
 
   const handleOpenChange = (open: boolean) => {
     setIsOpen(open);

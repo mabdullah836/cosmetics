@@ -55,11 +55,8 @@ export default function ShippingReturnsPage() {
                 Orders below that threshold ship for {formatPrice(CONFIG.SHIPPING_COST)}.
               </p>
               <p className="leading-relaxed">
-                Most orders are processed within 24–48 hours. Domestic delivery typically takes 3–7 business days. 
+                Most orders are processed within 24–48 hours. Delivery across Pakistan typically takes 3–7 business days. 
                 You will receive a tracking number once your order ships.
-              </p>
-              <p className="leading-relaxed">
-                International shipping is available to select countries. Delivery times and fees vary by destination.
               </p>
             </CardContent>
           </Card>
@@ -72,16 +69,20 @@ export default function ShippingReturnsPage() {
             </CardHeader>
             <CardContent className="space-y-4 text-muted-foreground">
               <p className="leading-relaxed">
-                We offer a <strong className="text-foreground">30-day satisfaction guarantee</strong>. 
-                If you're not happy with your purchase, return unused products in their original packaging for a full refund.
+                We offer a <strong className="text-foreground">14-day return window</strong> from the delivery date. 
+                Items must be unused and in their original packaging with tags attached.
               </p>
               <p className="leading-relaxed">
-                Free returns for US customers. International returns may be subject to shipping costs. 
-                To start a return, contact our support team with your order number.
+                <strong className="text-foreground">Change of mind:</strong> If you simply changed your mind, 
+                return delivery charges are paid by you. Contact our support team with your order number to arrange a return.
+              </p>
+              <p className="leading-relaxed">
+                <strong className="text-foreground">Our mistake:</strong> If you received the wrong product or a damaged item, 
+                we cover all return delivery costs and issue a full refund or replacement — your choice.
               </p>
               <p className="leading-relaxed">
                 Refunds are processed within 5–10 business days after we receive your return. 
-                The original payment method will be credited.
+                Bank transfer orders are refunded to your account; COD orders are refunded via bank transfer.
               </p>
             </CardContent>
           </Card>
@@ -108,7 +109,7 @@ export default function ShippingReturnsPage() {
               </CardHeader>
               <CardContent>
                 <p className="text-sm text-muted-foreground">
-                  Orders placed before 2 PM EST on business days typically ship the same or next business day.
+                  Orders placed before 2 PM PKT on business days typically ship the same or next business day.
                 </p>
               </CardContent>
             </Card>

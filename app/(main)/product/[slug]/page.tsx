@@ -8,6 +8,7 @@ import { Truck, Shield, RotateCcw, Star, Package, ChevronRight } from "lucide-re
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
 import { logger } from "@/lib/utils/logger";
+import { getStaticProductSlugs } from "@/lib/actions/product";
 import {
   getCachedProductPageData,
   type ProductReviewRow,
@@ -37,6 +38,13 @@ function seoPlainText(html: string | null | undefined, max = 160): string {
 
 /** ISR: long TTL with on-demand revalidation via revalidateTag from admin. */
 export const revalidate = 86400;
+
+/** Pre-render known product pages at build; unknown slugs still work on-demand. */
+export const dynamicParams = true;
+
+export async function generateStaticParams() {
+  return getStaticProductSlugs();
+}
 
 export async function generateMetadata({
   params,
@@ -118,7 +126,13 @@ export default async function ProductPage({ params }: ProductPageProps) {
                   <BreadcrumbItem>
                     <BreadcrumbLink asChild>
                       <Link 
-                        href={`/categories/${product.category_id}`}
+                        href={
+                          product.categorySlug
+                            ? `/products?category=${product.categorySlug}`
+                            : product.category_id
+                              ? `/products?categories=${product.category_id}`
+                              : "/products"
+                        }
                         className="text-muted-foreground hover:text-foreground transition-colors text-sm"
                       >
                         {product.category}
@@ -178,8 +192,8 @@ export default async function ProductPage({ params }: ProductPageProps) {
                 <RotateCcw className="h-6 w-6 text-muted-foreground" />
               </div>
               <div>
-                <h4 className="font-medium text-foreground text-sm">30-Day Returns</h4>
-                <p className="text-muted-foreground text-xs">Easy returns</p>
+                <h4 className="font-medium text-foreground text-sm">14-Day Returns</h4>
+                <p className="text-muted-foreground text-xs">Fair return policy</p>
               </div>
             </div>
             <div className="flex items-center gap-4">
@@ -187,8 +201,8 @@ export default async function ProductPage({ params }: ProductPageProps) {
                 <Shield className="h-6 w-6 text-muted-foreground" />
               </div>
               <div>
-                <h4 className="font-medium text-foreground text-sm">Secure Payment</h4>
-                <p className="text-muted-foreground text-xs">100% secure</p>
+                <h4 className="font-medium text-foreground text-sm">Flexible Payment</h4>
+                <p className="text-muted-foreground text-xs">COD & bank transfer</p>
               </div>
             </div>
             <div className="flex items-center gap-4">
@@ -378,8 +392,8 @@ export default async function ProductPage({ params }: ProductPageProps) {
                       <span>1-2 business days</span>
                     </p>
                     <p className="flex items-start gap-2">
-                      <span className="text-foreground font-medium">• International:</span>
-                      <span>Available to select countries</span>
+                      <span className="text-foreground font-medium">• Delivery Area:</span>
+                      <span>Nationwide across Pakistan</span>
                     </p>
                   </div>
                 </div>
@@ -388,19 +402,27 @@ export default async function ProductPage({ params }: ProductPageProps) {
                   <div className="space-y-3 text-muted-foreground">
                     <p className="flex items-start gap-2">
                       <span className="text-foreground font-medium">• Return Window:</span>
-                      <span>30 days from delivery date</span>
+                      <span>14 days from delivery date</span>
                     </p>
                     <p className="flex items-start gap-2">
                       <span className="text-foreground font-medium">• Condition:</span>
                       <span>Unused, in original packaging with tags</span>
                     </p>
                     <p className="flex items-start gap-2">
+                      <span className="text-foreground font-medium">• Change of Mind:</span>
+                      <span>Customer pays return delivery charges</span>
+                    </p>
+                    <p className="flex items-start gap-2">
+                      <span className="text-foreground font-medium">• Wrong or Damaged Item:</span>
+                      <span>We cover return delivery; full refund or replacement</span>
+                    </p>
+                    <p className="flex items-start gap-2">
                       <span className="text-foreground font-medium">• Refund Time:</span>
                       <span>5-10 business days after return receipt</span>
                     </p>
                     <p className="flex items-start gap-2">
-                      <span className="text-foreground font-medium">• Defective Items:</span>
-                      <span>Free returns and replacement</span>
+                      <span className="text-foreground font-medium">• How to Return:</span>
+                      <span>Contact our support team with your order number</span>
                     </p>
                   </div>
                 </div>
