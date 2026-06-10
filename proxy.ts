@@ -2,6 +2,31 @@ import { createServerClient } from '@supabase/ssr'
 import { NextResponse, type NextRequest } from 'next/server'
 
 export async function proxy(request: NextRequest) {
+  const { pathname, searchParams } = request.nextUrl;
+
+  if (pathname === "/search") {
+    const query = searchParams.get("q")?.trim();
+    const destination = query
+      ? `/products?search=${encodeURIComponent(query)}`
+      : "/products";
+    return NextResponse.redirect(new URL(destination, request.url));
+  }
+
+  if (pathname === "/categories") {
+    return NextResponse.redirect(new URL("/products", request.url));
+  }
+
+  if (pathname.startsWith("/categories/")) {
+    const slug = pathname.slice("/categories/".length).split("/")[0];
+    if (slug) {
+      const query = new URLSearchParams(request.nextUrl.searchParams);
+      query.set("category", decodeURIComponent(slug));
+      return NextResponse.redirect(
+        new URL(`/products?${query.toString()}`, request.url)
+      );
+    }
+  }
+
   let response = NextResponse.next()
 
   const supabase = createServerClient(

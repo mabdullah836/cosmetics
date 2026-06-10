@@ -32,7 +32,7 @@ const features = [
   {
     icon: RotateCcw,
     title: "Easy Returns",
-    description: "30-day satisfaction guarantee. Hassle-free returns on unused items in original packaging.",
+    description: "14-day returns on unused items. You pay return delivery for change of mind; we cover it for wrong or damaged orders.",
     gradient: "from-blue-500/15 to-indigo-500/5",
     iconColor: "text-blue-600 dark:text-blue-400",
   },
