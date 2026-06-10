@@ -10,53 +10,76 @@ interface Props {
   productName: string;
 }
 
+const FALLBACK_IMAGE =
+  "https://images.unsplash.com/photo-1596462502278-27bfdc403348?w=1200&h=1500&fit=crop";
+
 export default function ProductImageGallery({ images, productName }: Props) {
   const list =
     images.length > 0
       ? images
-      : [
-          {
-            image_url:
-              "https://images.unsplash.com/photo-1596462502278-27bfdc403348?w=800",
-          } as ProductImage,
-        ];
+      : [{ image_url: FALLBACK_IMAGE } as ProductImage];
 
-  const [active, setActive] = useState(list[0]?.image_url || list[0]?.image_url || '');
+  const [activeIndex, setActiveIndex] = useState(0);
+  const active = list[activeIndex]?.image_url || list[0]?.image_url || FALLBACK_IMAGE;
 
   return (
-    <div className="flex gap-4">
-      {/* Thumbnails */}
-      <div className="flex flex-col gap-2">
-        {list.map((img) => (
-          <button
-            key={img?.image_url}
-            onMouseEnter={() => setActive(img?.image_url || '')}
-            className={cn(
-              "h-16 w-16 border rounded-lg overflow-hidden transition",
-              active === img?.image_url
-                ? "border-foreground"
-                : "border-border hover:border-muted-foreground/50"
-            )}
-          >
-            <Image
-              src={img?.image_url || '/placeholder.svg'}
-              alt={productName}
-              width={64}
-              height={64}
-              className="object-cover"
-            />
-          </button>
-        ))}
-      </div>
+    <div className="flex flex-col-reverse gap-4 md:flex-row md:gap-5">
+      {/* Thumbnails — horizontal on mobile, vertical on desktop */}
+      {list.length > 1 && (
+        <div
+          className={cn(
+            "flex gap-2 md:flex-col md:gap-2.5",
+            "overflow-x-auto pb-1 md:overflow-visible md:pb-0",
+            "scrollbar-thin md:w-[72px] md:shrink-0"
+          )}
+        >
+          {list.map((img, index) => {
+            const url = img?.image_url || FALLBACK_IMAGE;
+            const isActive = index === activeIndex;
+            return (
+              <button
+                key={`${url}-${index}`}
+                type="button"
+                aria-label={`View image ${index + 1} of ${list.length}`}
+                aria-current={isActive ? "true" : undefined}
+                onClick={() => setActiveIndex(index)}
+                onMouseEnter={() => setActiveIndex(index)}
+                className={cn(
+                  "relative shrink-0 overflow-hidden rounded-lg border-2 transition-all",
+                  "h-[72px] w-[72px] md:h-16 md:w-16",
+                  isActive
+                    ? "border-foreground ring-2 ring-foreground/10"
+                    : "border-border opacity-80 hover:border-muted-foreground/50 hover:opacity-100"
+                )}
+              >
+                <Image
+                  src={url}
+                  alt=""
+                  fill
+                  sizes="72px"
+                  className="object-cover object-center"
+                />
+              </button>
+            );
+          })}
+        </div>
+      )}
 
-      {/* Main Image */}
-      <div className="relative flex-1 aspect-square border border-border rounded-xl bg-card overflow-hidden">
+      {/* Main image — portrait frame like catalog cards (Sephora/Shopify style) */}
+      <div
+        className={cn(
+          "relative w-full overflow-hidden rounded-2xl",
+          "aspect-[4/5] bg-gradient-to-b from-muted/60 via-muted/40 to-muted/70",
+          "ring-1 ring-border/60"
+        )}
+      >
         <Image
           src={active}
           alt={productName}
           fill
           priority
-          className="object-contain transition-transform duration-300 hover:scale-105"
+          sizes="(max-width: 768px) 100vw, 50vw"
+          className="object-cover object-center transition-opacity duration-300"
         />
       </div>
     </div>
